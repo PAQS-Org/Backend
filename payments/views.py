@@ -1,6 +1,5 @@
 from django.shortcuts import render
 import requests
-from django.contrib.auth.decorators import login_required
 
 # Create your views here.
 from django.http import JsonResponse, HttpResponse
@@ -62,45 +61,104 @@ class InitiatePayment(APIView):
         return JsonResponse({"payment_url": data["data"]["authorization_url"]})
 
 
-
-def verify_webhook_signature(request):
-  if request.method != 'POST':
-    return JsonResponse({'error': 'Method not allowed'}, status=405)
-
-  signature = request.META.get("HTTP_X-PAYSTACK-SIGNATURE")
-  payload = request.body.decode("utf-8")
-  hashed_payload = hmac.new(
-    PAYSTACK_SECRET_KEY.encode("utf-8"), msg=payload, digestmod=hashlib.sha256
-  ).hexdigest()
-  return signature.lower() == hashed_payload.lower()
-
-
 @csrf_exempt
 def verify_payment(request):
-    if request.method == "POST":
-        # Retrieve and verify the signature from Paystack's webhook
-        data = request.POST
+  # Get the request body content
+  hook = request.body.decode('utf-8')
+  hook_data = hook.strip()
 
-        # Retrieve transaction details using the transaction ID
-        transaction_id = data.get("data")
-        try:
-            transaction = Payment.objects.get(transaction_id=transaction_id)
-        except Payment.DoesNotExist:
-            return JsonResponse({"message": "Transaction not found"}, status=400)
+  # Verify the request signature using HMAC
+  signature = request.headers['x-paystack-signature']
+  computed_signature = hmac.new(
+                PAYSTACK_SECRET_KEY.encode('utf-8'),
+                hook_data.encode('utf-8'),
+                hashlib.sha512
+            ).hexdigest()
+  if not hmac.compare_digest(computed_signature, signature):
+      return HttpResponse("Signature verification failed.", status=400)
 
-        # Update transaction status based on Paystack response
-        if data.get("data")["status"] == "success":
-            transaction.transaction_status = "success"
-            transaction.save()
-            # Redirect to success step on frontend (handled in success callback)
-            return JsonResponse({"message": "Payment successful"})
-        else:
-            transaction.transaction_status = "failed"
-            transaction.save()
-            # Redirect to failure step on frontend (handled in error callback)
-            return JsonResponse({"message": "Payment failed"})
-    else:
-        return JsonResponse({"error": "Method not allowed"}, status=405)
+  # Parse the request data
+  try:
+      data = json.loads(hook_data)
+  except json.JSONDecodeError:
+      return HttpResponse("Invalid JSON payload", status=400)
+
+  # Check for the event type
+  event = data.get('event')
+  if event != 'charge.success':
+      return HttpResponse("Only charge.success event is processed.", status=400)
+
+  # Retrieve transaction details from the data
+  reference = data['data']['reference']
+  transaction_id = data['data']['id']
+
+  try:
+      # Update the transaction status in your database
+      payment = Payment.objects.get(transaction_id=reference)
+      payment.transaction_status = 'paid'
+      payment.verified = True 
+      payment.save()
+  except Payment.DoesNotExist:
+      return HttpResponse("Transaction not found.", status=400)
+
+  # Return a successful response
+  return HttpResponse("Transaction updated successfully.", status=200)
+
+
+
+
+
+# @csrf_exempt
+# def verify_payment(request):
+#     # retrive the payload from the request body
+#     payload = request.body
+#     # signature header to to verify the request is from paystack
+#     sig_header = request.headers['x-paystack-signature']
+#     body = None
+#     event = None
+
+#     try:
+#         # sign the payload with `HMAC SHA512`
+#         hash = hmac.new(PAYSTACK_SECRET_KEY.encode('utf-8'), payload, digestmod=hashlib.sha512).hexdigest()
+#         # compare our signature with paystacks signature
+#         if hash == sig_header:
+#             # if signature matches, 
+#             # proceed to retrive event status from payload
+#             body_unicode = payload.decode('utf-8')
+#             body = json.loads(body_unicode)
+#             # event status
+#             event = body['event']
+#         else:
+#             raise Exception
+#     except ValueError as e:
+#         # Invalid payload
+#         return HttpResponse(status=400)
+#     except KeyError as e:
+#         # Invalid payload
+#         return HttpResponse(status=400)
+#     except:
+#         # Invalid signature
+#         return HttpResponse(status=400)
+
+#     if event == 'charge.success':
+#         # if event status equals 'charge.success'
+#         # get the data and the `payment_id` 
+#         # we'd set in the metadata ealier
+#         data, transaction_id = body["data"], body['data']['metadata']['transaction_id']
+
+#         # validate status and gateway_response
+#         if (data["status"] == 'success') and (data["gateway_response"] == "Successful"):
+#             try:
+#                 payment = Payment.objects.get(id=transaction_id)
+#             except Payment.DoesNotExist:
+#                 return HttpResponse(status=404)
+#             # mark payment as paid
+#             payment.verified = True
+#             payment.save(force_update=True)
+
+#             print("PAID")
+
+#     return HttpResponse(status=200)
 
 
 def download_receipt(request, reference):

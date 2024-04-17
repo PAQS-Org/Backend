@@ -53,16 +53,6 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    # 'corsheaders.middleware.CorsMiddleware',
-    # 'django.middleware.security.SecurityMiddleware',
-    # 'whitenoise.middleware.WhiteNoiseMiddleware',
-    # 'django.contrib.sessions.middleware.SessionMiddleware',
-    # 'django.middleware.common.CommonMiddleware',
-    # 'django.middleware.csrf.CsrfViewMiddleware',
-    # 'django.contrib.auth.middleware.AuthenticationMiddleware',
-    # 'django.contrib.messages.middleware.MessageMiddleware',
-    # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
-
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
@@ -162,7 +152,7 @@ SESSION_COOKIE_SECURE = True
 SECURE_SSL_REDIRECT = False
 CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:7200/",
+    "http://localhost:7200/", 'https://*.ngrok.io'
 ]
 
 CORS_ALLOW_HEADERS = [
