@@ -1,14 +1,11 @@
 {
   "folders": [
-	{
-		"path": "../../../../Desktop/paqsComp"
-	},
-	{
-		"path": "../../../frontend/PAQSBack"
-	},
-	{
-		"path": ".."
-	}
-],
+    {
+      "path": "../../../../Desktop/paqsComp"
+    },
+    {
+      "path": ".."
+    }
+  ],
   "settings": {}
 }
