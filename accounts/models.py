@@ -12,30 +12,31 @@ AUTH_PROVIDERS = {'facebook': 'facebook', 'google': 'google',
 
 class UserManager(BaseUserManager):
 
-    def create_user(self, first_name, 
-                       last_name, email, password=None):
+    def create_user(self, email, password=None, **extra_fields):
         """
         Creates and saves a User with the given email and password.
         """
         if not email:
             raise ValueError('Users must have an email address')
-        user = self.model(first_name=first_name,
-            last_name=last_name,email=self.normalize_email(email))
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
         user.set_password(password)
-        user.save()
+        user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, password=None):
+    def create_superuser(self, email, password=None, **extra_fields):
         """
         Creates and saves a superuser with the given email and password.
         """
-        if not email and password is None:
-            raise ValueError('Superusers must have an email address and password')
-        user = self.create_user(email, password)
-        user.is_superuser = True
-        user.is_staff = True
-        user.save()
-        return user
+        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('is_staff', True)
+
+        if not email:
+            raise ValueError('Superusers must have an email address')
+        if not password:
+            raise ValueError('Superusers must have a password')
+
+        return self.create_user(email, password, **extra_fields)
 
 
 class AbstractUserProfile(AbstractBaseUser, PermissionsMixin):
@@ -67,34 +68,34 @@ class AbstractUserProfile(AbstractBaseUser, PermissionsMixin):
         return {'refresh': str(refresh), 'access': str(refresh.access_token)}
     
 
-class CompanyManager(BaseUserManager):
+# class CompanyManager(BaseUserManager):
 
-    def create_company(self, 
-                       first_name, 
-                       last_name, 
-                       company_name, 
-                       company_logo, 
-                       email, 
-                       password=None, 
-                       is_company=False,
-                       **extra_fields,
-                       ):
-        """
-        Creates and saves a Company profile with the given details.
-        """
-        if not email:
-            raise ValueError('Companies must have an email address')
-        company = Company(
-            first_name=first_name,
-            last_name=last_name,
-            company_name=company_name,
-            company_logo = company_logo,
-            email=self.normalize_email(email),
-            is_company=is_company,
-        )
-        company.set_password(password)
-        company.save()
-        return company
+#     def create_company(self, 
+#                        first_name, 
+#                        last_name, 
+#                        company_name, 
+#                        company_logo, 
+#                        email, 
+#                        password=None, 
+#                        is_company=False,
+#                        **extra_fields,
+#                        ):
+#         """
+#         Creates and saves a Company profile with the given details.
+#         """
+#         if not email:
+#             raise ValueError('Companies must have an email address')
+#         company = Company(
+#             first_name=first_name,
+#             last_name=last_name,
+#             company_name=company_name,
+#             company_logo = company_logo,
+#             email=self.normalize_email(email),
+#             is_company=is_company,
+#         )
+#         company.set_password(password)
+#         company.save()
+#         return company
 
 
 class Company(AbstractUserProfile):
@@ -106,7 +107,7 @@ class Company(AbstractUserProfile):
 
     USERNAME_FIELD = "email"
     
-    objects = CompanyManager()
+    # objects = CompanyManager()
 
     class Meta:
         verbose_name = 'Company'

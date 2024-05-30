@@ -183,6 +183,12 @@ STATICFILES_DIRS = [
 STATICFILES_STORAGE = "whitenoise.django.GzipManifestStaticFilesStorage"
 
 
+AUTHENTICATION_BACKENDS = [
+    'accounts.base.CustomUserCompanyAuthBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+
 AUTH_USER_MODEL = "accounts.AbstractUserProfile"
 # AUTH_USER_MODEL = "accounts.Company"
 

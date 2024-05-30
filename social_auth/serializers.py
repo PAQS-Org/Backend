@@ -3,31 +3,22 @@ from .helpers import Google, register_social_user
 from PAQSBackend.settings import GOOGLE_CLIENT_ID
 from rest_framework.exceptions import AuthenticationFailed
 
-
 class GoogleSignInSerializer(serializers.Serializer):
-    access_token=serializers.CharField()
+    access_token = serializers.CharField()
+    # user_type = serializers.ChoiceField(choices=['user', 'company'])
 
-
-    def validate_access_token(self, access_token):
-        user_data=Google.validate(access_token)
+    def validate(self, attrs):
+        access_token = attrs.get('access_token')
+        # user_type = attrs.get('user_type' = "user")
+        user_data = Google.validate(access_token)
         first_name, last_name, email = Google.get_user_info(access_token)
-        
-        print(first_name)
-
 
         try:
             user_data['sub']
-            
-        except:
-            raise serializers.ValidationError("this token has expired or invalid please try again lil tee")
+        except KeyError:
+            raise serializers.ValidationError("The token has expired or is invalid. Please try again.")
         
         if user_data['aud'] != GOOGLE_CLIENT_ID:
-                raise AuthenticationFailed('Could not verify user.')
+            raise AuthenticationFailed('Could not verify user.')
 
-        email=email
-        first_name=first_name
-        last_name=last_name
-        provider='google'
-
-        return register_social_user(provider, email, first_name, last_name)
-
+        return register_social_user('google', email, first_name, last_name)
