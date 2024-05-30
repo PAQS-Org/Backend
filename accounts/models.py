@@ -6,16 +6,21 @@ from django.contrib.auth.models import (
     AbstractBaseUser, BaseUserManager, PermissionsMixin)
 from rest_framework_simplejwt.tokens import RefreshToken
 
+AUTH_PROVIDERS = {'facebook': 'facebook', 'google': 'google',
+                  'twitter': 'twitter', 'email': 'email'}
+
 
 class UserManager(BaseUserManager):
 
-    def create_user(self, email, password=None):
+    def create_user(self, first_name, 
+                       last_name, email, password=None):
         """
         Creates and saves a User with the given email and password.
         """
         if not email:
             raise ValueError('Users must have an email address')
-        user = self.model(email=self.normalize_email(email))
+        user = self.model(first_name=first_name,
+            last_name=last_name,email=self.normalize_email(email))
         user.set_password(password)
         user.save()
         return user
@@ -46,7 +51,7 @@ class AbstractUserProfile(AbstractBaseUser, PermissionsMixin):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     auth_provider = models.CharField(
-        max_length=255, blank=False, null=False, default='email'
+        max_length=255, blank=False, null=False, default=AUTH_PROVIDERS.get('email')
     )
 
     USERNAME_FIELD = 'email'
@@ -118,8 +123,20 @@ class Company(AbstractUserProfile):
             return self.company_logo.url
         return None  
     
+    @property
+    def get_full_name(self):
+        return f"{self.first_name.title()} {self.last_name.title()}"
+    
 
 class User(AbstractUserProfile):
+    first_name = models.CharField(max_length=100, db_index=True)
+    last_name = models.CharField(max_length=100, db_index=True)
+
+    objects = UserManager()
     class Meta:
         verbose_name = 'User'
         verbose_name_plural = 'Users'
+
+    @property
+    def get_full_name(self):
+        return f"{self.first_name.title()} {self.last_name.title()}"

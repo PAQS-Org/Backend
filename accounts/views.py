@@ -6,10 +6,12 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Company
+from .models import Company, User
 from .serializer import (
     CompanyRegisterSerializer, CompanyLoginSerializer,
     EmailVerificationSerializer, SetNewPasswordSerializer,
+    # indi serializer
+    LoginSerializer, RegisterSerializer
 )
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
@@ -117,3 +119,52 @@ class LogoutAPIView(APIView):
             except (RefreshToken.DoesNotExist, ValidationError):
                 pass  # Ignore potential errors if token is invalid or blacklisted already
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+
+
+
+
+    # Individuals work
+class IndividualLoginView(APIView):
+    serializer_class = LoginSerializer
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email']
+        user = User.objects.get(email=email)
+
+        refresh = RefreshToken.for_user(user)
+        token_response = {
+            "refresh": str(refresh),
+            "access": str(refresh.access_token),
+        }
+        if hasattr(user, 'user'):
+            token_response.update({
+                "user_name": user.user.get_full_name,
+            })
+
+        return Response(token_response, status=status.HTTP_200_OK)
+
+
+class IndividualRegistrationView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = RegisterSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        # Generate verification token (replace with your preferred library)
+        user_data = serializer.data
+        user = User.objects.get(email=user_data['email'])
+        token = RefreshToken.for_user(user).access_token
+        current_site = get_current_site(request).domain
+        relativeLink = reverse('email-verify')
+        absurl = 'http://'+current_site+relativeLink+"?token="+str(token)
+        email_body = 'Hi '+user.first_name + \
+            ' Use the link below to verify your email \n' + absurl
+        data = {'email_body': email_body, 'to_email': user.email,
+                'email_subject': 'Verify your email'}
+
+        Util.send_email(data)
+        return Response(user_data, status=status.HTTP_201_CREATED)

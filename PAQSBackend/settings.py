@@ -33,6 +33,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
+SITE_ID = 1
 
 # Application definition
 
@@ -43,19 +44,18 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
-    'allauth.socialaccount.providers.facebook',    
-    'allauth.socialaccount.providers.google',    
-    'allauth.socialaccount.providers.twitter',
+    'django.contrib.sites',
+    
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
+    'rest_framework.authtoken',
+    'rest_auth',
     'corsheaders',
     'drf_yasg',
     'accounts',
     'payments',
+    'social_auth',
 ]
 
 MIDDLEWARE = [
@@ -67,7 +67,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    "allauth.account.middleware.AccountMiddleware",
 ]
 
 ROOT_URLCONF = 'PAQSBackend.urls'
@@ -83,7 +82,6 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'django.template.context_processors.request',
             ],
         },
     },
@@ -150,7 +148,7 @@ CORS_ALLOWED_ORIGINS = [
     "https://paqs.herokuapp.com",
     "http://localhost:8080",
     "http://localhost:7200",
-    "http://localhost:9200",
+    "http://localhost:9000",
     "http://127.0.0.1:9000",
 ]
 
@@ -195,6 +193,9 @@ EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 PAYSTACK_SECRET_KEY = os.environ.get("PAYSTACK_SECRET_KEY")
 PAYSTACK_PUBLIC_KEY = os.environ.get("PAYSTACK_PUBLIC_KEY")
+GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
+GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET')
+SOCIAL_AUTH_PASSWORD = os.environ.get('SOCIAL_AUTH_PASSWORD')
 
 IGNORABLE_404_URLS = [
     re.compile(r"^/apple-touch-icon.*\.png$"),
@@ -249,26 +250,5 @@ SWAGGER_SETTINGS = {
     }
 }
 
-SOCIALACCOUNT_PROVIDERS = {
-    'google': {
-        # For each OAuth based provider, either add a ``SocialApp``
-        # (``socialaccount`` app) containing the required client
-        # credentials, or list them here:
-        'APP': {
-            'client_id': '123',
-            'secret': '456',
-            'key': ''
-        }
-    }
-}
-
-
-AUTHENTICATION_BACKENDS = [
-    # Needed to login by username in Django admin, regardless of `allauth`
-    'django.contrib.auth.backends.ModelBackend',
-
-    # `allauth` specific authentication methods, such as login by email
-    'allauth.account.auth_backends.AuthenticationBackend',
-]
 
 django_heroku.settings(locals())
