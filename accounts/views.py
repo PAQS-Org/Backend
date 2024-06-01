@@ -14,13 +14,11 @@ from .serializer import (
     LoginSerializer, RegisterSerializer
 )
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth import authenticate
-from django.core.mail import send_mail
 from django.urls import reverse
 from django.contrib.sites.shortcuts import get_current_site
 from .utils import Util
 from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
-from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 
 from rest_framework.permissions import IsAuthenticated
