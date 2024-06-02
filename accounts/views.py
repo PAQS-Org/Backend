@@ -1,4 +1,5 @@
 from django.shortcuts import render
+import os
 
 # Create your views here.
 from rest_framework import status
@@ -16,6 +17,7 @@ from .serializer import (
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.urls import reverse
 from django.contrib.sites.shortcuts import get_current_site
+from django.conf import settings
 from .utils import Util
 from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
 from django.utils.http import urlsafe_base64_decode
@@ -23,6 +25,7 @@ from django.contrib.auth.tokens import PasswordResetTokenGenerator
 
 from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ValidationError
+from django.template.loader import render_to_string
 
 
 class CompanyRegistrationView(APIView):
@@ -159,8 +162,12 @@ class IndividualRegistrationView(APIView):
         current_site = get_current_site(request).domain
         relativeLink = reverse('email-verify')
         absurl = 'http://'+current_site+relativeLink+"?token="+str(token)
-        email_body = 'Hi '+user.first_name + \
-            ' Use the link below to verify your email \n' + absurl
+        template_path = 'verification-email.html'
+        email_body = render_to_string(template_path, {
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'verification_link': absurl
+        })
         data = {'email_body': email_body, 'to_email': user.email,
                 'email_subject': 'Verify your email'}
 
