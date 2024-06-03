@@ -1,11 +1,20 @@
+{% load static %}
+
 <x-main>
   <section class="max-w-2xl px-6 py-8 mx-auto bg-white dark:bg-gray-900">
     <header>
       <a href="#">
         <img
-          class="w-auto h-7 sm:h-8"
-          src="../images/main-01.svg"
+          class="sm-h-8"
+          src="{% static 'images/main-01.svg' %}"
           alt="PAQS Logo"
+          style="
+            max-width: 100%;
+            vertical-align: middle;
+            line-height: 1;
+            height: 28px;
+            width: auto;
+          "
         />
       </a>
     </header>

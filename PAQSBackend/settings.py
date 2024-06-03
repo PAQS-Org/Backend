@@ -75,7 +75,8 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            BASE_DIR / "email-templates/build_production",
+            BASE_DIR / "email-templates/src/templates",
+            # BASE_DIR / "email-templates/build_production",
             # BASE_DIR / "templates",
             # BASE_DIR / "new-template-directory", 
         ],
@@ -141,7 +142,18 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_ROOT = "/static/"
+STATIC_URL = "/static/"
+MEDIA_URL = "/images/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "static/images/paqs")
+STATICFILES_DIRS = [
+    os.path.join(
+        BASE_DIR,
+        "static",
+    ),
+    os.path.join(BASE_DIR, "email-templates/src")
+]
+STATICFILES_STORAGE = "whitenoise.django.GzipManifestStaticFilesStorage"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
@@ -174,17 +186,6 @@ CORS_ALLOW_HEADERS = [
 ]
 
 
-STATIC_ROOT = "/static/"
-STATIC_URL = "/static/"
-MEDIA_URL = "/images/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "static/images/paqs")
-STATICFILES_DIRS = [
-    os.path.join(
-        BASE_DIR,
-        "static",
-    )
-]
-STATICFILES_STORAGE = "whitenoise.django.GzipManifestStaticFilesStorage"
 
 
 AUTHENTICATION_BACKENDS = [

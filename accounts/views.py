@@ -1,6 +1,6 @@
 from django.shortcuts import render
 import os
-
+import datetime
 # Create your views here.
 from rest_framework import status
 from rest_framework.permissions import AllowAny
@@ -26,6 +26,7 @@ from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ValidationError
 from django.template.loader import render_to_string
+
 
 
 class CompanyRegistrationView(APIView):
@@ -142,7 +143,9 @@ class IndividualLoginView(APIView):
         }
         if hasattr(user, 'user'):
             token_response.update({
-                "user_name": user.user.get_full_name,
+                "first_name": user.user.first_name,
+                "last_name": user.user.last_name,
+                "email": user.user.email,
             })
 
         return Response(token_response, status=status.HTTP_200_OK)
@@ -166,7 +169,8 @@ class IndividualRegistrationView(APIView):
         email_body = render_to_string(template_path, {
             'first_name': user.first_name,
             'last_name': user.last_name,
-            'verification_link': absurl
+            'verification_link': absurl,
+            'current_year': datetime.datetime.now().year,
         })
         data = {'email_body': email_body, 'to_email': user.email,
                 'email_subject': 'Verify your email'}
