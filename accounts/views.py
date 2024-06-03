@@ -43,8 +43,14 @@ class CompanyRegistrationView(APIView):
         current_site = get_current_site(request).domain
         relativeLink = reverse('email-verify')
         absurl = 'http://'+current_site+relativeLink+"?token="+str(token)
-        email_body = 'Hi '+user.first_name + \
-            ' Use the link below to verify your email \n' + absurl
+        template_path = 'company-verification-email.html'
+        email_body = render_to_string(template_path, {
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'company_name': user.company_name,
+            'verification_link': absurl,
+            'current_year': datetime.datetime.now().year,
+        })
         data = {'email_body': email_body, 'to_email': user.email,
                 'email_subject': 'Verify your email'}
 
@@ -90,6 +96,26 @@ class EmailVerificationView(APIView):
             return Response({'error': 'Invalid verification token'}, status=status.HTTP_400_BAD_REQUEST)
         company.is_active = True
         company.save()
+        return Response({'message': 'Email verified successfully.'}, status=status.HTTP_200_OK)
+
+
+class IndividualEmailVerificationView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = EmailVerificationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        token = serializer.validated_data['token']
+        try:
+            first_name = force_str(urlsafe_base64_decode(token))
+            user = User.objects.get(pk=first_name)
+        except (ValueError, DjangoUnicodeDecodeError, User.DoesNotExist):
+            return Response({'error': 'Invalid verification token'}, status=status.HTTP_400_BAD_REQUEST)
+        # Add verification logic (e.g., check token validity using a library)
+        if not is_valid_verification_token(user, token):  # Replace with your verification logic
+            return Response({'error': 'Invalid verification token'}, status=status.HTTP_400_BAD_REQUEST)
+        user.is_active = True
+        user.save()
         return Response({'message': 'Email verified successfully.'}, status=status.HTTP_200_OK)
 
 def is_valid_verification_token(company, token):
@@ -163,7 +189,7 @@ class IndividualRegistrationView(APIView):
         user = User.objects.get(email=user_data['email'])
         token = RefreshToken.for_user(user).access_token
         current_site = get_current_site(request).domain
-        relativeLink = reverse('email-verify')
+        relativeLink = reverse('user-email-verify')
         absurl = 'http://'+current_site+relativeLink+"?token="+str(token)
         template_path = 'verification-email.html'
         email_body = render_to_string(template_path, {

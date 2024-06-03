@@ -2,7 +2,6 @@ from rest_framework import serializers
 from django.core.validators import EmailValidator
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from django.contrib.auth import authenticate, password_validation
-from django.core.exceptions import ValidationError
 
 
 from .models import User, Company
@@ -55,6 +54,8 @@ class LoginSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Invalid credentials')
         if not user.is_active:
             raise serializers.ValidationError('Account disabled')
+        if not user.is_verified:
+            raise serializers.ValidationError('Email is not verified')
         refresh = RefreshToken.for_user(user)
         return {'refresh': str(refresh), 'access': str(refresh.access_token)}
 
@@ -140,6 +141,8 @@ class CompanyLoginSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Invalid credentials')
         if not user.is_active:
             raise serializers.ValidationError('Account disabled')
+        if not user.is_verified:
+            raise serializers.ValidationError('Account is not verified')
         refresh = RefreshToken.for_user(user)
         return {'refresh': str(refresh),
                 'access': str(refresh.access_token),
