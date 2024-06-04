@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'social_auth',
 ]
 
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -75,9 +76,9 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            BASE_DIR / "email-templates/src/templates",
+            # BASE_DIR / "email-templates/src/templates",
             # BASE_DIR / "email-templates/build_production",
-            # BASE_DIR / "templates",
+            BASE_DIR / "templates",
             # BASE_DIR / "new-template-directory", 
         ],
         'APP_DIRS': True,
@@ -151,7 +152,6 @@ STATICFILES_DIRS = [
         BASE_DIR,
         "static",
     ),
-    os.path.join(BASE_DIR, "email-templates/src")
 ]
 STATICFILES_STORAGE = "whitenoise.django.GzipManifestStaticFilesStorage"
 

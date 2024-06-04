@@ -47,6 +47,7 @@ class CompanyRegistrationView(APIView):
         email_body = render_to_string(template_path, {
             'first_name': user.first_name,
             'last_name': user.last_name,
+            'email':user.email,
             'company_name': user.company_name,
             'verification_link': absurl,
             'current_year': datetime.datetime.now().year,
@@ -195,6 +196,7 @@ class IndividualRegistrationView(APIView):
         email_body = render_to_string(template_path, {
             'first_name': user.first_name,
             'last_name': user.last_name,
+            'email':user.email,
             'verification_link': absurl,
             'current_year': datetime.datetime.now().year,
         })
