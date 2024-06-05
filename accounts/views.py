@@ -1,6 +1,8 @@
 from django.shortcuts import render
 import os
+import jwt
 import datetime
+from django.shortcuts import redirect
 # Create your views here.
 from rest_framework import status
 from rest_framework.permissions import AllowAny
@@ -17,6 +19,7 @@ from .serializer import (
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.urls import reverse
 from django.contrib.sites.shortcuts import get_current_site
+from PAQSBackend.settings import SECRET_KEY
 from django.conf import settings
 from .utils import Util
 from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
@@ -83,7 +86,7 @@ class CompanyLoginView(APIView):
 class EmailVerificationView(APIView):
     permission_classes = [AllowAny]
 
-    def post(self, request):
+    def get(self, request):
         serializer = EmailVerificationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         token = serializer.validated_data['token']
@@ -191,7 +194,8 @@ class IndividualRegistrationView(APIView):
         token = RefreshToken.for_user(user).access_token
         current_site = get_current_site(request).domain
         relativeLink = reverse('user-email-verify')
-        absurl = 'http://'+current_site+relativeLink+"?token="+str(token)
+        absurl = f'http://{current_site}{relativeLink}?token={str(token)}'
+        print(absurl)
         template_path = 'verification-email.html'
         email_body = render_to_string(template_path, {
             'first_name': user.first_name,
@@ -205,3 +209,25 @@ class IndividualRegistrationView(APIView):
 
         Util.send_email(data)
         return Response(user_data, status=status.HTTP_201_CREATED)
+
+
+
+class UserEmailVerificationView(APIView):
+    permission_classes = [AllowAny]
+
+    serializer_class = EmailVerificationSerializer
+    def get(self, request):
+        token = str(request.GET.get('token'))
+        set_key = str(settings.SECRET_KEY)
+        try:
+            payload = jwt.decode(token, set_key, algorithms=["HS256"])
+            user = User.objects.get(id=payload['user_id'])
+            if not user.is_verified:
+                user.is_verified = True
+                user.save()
+            return redirect('http://localhost:9000/#/auth/login/')
+        except jwt.ExpiredSignatureError as identifier:
+            return Response({'error': 'Activation Expired'}, status=status.HTTP_400_BAD_REQUEST)
+        except jwt.exceptions.DecodeError as identifier:
+            return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)    # Redirect to frontend login page
+        
