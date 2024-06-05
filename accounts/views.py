@@ -4,7 +4,7 @@ import jwt
 import datetime
 from django.shortcuts import redirect
 # Create your views here.
-from rest_framework import status
+from rest_framework import status, generics
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -12,7 +12,8 @@ from rest_framework.views import APIView
 from .models import Company, User
 from .serializer import (
     CompanyRegisterSerializer, CompanyLoginSerializer,
-    EmailVerificationSerializer, SetNewPasswordSerializer,
+    EmailVerificationSerializer, SetNewPasswordSerializer, 
+    ResetPasswordEmailRequestSerializer,
     # indi serializer
     LoginSerializer, RegisterSerializer
 )
@@ -23,8 +24,9 @@ from PAQSBackend.settings import SECRET_KEY
 from django.conf import settings
 from .utils import Util
 from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
-from django.utils.http import urlsafe_base64_decode
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.http import HttpResponsePermanentRedirect
 
 from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ValidationError
@@ -83,74 +85,100 @@ class CompanyLoginView(APIView):
 
         return Response(token_response, status=status.HTTP_200_OK)
 
-class EmailVerificationView(APIView):
+class CompanyEmailVerificationView(APIView):
     permission_classes = [AllowAny]
 
+    serializer_class = EmailVerificationSerializer
     def get(self, request):
-        serializer = EmailVerificationSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        token = serializer.validated_data['token']
+        token = str(request.GET.get('token'))
+        set_key = str(settings.SECRET_KEY)
         try:
-            company_name = force_str(urlsafe_base64_decode(token))
-            company = Company.objects.get(pk=company_name)
-        except (ValueError, DjangoUnicodeDecodeError, Company.DoesNotExist):
-            return Response({'error': 'Invalid verification token'}, status=status.HTTP_400_BAD_REQUEST)
-        # Add verification logic (e.g., check token validity using a library)
-        if not is_valid_verification_token(company, token):  # Replace with your verification logic
-            return Response({'error': 'Invalid verification token'}, status=status.HTTP_400_BAD_REQUEST)
-        company.is_active = True
-        company.save()
-        return Response({'message': 'Email verified successfully.'}, status=status.HTTP_200_OK)
+            payload = jwt.decode(token, set_key, algorithms=["HS256"])
+            user = Company.objects.get(id=payload['user_id'])
+        except jwt.ExpiredSignatureError as identifier:
+            return Response({'error': 'Activation Expired'}, status=status.HTTP_400_BAD_REQUEST)
+        except jwt.exceptions.DecodeError as identifier:
+            return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)    # Redirect to frontend login page
+        if not user.is_verified:
+            user.is_verified = True
+            user.save()
+        return redirect('http://localhost:9000/#/auth/login/')
 
 
-class IndividualEmailVerificationView(APIView):
-    permission_classes = [AllowAny]
+class CustomRedirect(HttpResponsePermanentRedirect):
+
+    allowed_schemes = [os.environ.get('APP_SCHEME'), 'http', 'https']
+
+
+
+
+class RequestPasswordResetEmail(generics.GenericAPIView):
+    serializer_class = ResetPasswordEmailRequestSerializer
 
     def post(self, request):
-        serializer = EmailVerificationSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        token = serializer.validated_data['token']
+        serializer = self.serializer_class(data=request.data)
+
+        email = request.data.get('email', '')
+
+        if User.objects.filter(email=email).exists():
+            user = User.objects.get(email=email)
+            uidb64 = urlsafe_base64_encode(smart_bytes(user.id))
+            token = PasswordResetTokenGenerator().make_token(user)
+            current_site = get_current_site(
+                request=request).domain
+            relativeLink = reverse(
+                'password-reset-confirm', kwargs={'uidb64': uidb64, 'token': token})
+
+            redirect_url = request.data.get('redirect_url', '')
+            absurl = 'http://'+current_site + relativeLink
+            email_body = 'Hello, \n Use link below to reset your password  \n' + \
+                absurl+"?redirect_url="+redirect_url
+            data = {'email_body': email_body, 'to_email': user.email,
+                    'email_subject': 'Reset your passsword'}
+            Util.send_email(data)
+        return Response({'success': 'We have sent you a link to reset your password'}, status=status.HTTP_200_OK)
+
+
+class PasswordTokenCheckAPI(generics.GenericAPIView):
+    serializer_class = SetNewPasswordSerializer
+
+    def get(self, request, uidb64, token):
+
+        redirect_url = request.GET.get('redirect_url')
+
         try:
-            first_name = force_str(urlsafe_base64_decode(token))
-            user = User.objects.get(pk=first_name)
-        except (ValueError, DjangoUnicodeDecodeError, User.DoesNotExist):
-            return Response({'error': 'Invalid verification token'}, status=status.HTTP_400_BAD_REQUEST)
-        # Add verification logic (e.g., check token validity using a library)
-        if not is_valid_verification_token(user, token):  # Replace with your verification logic
-            return Response({'error': 'Invalid verification token'}, status=status.HTTP_400_BAD_REQUEST)
-        user.is_active = True
-        user.save()
-        return Response({'message': 'Email verified successfully.'}, status=status.HTTP_200_OK)
+            id = smart_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(id=id)
 
-def is_valid_verification_token(company, token):
-    """
-    Checks the validity of the verification token for the company.
-    """
-    generator = PasswordResetTokenGenerator()
-    return generator.check_token(company, token)
+            if not PasswordResetTokenGenerator().check_token(user, token):
+                if len(redirect_url) > 3:
+                    return CustomRedirect(redirect_url+'?token_valid=False')
+                else:
+                    return CustomRedirect(os.environ.get('FRONTEND_URL', '')+'?token_valid=False')
 
-class SetNewPasswordAPIView(APIView):
+            if redirect_url and len(redirect_url) > 3:
+                return CustomRedirect(redirect_url+'?token_valid=True&message=Credentials Valid&uidb64='+uidb64+'&token='+token)
+            else:
+                return CustomRedirect(os.environ.get('FRONTEND_URL', '')+'?token_valid=False')
+
+        except DjangoUnicodeDecodeError as identifier:
+            try:
+                if not PasswordResetTokenGenerator().check_token(user):
+                    return CustomRedirect(redirect_url+'?token_valid=False')
+                    
+            except UnboundLocalError as e:
+                return Response({'error': 'Token is not valid, please request a new one'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class SetNewPasswordAPIView(generics.GenericAPIView):
+    serializer_class = SetNewPasswordSerializer
+
     def patch(self, request):
-        serializer = SetNewPasswordSerializer(data=request.data)
+        serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = request.user  # Access user from request object (assuming JWT authentication)
-        user.set_password(serializer.validated_data['new_password'])
-        user.save()
         return Response({'success': True, 'message': 'Password reset success'}, status=status.HTTP_200_OK)
 
-
-class LogoutAPIView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        refresh_token = request.data.get('refresh')
-        if refresh_token:
-            try:
-                token = RefreshToken(refresh_token)
-                token.blacklist()
-            except (RefreshToken.DoesNotExist, ValidationError):
-                pass  # Ignore potential errors if token is invalid or blacklisted already
-        return Response(status=status.HTTP_204_NO_CONTENT)
     
 
 
@@ -210,8 +238,6 @@ class IndividualRegistrationView(APIView):
         Util.send_email(data)
         return Response(user_data, status=status.HTTP_201_CREATED)
 
-
-
 class UserEmailVerificationView(APIView):
     permission_classes = [AllowAny]
 
@@ -222,12 +248,24 @@ class UserEmailVerificationView(APIView):
         try:
             payload = jwt.decode(token, set_key, algorithms=["HS256"])
             user = User.objects.get(id=payload['user_id'])
-            if not user.is_verified:
-                user.is_verified = True
-                user.save()
-            return redirect('http://localhost:9000/#/auth/login/')
         except jwt.ExpiredSignatureError as identifier:
             return Response({'error': 'Activation Expired'}, status=status.HTTP_400_BAD_REQUEST)
         except jwt.exceptions.DecodeError as identifier:
             return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)    # Redirect to frontend login page
+        if not user.is_verified:
+            user.is_verified = True
+            user.save()
+        return redirect('http://localhost:9000/#/auth/login/')
         
+class LogoutAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        refresh_token = request.data.get('refresh')
+        if refresh_token:
+            try:
+                token = RefreshToken(refresh_token)
+                token.blacklist()
+            except (RefreshToken.DoesNotExist, ValidationError):
+                pass  # Ignore potential errors if token is invalid or blacklisted already
+        return Response(status=status.HTTP_204_NO_CONTENT)

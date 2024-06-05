@@ -3,11 +3,10 @@ from .views import (
     CompanyRegistrationView, 
     LogoutAPIView, 
     SetNewPasswordAPIView, 
-    EmailVerificationView, 
+    CompanyEmailVerificationView, 
     CompanyLoginView, 
     IndividualLoginView,
     IndividualRegistrationView,
-    # IndividualEmailVerificationView,
     UserEmailVerificationView
     )
 # PasswordTokenCheckAPI, RequestPasswordResetEmail
@@ -20,8 +19,7 @@ urlpatterns = [
     path('company-register/', CompanyRegistrationView.as_view(), name="register"),
     path('company-login/', CompanyLoginView.as_view(), name="login"),
     path('logout/', LogoutAPIView.as_view(), name="logout"),
-    path('email-verify/', EmailVerificationView.as_view(), name="email-verify"),
-    # path('user-email-verify/', IndividualEmailVerificationView.as_view(), name="user-email-verify"),
+    path('email-verify/', CompanyEmailVerificationView.as_view(), name="email-verify"),
     path('user-email-verify/', UserEmailVerificationView.as_view(), name="user-email-verify"),
     path('user-register/', IndividualRegistrationView.as_view(), name="user-register"),
     path('user-login', IndividualLoginView.as_view(), name="user-login"),
