@@ -41,26 +41,52 @@ class EmailVerificationSerializer(serializers.Serializer):
 
 
 class LoginSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(
-        max_length=255, validators=[EmailValidator(message='Enter a valid email address')]
-    )
-    password = serializers.CharField(write_only=True)
+    email = serializers.EmailField(max_length=255, min_length=3)
+    password = serializers.CharField(
+        max_length=68, min_length=6, write_only=True)
+    first_name = serializers.CharField(read_only=True)
+    last_name = serializers.CharField(read_only=True)
+
     tokens = serializers.SerializerMethodField()
+
+    def get_tokens(self, obj):
+        user = User.objects.get(email=obj['email'])
+
+        return {
+            'refresh': user.tokens()['refresh'],
+            'access': user.tokens()['access']
+        }
 
     class Meta:
         model = User
-        fields = ['email', 'password', 'tokens']
+        fields = ['email', 'first_name', 'last_name', 'password', 'tokens']
+    
+    def validate(self, attrs):
+        email = attrs.get('email', '')
+        password = attrs.get('password', '')
+        filtered_user_by_email = User.objects.filter(email=email)
+        user = authenticate(email=email, password=password)
+        users = User.objects.get(email=email)
 
-    def get_tokens(self, obj):
-        user = authenticate(email=obj['email'], password=obj['password'])
+        if filtered_user_by_email.exists() and filtered_user_by_email[0].auth_provider != 'email':
+            raise AuthenticationFailed(
+                detail='Please continue your login using ' + filtered_user_by_email[0].auth_provider)
+
         if not user:
-            raise serializers.ValidationError('Invalid credentials')
+            raise AuthenticationFailed('Invalid credentials, try again')
         if not user.is_active:
-            raise serializers.ValidationError('Account disabled')
+            raise AuthenticationFailed('Account disabled, contact admin')
         if not user.is_verified:
-            raise serializers.ValidationError('Email is not verified')
-        refresh = RefreshToken.for_user(user)
-        return {'refresh': str(refresh), 'access': str(refresh.access_token)}
+            raise AuthenticationFailed('Email is not verified')
+
+        return {
+            'email': user.email,
+            'first_name': users.first_name,
+            'last_name': users.last_name,
+            'tokens': user.tokens
+        }
+
+        return super().validate(attrs)
 
 
 class ResetPasswordEmailRequestSerializer(serializers.Serializer):
@@ -140,23 +166,43 @@ class CompanyLoginSerializer(serializers.ModelSerializer):
     company_logo = serializers.ReadOnlyField(source='logo') 
     tokens = serializers.SerializerMethodField()
 
+    def get_tokens(self, obj):
+        user = Company.objects.get(email=obj['email'])
+
+        return {
+            'refresh': user.tokens()['refresh'],
+            'access': user.tokens()['access']
+        }
     class Meta:
         model = Company
         fields = ['email', 'password', 'tokens', 'company_name', 'company_logo' ]
 
-    def get_tokens(self, obj):
-        user = authenticate(email=obj['email'], password=obj['password'])
-        if not user:
-            raise serializers.ValidationError('Invalid credentials')
-        if not user.is_active:
-            raise serializers.ValidationError('Account disabled')
-        if not user.is_verified:
-            raise serializers.ValidationError('Account is not verified')
-        refresh = RefreshToken.for_user(user)
-        return {'refresh': str(refresh),
-                'access': str(refresh.access_token),
-                }
+    def validate(self, attrs):
+        email = attrs.get('email', '')
+        password = attrs.get('password', '')
+        filtered_user_by_email = Company.objects.filter(email=email)
+        user = authenticate(email=email, password=password)
+        users = Company.objects.get(email=email)
 
+        if filtered_user_by_email.exists() and filtered_user_by_email[0].auth_provider != 'email':
+            raise AuthenticationFailed(
+                detail='Please continue your login using ' + filtered_user_by_email[0].auth_provider)
+
+        if not user:
+            raise AuthenticationFailed('Invalid credentials, try again')
+        if not user.is_active:
+            raise AuthenticationFailed('Account disabled, contact admin')
+        if not user.is_verified:
+            raise AuthenticationFailed('Email is not verified')
+
+        return {
+            'email': user.email,
+            'company_name': users.company_name,
+            'company_logo': users.company_logo,
+            'tokens': user.tokens
+        }
+
+        return super().validate(attrs)
 
 class CompanyResetPasswordEmailRequestSerializer(serializers.Serializer):
     email = serializers.EmailField(
