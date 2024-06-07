@@ -183,7 +183,6 @@ AUTHENTICATION_BACKENDS = [
 
 
 AUTH_USER_MODEL = "accounts.AbstractUserProfile"
-# AUTH_USER_MODEL = "accounts.Company"
 
 import logging
 

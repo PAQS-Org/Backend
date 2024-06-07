@@ -128,7 +128,6 @@ class IndividualRegistrationView(APIView):
         current_site = get_current_site(request).domain
         relativeLink = reverse('user-email-verify')
         absurl = f'http://{current_site}{relativeLink}?token={str(token)}'
-        print(absurl)
         template_path = 'verification-email.html'
         email_body = render_to_string(template_path, {
             'first_name': user.first_name,
@@ -195,7 +194,6 @@ class RequestPasswordResetEmail(generics.GenericAPIView):
 
             redirect_url = request.data.get('redirect_url', '')
             absurl = f'http://{current_site}{relativeLink}'
-            print(absurl)
             template_path = 'user-reset-password.html'
             email_body = render_to_string(template_path, {             
                 'email':user.email,
