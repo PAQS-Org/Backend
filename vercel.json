@@ -9,11 +9,10 @@
       }
     },
     {
-      "src": "build_files.sh",
+      "src": "sh build_files.sh",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "statisfiles",
-        "command": "sh build_files.sh"
+        "distDir": "statisfiles"
       }
     }
   ],
