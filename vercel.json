@@ -1,8 +1,26 @@
 {
+  "builds": [
+    {
+      "src": "build_file.sh",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "staticfiles"
+      }
+    },
+    {
+      "src": "/PAQSBackend/wsgi.py",
+      "use": "@vercel/python",
+      "config": { "maxLambdaSize": "15mb" }
+    }
+  ],
   "routes": [
     {
       "src": "/(.*)",
       "dest": "PAQSBackend/wsgi.py"
+    },
+    {
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
     }
   ]
 }
