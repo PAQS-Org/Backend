@@ -1,7 +1,7 @@
 {
   "builds": [
     {
-      "src": "PAQSBackend/",
+      "src": "PAQSBackend/wsgi.py",
       "use": "@vercel/build-python",
       "config": {
         "command": "sh build_files.sh"
