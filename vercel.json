@@ -1,4 +1,5 @@
 {
+  "version": 2,
   "builds": [
     {
       "src": "PAQSBackend/wsgi.py",
@@ -9,10 +10,10 @@
       }
     },
     {
-      "src": "sh build_files.sh",
+      "src": "build_files.sh",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "statisfiles"
+        "distDir": "statisfiles_build"
       }
     }
   ],
