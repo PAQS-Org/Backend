@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'accounts',
     'payments',
     'social_auth',
+    'entry',
 ]
 
 
