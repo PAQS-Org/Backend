@@ -19,7 +19,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [ '127.0.0.1', 'localhost']
+ALLOWED_HOSTS = [ '127.0.0.1', 'localhost', '.vercel.app']
 
 SITE_ID = 1
 
@@ -81,7 +81,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'PAQSBackend.wsgi.application'
+WSGI_APPLICATION = 'PAQSBackend.wsgi.app'
 
 
 # Database
@@ -153,7 +153,9 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:8080",
     "http://localhost:7200",
     "http://localhost:9000",
+    "http://localhost:9200",
     "http://127.0.0.1:9000",
+    "https://paqs-l46fiysct-osahenes-projects.vercel.app"
 ]
 
 CSRF_COOKIE_SECURE = True
