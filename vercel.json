@@ -1,4 +1,13 @@
 {
+  "builds": [
+    {
+      "src": "PAQSBackend/",
+      "use": "@vercel/build-python",
+      "config": {
+        "command": "sh build_files.sh"
+      }
+    }
+  ],
   "routes": [
     {
       "src": "/static/(.*)",
