@@ -127,18 +127,6 @@ class ResetPasswordEmailRequestSerializer(serializers.Serializer):
         fields = ['email']
 
 
-class LogoutSerializer(serializers.Serializer):
-    refresh = serializers.CharField()
-
-    def validate(self, attrs):
-        try:
-            refresh = RefreshToken(attrs['refresh'])
-            refresh.blacklist()
-        except TokenError:
-            raise serializers.ValidationError('Invalid refresh token')
-        return attrs
-
-
 class EmailVerificationSerializer(serializers.Serializer):
     token = serializers.CharField()
 
