@@ -11,6 +11,7 @@ def index(request):
             <h1>Hello from PAQS Team!</h1> 
             <h3>This is a trial</h3>
             <p>The current time is { now }.</p>
+            <h3>test by osahene lab</h3>
         </body>
     </html>
     ''' 
