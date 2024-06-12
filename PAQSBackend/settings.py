@@ -160,6 +160,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:7200",
     "http://localhost:9000",
     "http://localhost:9200",
+    "http://localhost:9201",
+    "http://localhost:9202",
     "http://127.0.0.1:9000",
     "https://paqs-l46fiysct-osahenes-projects.vercel.app",
     "https://vercel.com",

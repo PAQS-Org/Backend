@@ -155,7 +155,8 @@ class CompanyRegisterSerializer(serializers.ModelSerializer):
         fields = ['email', 'first_name', 'last_name', 'company_name', 'company_logo', 'password']
 
     def create(self, validated_data):
-        company = Company.objects.create_company(**validated_data)
+        # company = Company.objects.create_company(**validated_data)
+        company = Company.objects.create_user(**validated_data)
         # Send verification email here (if applicable)
         return company
 
@@ -165,8 +166,10 @@ class CompanyLoginSerializer(serializers.ModelSerializer):
         max_length=255, validators=[EmailValidator(message='Enter a valid email address')]
     )
     password = serializers.CharField(write_only=True)
-    company_name = serializers.ReadOnlyField(source='name')  # Access company name from related field
-    company_logo = serializers.ReadOnlyField(source='logo') 
+    company_name = serializers.CharField(read_only=True)  # Access company name from related field
+    company_logo = serializers.CharField(read_only=True)
+    first_name = serializers.CharField(read_only=True)
+    last_name = serializers.CharField(read_only=True)
     tokens = serializers.SerializerMethodField()
 
     def get_tokens(self, obj):
@@ -178,7 +181,7 @@ class CompanyLoginSerializer(serializers.ModelSerializer):
         }
     class Meta:
         model = Company
-        fields = ['email', 'password', 'tokens', 'company_name', 'company_logo' ]
+        fields = ['email', 'password', 'tokens', 'first_name', 'last_name', 'company_name', 'company_logo' ]
 
     def validate(self, attrs):
         email = attrs.get('email', '')
@@ -197,11 +200,15 @@ class CompanyLoginSerializer(serializers.ModelSerializer):
             raise AuthenticationFailed('Account disabled, contact admin')
         if not user.is_verified:
             raise AuthenticationFailed('Email is not verified')
+        if not user.is_company:
+            raise AuthenticationFailed('This is not a company email')
 
         return {
             'email': user.email,
             'company_name': users.company_name,
             'company_logo': users.company_logo,
+            'first_name': users.first_name,
+            'last_name': users.last_name,
             'tokens': user.tokens
         }
 

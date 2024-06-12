@@ -166,6 +166,7 @@ class CompanyEmailVerificationView(APIView):
             return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)    # Redirect to frontend login page
         if not user.is_verified:
             user.is_verified = True
+            user.is_company = True
             user.save()
         return redirect('http://localhost:9000/#/auth/login/')
 
