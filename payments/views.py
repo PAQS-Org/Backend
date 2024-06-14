@@ -18,6 +18,9 @@ from .prices import calculate_unit_price
 from PAQSBackend.settings import PAYSTACK_SECRET_KEY
 from django.utils import timezone
 from rest_framework.views import APIView
+from rest_framework import viewsets
+from rest_framework.pagination import PageNumberPagination
+from weasyprint import HTML
 
 
 class InitiatePayment(APIView):
@@ -108,27 +111,30 @@ def verify_payment(request):
 
 def download_receipt(request, reference):
     try:
-        transaction = Payment.objects.get(reference=reference)
+        transaction = Payment.objects.get(transaction_id=reference)
     except Payment.DoesNotExist:
         return HttpResponse("Transaction not found", status=404)
 
-    # Generate receipt content (e.g., using a templating library)
-    receipt_content = f"""
-  Product Name: {transaction.product_name}
-  Quantity: {transaction.quantity}
-  Amount: GHS {transaction.amount}
-  Transaction Reference: {transaction.reference}
-  Date: {transaction.date_created}
-  Company: {transaction.company.name_of_company}  # Add company name
-  """
+    receipt_html = f"""
+    <html>
+    <body>
+        <h1>Receipt</h1>
+        <p>Product Name: {transaction.product_name}</p>
+        <p>Quantity: {transaction.quantity}</p>
+        <p>Amount: GHS {transaction.amount}</p>
+        <p>Transaction Reference: {transaction.transaction_id}</p>
+        <p>Date: {transaction.date_created}</p>
+        <p>Company: {transaction.company.name_of_company}</p>
+    </body>
+    </html>
+    """
 
-    # Create a file-like object for the receipt
-    buffer = BytesIO(receipt_content.encode("utf-8"))
+    html = HTML(string=receipt_html)
+    pdf_file = html.write_pdf()
 
-    # Set response headers for file download
-    response = FileResponse(buffer, content_type="application/pdf")
-    response["Content-Disposition"] = f"attachment; filename=receipt_{reference}.pdf"
-
+    response = HttpResponse(pdf_file, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename=receipt_{reference}.pdf'
+    
     return response
 
 
@@ -137,3 +143,19 @@ def delete_old_transactions():
   threshold = timezone.now() - timezone.timedelta(days=30)
   transactions = Payment.objects.filter(created_at__lt=threshold, transaction_status__in=["failed", "pending"])
   transactions.delete()
+
+
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 5
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+class InvoiceViewSet(viewsets.ModelViewSet):
+    queryset = Payment.objects.all()
+    serializer_class = PaymentSerializer
+    pagination_class = StandardResultsSetPagination
+    permission_classes = [IsAuthenticated, IsOwner]
+
+    def get_queryset(self):
+        company = self.request.user.company
+        return Payment.objects.filter(company=company)  
