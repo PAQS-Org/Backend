@@ -109,9 +109,9 @@ def verify_payment(request):
 
 
 
-def download_receipt(request, reference):
+def download_receipt(request, transaction_id):
     try:
-        transaction = Payment.objects.get(transaction_id=reference)
+        transaction = Payment.objects.get(transaction_id=transaction_id)
     except Payment.DoesNotExist:
         return HttpResponse("Transaction not found", status=404)
 
@@ -119,12 +119,13 @@ def download_receipt(request, reference):
     <html>
     <body>
         <h1>Receipt</h1>
+        <p>Company: {transaction.company.company_name}</p>
         <p>Product Name: {transaction.product_name}</p>
         <p>Quantity: {transaction.quantity}</p>
         <p>Amount: GHS {transaction.amount}</p>
         <p>Transaction Reference: {transaction.transaction_id}</p>
         <p>Date: {transaction.date_created}</p>
-        <p>Company: {transaction.company.name_of_company}</p>
+        <p>You successfully made a purchase.</p>
     </body>
     </html>
     """
@@ -133,7 +134,7 @@ def download_receipt(request, reference):
     pdf_file = html.write_pdf()
 
     response = HttpResponse(pdf_file, content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename=receipt_{reference}.pdf'
+    response['Content-Disposition'] = f'attachment; filename=receipt_{transaction_id}.pdf'
     
     return response
 

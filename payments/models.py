@@ -11,6 +11,7 @@ class Payment(models.Model):
     )  # One company can have many payments
 
     product_name = models.CharField(max_length=120)
+    batch_number = models.PositiveIntegerField(null=True)
     quantity = models.PositiveIntegerField(null=True)
     unit_price = models.DecimalField(null=True, max_digits=5, decimal_places=2)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
