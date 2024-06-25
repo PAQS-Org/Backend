@@ -21,6 +21,8 @@ from rest_framework.views import APIView
 from rest_framework import viewsets
 from rest_framework.pagination import PageNumberPagination
 from weasyprint import HTML
+from django.template.loader import render_to_string
+from django.templatetags.static import static
 
 
 class InitiatePayment(APIView):
@@ -115,20 +117,19 @@ def download_receipt(request, transaction_id):
     except Payment.DoesNotExist:
         return HttpResponse("Transaction not found", status=404)
 
-    receipt_html = f"""
-    <html>
-    <body>
-        <h1>Receipt</h1>
-        <p>Company: {transaction.company.company_name}</p>
-        <p>Product Name: {transaction.product_name}</p>
-        <p>Quantity: {transaction.quantity}</p>
-        <p>Amount: GHS {transaction.amount}</p>
-        <p>Transaction Reference: {transaction.transaction_id}</p>
-        <p>Date: {transaction.date_created}</p>
-        <p>You successfully made a purchase.</p>
-    </body>
-    </html>
-    """
+    logo_url = request.build_absolute_uri(static('images/logo.png'))
+    receipt_html = render_to_string('receipt.html',{
+        'trans_ref':transaction.transaction_id,
+        'date':transaction.date_created,
+        'prod_name':transaction.product_name,
+        'comp_name':transaction.company.company_name,
+        'batch_num':transaction.batch_number,
+        'unit_price':transaction.unit_price,
+        'qty':transaction.quantity,
+        'total':transaction.amount,
+        'logo_url': logo_url,
+    }) 
+   
 
     html = HTML(string=receipt_html)
     pdf_file = html.write_pdf()

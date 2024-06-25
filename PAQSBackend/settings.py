@@ -185,8 +185,6 @@ CORS_ALLOW_HEADERS = [
 ]
 
 
-
-
 AUTHENTICATION_BACKENDS = [
     'accounts.base.CustomUserCompanyAuthBackend',
     'django.contrib.auth.backends.ModelBackend',
@@ -237,7 +235,7 @@ REST_FRAMEWORK = {
 
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': datetime.timedelta(minutes=40),
+    'ACCESS_TOKEN_LIFETIME': datetime.timedelta(minutes=60),
     'REFRESH_TOKEN_LIFETIME': datetime.timedelta(days=1),
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': True,

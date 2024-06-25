@@ -1,5 +1,8 @@
 .code-workspace
 .env
 staticfiles
+.pyc
+__pycache__
+migrations
 .vercel
 
