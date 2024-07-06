@@ -2,6 +2,7 @@
 .env
 staticfiles
 .pyc
+.cpython-312.pyc
 __pycache__
 migrations
 .vercel

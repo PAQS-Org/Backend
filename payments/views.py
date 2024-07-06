@@ -34,6 +34,7 @@ class InitiatePayment(APIView):
         serializer.is_valid(raise_exception=True)
         user_data = serializer.data
         product_name = user_data.get('product_name')
+        batch_number = user_data.get('batch_number')
         quantity = user_data.get('quantity')
         (amount, _, unit_price) = calculate_unit_price(quantity)
 
@@ -60,6 +61,7 @@ class InitiatePayment(APIView):
                     quantity=quantity,
                     amount=amount,
                     product_name=product_name,
+                    batch_number=batch_number,
                     unit_price=unit_price,
                     transaction_id=data.get('data', {}).get('reference'),
                     )
