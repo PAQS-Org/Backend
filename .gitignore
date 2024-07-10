@@ -1,9 +1,7 @@
 .code-workspace
 .env
 staticfiles
-.pyc
-.cpython-312.pyc
-__pycache__
+*.pyc
 migrations
 .vercel
-
+*.sqlite3

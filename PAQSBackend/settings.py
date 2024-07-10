@@ -91,12 +91,14 @@ WSGI_APPLICATION = 'PAQSBackend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-       'NAME': os.environ.get("DB_NAME"),
-       'USER': os.environ.get("DB_USER"),
-       'PASSWORD': os.environ.get("DB_PASSWORD"),
-       'HOST': os.environ.get("DB_HOST"),
-       'PORT': os.environ.get("DB_PORT"),
+        # 'ENGINE': 'django.db.backends.postgresql',
+    'POSTGRES_URL': os.environ.get("POSTGRES_URL"),
+       'POSTGRES_USER': os.environ.get("POSTGRES_USER"),
+       'POSTGRES_DATABASE': os.environ.get("POSTGRES_DATABASE"),
+       'POSTGRES_PASSWORD': os.environ.get("POSTGRES_PASSWORD"),
+       'POSTGRES_HOST': os.environ.get("POSTGRES_HOST"),
+       'POSTGRES_PRISMA_URL': os.environ.get("POSTGRES_PRISMA_URL"),
+       'POSTGRES_URL_NON_POOLING': os.environ.get("POSTGRES_URL_NON_POOLING"),
     }
 }
 
