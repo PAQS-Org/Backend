@@ -91,14 +91,13 @@ WSGI_APPLICATION = 'PAQSBackend.wsgi.application'
 
 DATABASES = {
     'default': {
-        # 'ENGINE': 'django.db.backends.postgresql',
-    'POSTGRES_URL': os.environ.get("POSTGRES_URL"),
-       'POSTGRES_USER': os.environ.get("POSTGRES_USER"),
-       'POSTGRES_DATABASE': os.environ.get("POSTGRES_DATABASE"),
-       'POSTGRES_PASSWORD': os.environ.get("POSTGRES_PASSWORD"),
-       'POSTGRES_HOST': os.environ.get("POSTGRES_HOST"),
-       'POSTGRES_PRISMA_URL': os.environ.get("POSTGRES_PRISMA_URL"),
-       'POSTGRES_URL_NON_POOLING': os.environ.get("POSTGRES_URL_NON_POOLING"),
+       'ENGINE': 'django.db.backends.postgresql_psycopg2',
+       'DATABASE_URL': os.environ.get("DB_URL"),
+       'POSTGRES_DB': os.environ.get("DB_NAME"),
+       'POSTGRES_USER': os.environ.get("DB_USER"),
+       'POSTGRES_PASSWORD': os.environ.get("DB_PASSWORD"),
+       'PGHOST': os.environ.get("DB_HOST"),
+       'PGPORT': os.environ.get("DB_PORT"),
     }
 }
 
@@ -149,7 +148,7 @@ STATICFILES_DIRS = [
         "static",
     ),
 ]
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
