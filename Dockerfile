@@ -16,8 +16,3 @@ RUN apt-get install -y \
 WORKDIR /PAQSBackend
 
 
-# Copy entire project directory
-COPY . .
-
-# Use gunicorn as the main process
-CMD ["gunicorn", "PAQSBackend.wsgi"]
