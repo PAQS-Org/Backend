@@ -1,7 +1,14 @@
-echo "# PAQSBackend" >> README.md
-git init
-git add README.md
-git commit -m "first commit"
-git branch -M master
-git remote add origin https://github.com/osahene/PAQSBackend.git
-git push -u origin master
+# PAQS Backend
+
+```commandLine
+make migrations
+python manage.py
+manage.py migrate
+run server
+```
+
+## Using Conda
+
+```commandLine
+conda activate base
+```
