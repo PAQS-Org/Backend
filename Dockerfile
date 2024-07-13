@@ -15,10 +15,6 @@ RUN apt-get install -y \
 # Set working directory
 WORKDIR /PAQSBackend
 
-# Install pipenv (assuming it's not already installed in the base image)
-COPY requirements.txt ./
-
-RUN pip install -r requirements.txt
 
 # Copy entire project directory
 COPY . .
