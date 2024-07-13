@@ -16,13 +16,7 @@ RUN apt-get install -y \
 WORKDIR /PAQSBackend
 
 # Install pipenv (assuming it's not already installed in the base image)
-RUN pip install pipenv
-
-# Copy Pipfile and Pipfile.lock (ensure they are in the same directory)
-COPY Pipfile Pipfile.lock ./
-
-# Install project dependencies using pipenv
-RUN pipenv install --deploy --ignore-pipfile
+RUN pip install -r requirements.txt
 
 # Copy entire project directory
 COPY . .
