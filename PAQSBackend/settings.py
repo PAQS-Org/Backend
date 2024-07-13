@@ -156,6 +156,8 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOWED_ORIGINS = [
+    'https://company-six-liard.vercel.app', #company temporal
+    'https://users-rouge.vercel.app', #user temporal
     "https://paqs.herokuapp.com",
     "http://localhost:8080",
     "http://localhost:7200",
@@ -175,7 +177,7 @@ SESSION_COOKIE_SECURE = True
 SECURE_SSL_REDIRECT = False
 CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:7200/", 'https://*.ngrok.io'
+    "http://localhost:7200/", 'https://*.ngrok.io', 'https://web-production-ef21.up.railway.app'
 ]
 
 CORS_ALLOW_HEADERS = [
