@@ -158,7 +158,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOWED_ORIGINS = [
     'https://company-six-liard.vercel.app', #company temporal
     'https://users-rouge.vercel.app', #user temporal
-    "https://paqs.herokuapp.com",
+    "https://web-production-ef21.up.railway.app", # backend url
     "http://localhost:8080",
     "http://localhost:7200",
     "http://localhost:9000",
