@@ -5,3 +5,4 @@ staticfiles
 migrations
 .vercel
 *.sqlite3
+.venv
