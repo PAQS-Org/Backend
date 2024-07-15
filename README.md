@@ -11,6 +11,7 @@ pip install -r requirements.txt
 python manage.py migrate
 python manage.py runserver
 ```
+Make sure you do not commit .env, .env.production or .env.local
 
 ## Commands
 
