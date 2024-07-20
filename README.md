@@ -21,7 +21,7 @@ python manage.py runserver
 
 In Django, the project is the foundation or parent of the entire project. The main workable file, settings.py includes the database configuration and the application specific settings. The app is the child or mini-services that connects to the project. The urls.py in the project (PAQSBackend) folder is the main entry point. The various apps are connected to it through their url. The url serves as the API endpoint to the various apps
 
-[post-request: ] (web-production-ef21.up.railway.app/accounts/company-login/)
+[post-request: ](web-production-ef21.up.railway.app/accounts/company-login/)
 
 Main urls
 web-production-ef21.up.railway.app
@@ -62,7 +62,7 @@ The payment app is designated for company payments. This makes use of Paystack. 
 Static is not an app. It only hold static files like images, css and javascript. 
 
 ## Creating a superuser 
-A superuser account automatically sets a user up as a staff and also gives the user a Superuser status. Its only a superuser that can log into the Django Administration page. As you run the createsuperuser command in the terminal, that account credential can be used to login to the (web-production-ef21.up.railway.app/admin)
+A superuser account automatically sets a user up as a staff and also gives the user a Superuser status. Its only a superuser that can log into the Django Administration page. As you run the createsuperuser command in the terminal, that account credential can be used to login to the [](web-production-ef21.up.railway.app/admin)
 
 # Creating a new service
 ```commandLine
