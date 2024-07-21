@@ -22,7 +22,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.urls import reverse
 from django.contrib.sites.shortcuts import get_current_site
 from PAQSBackend.settings import SECRET_KEY
-from django.conf import settings
+# from django.conf import settings
 from .utils import Util
 from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
@@ -156,7 +156,7 @@ class CompanyEmailVerificationView(APIView):
     serializer_class = EmailVerificationSerializer
     def get(self, request):
         token = str(request.GET.get('token'))
-        set_key = str(settings.SECRET_KEY)
+        set_key = str(SECRET_KEY)
         try:
             payload = jwt.decode(token, set_key, algorithms=["HS256"])
             user = Company.objects.get(id=payload['user_id'])
@@ -241,7 +241,7 @@ class UserEmailVerificationView(APIView):
     serializer_class = EmailVerificationSerializer
     def get(self, request):
         token = str(request.GET.get('token'))
-        set_key = str(settings.SECRET_KEY)
+        set_key = str(SECRET_KEY)
         try:
             payload = jwt.decode(token, set_key, algorithms=["HS256"])
             user = User.objects.get(id=payload['user_id'])
