@@ -3,7 +3,6 @@ from pathlib import Path
 import os
 import environ
 import datetime
-import django_heroku
 import re
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -85,7 +84,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'PAQSBackend.wsgi.application'
+WSGI_APPLICATION = 'PAQSBackend.wsgi.app'
 
 
 # Database
@@ -281,5 +280,3 @@ SWAGGER_SETTINGS = {
     }
 }
 
-
-django_heroku.settings(locals())
