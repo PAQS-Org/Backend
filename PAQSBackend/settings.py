@@ -1,21 +1,22 @@
 
 from pathlib import Path
 import os
-import environ
 import datetime
 import re
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-env = environ.Env()
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
-
+# env = environ.Env()
+# environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+load_dotenv()
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get("SECRET_KEY")
+SECRET_KEY = os.getenv("SECRET_KEY")
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -93,12 +94,12 @@ WSGI_APPLICATION = 'PAQSBackend.wsgi.app'
 DATABASES = {
     'default': {
        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-       'DATABASE_URL': os.environ.get("DB_URL"),
-       'NAME': os.environ.get("DB_NAME"),
-       'USER': os.environ.get("DB_USER"),
-       'PASSWORD': os.environ.get("DB_PASSWORD"),
-       'HOST': os.environ.get("DB_HOST"),
-       'PORT': os.environ.get("DB_PORT"),
+       'DATABASE_URL': os.getenv("DB_URL"),
+       'NAME': os.getenv("DB_NAME"),
+       'USER': os.getenv("DB_USER"),
+       'PASSWORD': os.getenv("DB_PASSWORD"),
+       'HOST': os.getenv("DB_HOST"),
+       'PORT': os.getenv("DB_PORT"),
     }
 }
 
@@ -210,13 +211,13 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_USE_TLS = True
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
-EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
-PAYSTACK_SECRET_KEY = os.environ.get("PAYSTACK_SECRET_KEY")
-PAYSTACK_PUBLIC_KEY = os.environ.get("PAYSTACK_PUBLIC_KEY")
-GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
-GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET')
-SOCIAL_AUTH_PASSWORD = os.environ.get('SOCIAL_AUTH_PASSWORD')
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+PAYSTACK_SECRET_KEY = os.getenv("PAYSTACK_SECRET_KEY")
+PAYSTACK_PUBLIC_KEY = os.getenv("PAYSTACK_PUBLIC_KEY")
+GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
+GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
+SOCIAL_AUTH_PASSWORD = os.getenv('SOCIAL_AUTH_PASSWORD')
 
 IGNORABLE_404_URLS = [
     re.compile(r"^/apple-touch-icon.*\.png$"),
