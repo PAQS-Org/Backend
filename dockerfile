@@ -5,6 +5,8 @@ ENV PYTHONBUFFERED=1
 
 RUN apt-get update && apt-get -y install python3-pip python3-cffi python3-brotli libpango-1.0-0 libpangoft2-1.0-0
 
+RUN conda install -c anaconda pango
+
 WORKDIR /PAQSBackend
 
 COPY . /PAQSBackend/
