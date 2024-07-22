@@ -9,12 +9,18 @@ RUN apt-get update && apt-get install -y \
     libharfbuzz-subset0 \
     libffi-dev \
     libcairo2 \
+    libcairo2-dev \
     libpango1.0-dev \
     libjpeg62-turbo-dev \
     libgdk-pixbuf2.0-0 \
     libgdk-pixbuf2.0-dev \
     build-essential \
+    libxml2-dev \
+    libxslt1-dev \
+    zlib1g-dev \
     && apt-get clean
+
+RUN dpkg -l | grep -E "libpango|libcairo|libgdk-pixbuf"
 
 
 FROM python:3.12.2-slim-bullseye
