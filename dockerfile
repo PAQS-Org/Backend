@@ -3,9 +3,21 @@ FROM python:3.12.2-slim-bullseye
 ENV PYTHONBUFFERED=1
 
 
-RUN apt-get update && apt-get -y install python3-pip python3-cffi python3-brotli libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz-subset0 libcairo2-dev libgirepository1.0-dev gir1.2-gtk-3.0
-
-RUN conda install -c anaconda pango
+RUN apt-get update && apt-get install -y \
+    python3-pip \
+    python3-cffi \
+    python3-brotli \
+    libpango1.0-0 \
+    libpangoft2-1.0-0 \
+    libharfbuzz-subset0 \
+    libffi-dev \
+    libcairo2 \
+    libpango1.0-dev \
+    libjpeg62-turbo-dev \
+    libgdk-pixbuf2.0-0 \
+    libgdk-pixbuf2.0-dev \
+    build-essential \
+    && apt-get clean
 
 WORKDIR /PAQSBackend
 
