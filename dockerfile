@@ -1,6 +1,7 @@
 FROM ubuntu:22.04-slim AS builder
 
 RUN apt-get update && apt-get install -y \
+    build-essential \
     python3-pip \
     python3-cffi \
     python3-brotli \
@@ -17,7 +18,8 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     libxml2-dev \
     libxslt1-dev \
-    zlib1g-dev \
+    zlib1g-dev \  
+    gobject-introspection \
     && apt-get clean
 
 RUN dpkg -l | grep -E "libpango|libcairo|libgdk-pixbuf"
