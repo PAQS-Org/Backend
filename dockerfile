@@ -20,6 +20,7 @@ RUN apt-get update && apt-get install -y \
     libxslt1-dev \
     zlib1g-dev \  
     gobject-introspection \
+    libgobject-2.0-0 \
     && apt-get clean
 
 RUN dpkg -l | grep -E "libpango|libcairo|libgdk-pixbuf"
