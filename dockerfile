@@ -3,7 +3,7 @@ FROM python:3.12.2-slim-bullseye
 ENV PYTHONBUFFERED=1
 
 
-RUN apt-get update && apt-get -y install python3-pip python3-cffi python3-brotli libpango-1.0-0 libpangoft2-1.0-0
+RUN apt-get update && apt-get -y install python3-pip python3-cffi python3-brotli libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz-subset0 libcairo2-dev libgirepository1.0-dev gir1.2-gtk-3.0
 
 RUN conda install -c anaconda pango
 
