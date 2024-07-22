@@ -1,7 +1,4 @@
-FROM python:3.12.2-slim-bullseye
-
-ENV PYTHONBUFFERED=1
-
+FROM ubuntu:22.04-slim AS builder
 
 RUN apt-get update && apt-get install -y \
     python3-pip \
@@ -19,11 +16,18 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     && apt-get clean
 
+
+FROM python:3.12.2-slim-bullseye
+
+ENV PYTHONBUFFERED=1
+
 WORKDIR /PAQSBackend
 
 COPY . /PAQSBackend/
 
 RUN pip install -r requirements.txt
 
-CMD gunicorn PAQSBackend.wsgi
+COPY PAQSBackend.wsgi /PAQSBackend/PAQSBackend.wsgi
+
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "PAQSBackend.wsgi"]
 
