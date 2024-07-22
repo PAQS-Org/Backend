@@ -1,7 +1,6 @@
 FROM ubuntu:22.04-slim AS builder
 
 RUN apt-get update && apt-get install -y \
-    build-essential \
     python3-pip \
     python3-cffi \
     python3-brotli \
@@ -10,16 +9,12 @@ RUN apt-get update && apt-get install -y \
     libharfbuzz-subset0 \
     libffi-dev \
     libcairo2 \
-    libcairo2-dev \
     libpango1.0-dev \
     libjpeg62-turbo-dev \
     libgdk-pixbuf2.0-0 \
     libgdk-pixbuf2.0-dev \
+    weasyprint \
     build-essential \
-    libxml2-dev \
-    libxslt1-dev \
-    zlib1g-dev \  
-    gobject-introspection \
     libgobject-2.0-0 \
     && apt-get clean
 
