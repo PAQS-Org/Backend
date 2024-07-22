@@ -1,4 +1,10 @@
-FROM ubuntu:22.04-slim AS builder
+FROM python:3.12.2-slim-bullseye
+
+ENV PYTHONBUFFERED=1
+
+WORKDIR /PAQSBackend
+
+COPY . /PAQSBackend/
 
 RUN apt-get update && apt-get install -y \
     python3-pip \
@@ -17,17 +23,6 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     libgobject-2.0-0 \
     && apt-get clean
-
-RUN dpkg -l | grep -E "libpango|libcairo|libgdk-pixbuf"
-
-
-FROM python:3.12.2-slim-bullseye
-
-ENV PYTHONBUFFERED=1
-
-WORKDIR /PAQSBackend
-
-COPY . /PAQSBackend/
 
 RUN pip install -r requirements.txt
 
