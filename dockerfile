@@ -1,4 +1,4 @@
-FROM ubuntu:22.04-slim AS builder
+FROM python:3.12.2-slim-bullseye
 
 RUN apt-get update && apt-get install -y \
     python3-pip \
@@ -17,17 +17,6 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     libgobject-2.0-0 \
     && apt-get clean
-
-RUN dpkg -l | grep -E "libpango|libcairo|libgdk-pixbuf"
-
-# Identify Python version (adjust based on your actual version)
-RUN python3 --version | cut -d ' ' -f 2 | cut -d '.' -f 1,2 | tr -d '\n'  PYTHON_VERSION=
-
-
-
-FROM python:3.12.2-slim-bullseye
-
-RUN cp -r /usr/local/lib/python${PYTHON_VERSION}/dist-packages/* /app/lib
 
 ENV PYTHONBUFFERED=1
 
