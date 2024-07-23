@@ -20,13 +20,14 @@ RUN apt-get update && apt-get install -y \
 
 RUN dpkg -l | grep -E "libpango|libcairo|libgdk-pixbuf"
 
+# Identify Python version (adjust based on your actual version)
+RUN python3 --version | cut -d ' ' -f 2 | cut -d '.' -f 1,2 | tr -d '\n'  PYTHON_VERSION=
+
+
 
 FROM python:3.12.2-slim-bullseye
 
-COPY --from=builder /usr/lib /usr/lib
-COPY --from=builder /usr/bin /usr/bin
-COPY --from=builder /usr/include /usr/include
-COPY --from=builder /usr/share /usr/share
+RUN cp -r /usr/local/lib/python${PYTHON_VERSION}/dist-packages/* /app/lib
 
 ENV PYTHONBUFFERED=1
 
