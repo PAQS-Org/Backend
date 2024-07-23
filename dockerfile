@@ -17,6 +17,8 @@ RUN apt-get update && apt-get install -y \
     libgobject-2.0-0 \
     && apt-get clean
 
+ENV LD_LIBRARY_PATH=/usr/lib:/usr/local/lib:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+
 ENV PYTHONBUFFERED=1
 
 WORKDIR /PAQSBackend
