@@ -1,6 +1,7 @@
 FROM python:3.12.2-slim-bullseye
 
 ENV PYTHONBUFFERED=1
+ENV WEASYPRINT_DLL_DIRECTORIES=/opt/venv/lib:/opt/venv/local/lib
 
 WORKDIR /PAQSBackend
 
@@ -19,7 +20,6 @@ RUN apt-get update && apt-get install -y \
     libjpeg62-turbo-dev \
     libgdk-pixbuf2.0-0 \
     libgdk-pixbuf2.0-dev \
-    weasyprint \
     build-essential \
     libgobject-2.0-0 \
     && apt-get clean
