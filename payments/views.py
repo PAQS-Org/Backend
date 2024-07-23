@@ -23,10 +23,7 @@ from rest_framework.pagination import PageNumberPagination
 from weasyprint import HTML
 from django.template.loader import render_to_string
 from django.templatetags.static import static
-import sys
-sys.path.append('/usr/local/lib/weasyprint')
 
-print('hello', sys.path.append('/usr/local/lib/weasyprint'))
 class InitiatePayment(APIView):
     serializer_class = PaymentSerializer
     permission_classes = (IsAuthenticated, IsOwner)
