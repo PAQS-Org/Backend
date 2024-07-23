@@ -13,7 +13,6 @@ RUN apt-get update && apt-get install -y \
     libjpeg62-turbo-dev \
     libgdk-pixbuf2.0-0 \
     libgdk-pixbuf2.0-dev \
-    weasyprint \
     build-essential \
     libgobject-2.0-0 \
     && apt-get clean
