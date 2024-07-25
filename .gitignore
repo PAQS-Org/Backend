@@ -1,6 +1,7 @@
 .code-workspace
 .env
 staticfiles
+staticfiles_build
 *.pyc
 migrations
 .vercel
@@ -16,3 +17,9 @@ media
 
 # Python
 .venv
+
+# Environments
+.env.*
+
+# qrcodes
+qrcodes/data
