@@ -1,7 +1,27 @@
 .code-workspace
 .env
 staticfiles
+staticfiles_build
 *.pyc
 migrations
 .vercel
 *.sqlite3
+
+# Django #
+*.log
+*.pot
+*.pyc
+__pycache__
+db.sqlite3
+media
+
+# Python
+.venv
+
+# Environments
+.env.*
+
+# qrcodes
+qrcodes/data
+
+.DS_Store
