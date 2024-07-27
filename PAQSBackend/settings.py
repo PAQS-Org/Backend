@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'payments',
     'social_auth',
     'entry',
+    'csp',
 ]
 
 
@@ -52,6 +53,7 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     "whitenoise.middleware.WhiteNoiseMiddleware",
+     "csp.middleware.CSPMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -216,6 +218,40 @@ PAYSTACK_PUBLIC_KEY = os.getenv("PAYSTACK_PUBLIC_KEY")
 GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
 GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
 SOCIAL_AUTH_PASSWORD = os.getenv('SOCIAL_AUTH_PASSWORD')
+
+CONTENT_SECURITY_POLICY = {
+    "EXCLUDE_URL_PREFIXES": ["/excluded-path/"],
+    "DIRECTIVES": {
+        "default-src": ["'self'", "https://web-production-ef21.up.railway.app"],
+        "script-src": ["'self'",  "https://web-production-ef21.up.railway.app"],
+        "style-src": ["'self'"],
+        "img-src": ["'self'", "data:"],
+        "connect-src": ["'self'", "https://web-production-ef21.up.railway.app"],
+        "font-src": ["'self'"],
+        "object-src": ["'none'"],
+        "frame-ancestors": ["'self'"],
+        "form-action": ["'self'"],
+        "base-uri": ["'self'"],
+        "report-uri": "/csp-report/",
+        "upgrade-insecure-requests": True,
+    },
+}
+
+CONTENT_SECURITY_POLICY_REPORT_ONLY = {
+    "EXCLUDE_URL_PREFIXES": ["/excluded-path/"],
+    "DIRECTIVES": {
+        "default-src": ["'none'"],
+        "connect-src": ["'self'"],
+        "img-src": ["'self'"],
+        "form-action": ["'self'"],
+        "frame-ancestors": ["'self'"],
+        "script-src": ["'self'"],
+        "style-src": ["'self'"],
+        "upgrade-insecure-requests": True,
+        "report-uri": "/csp-report/",
+    },
+}
+
 
 IGNORABLE_404_URLS = [
     re.compile(r"^/apple-touch-icon.*\.png$"),
