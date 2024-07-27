@@ -223,7 +223,7 @@ CONTENT_SECURITY_POLICY = {
     "EXCLUDE_URL_PREFIXES": ["/excluded-path/"],
     "DIRECTIVES": {
         "default-src": ["'self'", "https://web-production-ef21.up.railway.app"],
-        "script-src": ["'self'",  "https://web-production-ef21.up.railway.app"],
+        "script-src": ["'self'",  "https://web-production-ef21.up.railway.app", "'blob:'"],
         "style-src": ["'self'"],
         "img-src": ["'self'", "data:"],
         "connect-src": ["'self'", "https://web-production-ef21.up.railway.app"],
