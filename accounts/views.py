@@ -33,6 +33,8 @@ from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ValidationError
 from django.template.loader import render_to_string
 
+from django.http import JsonResponse
+import json
 
 
 class CompanyRegistrationView(APIView):
@@ -326,3 +328,11 @@ class UserSetNewPasswordAPIView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         return Response({'success': True, 'message': 'Password reset success'}, status=status.HTTP_200_OK)
 
+def csp_report(request):
+    if request.method == 'POST':
+        report = json.loads(request.body.decode('utf-8'))
+        # Process the report (e.g., log to a file, database, etc.)
+        # For now, let's just print it
+        print(report)
+        return JsonResponse({'status': 'ok'}, status=204)  # 204 No Content is a typical response
+    return JsonResponse({'status': 'method not allowed'}, status=405)

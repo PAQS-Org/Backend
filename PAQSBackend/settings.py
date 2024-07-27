@@ -225,7 +225,7 @@ CONTENT_SECURITY_POLICY = {
         "default-src": ["'self'", "https://web-production-ef21.up.railway.app"],
         "script-src": ["'self'",  "https://web-production-ef21.up.railway.app", "'blob:'"],
         "style-src": ["'self'"],
-        "img-src": ["'self'", "data:"],
+        "img-src": ["'self'", "data:", "https://web-production-ef21.up.railway.app/images/"],
         "connect-src": ["'self'", "https://web-production-ef21.up.railway.app"],
         "font-src": ["'self'"],
         "object-src": ["'none'"],

@@ -14,7 +14,9 @@ from .views import (
     UserLoginView,
     UserRegistrationView,
     # General
-    LogoutAPIView, 
+    LogoutAPIView,
+    # csp report
+    csp_report 
     )
 from rest_framework_simplejwt.views import (
     TokenRefreshView,
@@ -38,4 +40,7 @@ urlpatterns = [
     # generic
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('logout/', LogoutAPIView.as_view(), name="logout"),
+
+    # csp report
+    path('csp-report/', csp_report, name='csp_report'),
 ]
