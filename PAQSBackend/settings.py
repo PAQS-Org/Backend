@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'social_auth',
     'entry',
     'csp',
+    'storages'
 ]
 
 
@@ -218,6 +219,17 @@ PAYSTACK_PUBLIC_KEY = os.getenv("PAYSTACK_PUBLIC_KEY")
 GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
 GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
 SOCIAL_AUTH_PASSWORD = os.getenv('SOCIAL_AUTH_PASSWORD')
+
+AWS_ACCESS_KEY_ID = os.getenv("ACCESS_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("SECRET_ACCESS_KEY")
+AWS_STORAGE_BUCKET_NAME = os.getenv("BUCKET_NAME")
+AWS_S3_REGION_NAME = os.getenv("BUCKET_LOCATION") # e.g., us-east-1
+AWS_S3_SIGNATURE_NAME = os.getenv("SIGNATURE") #'s3v4',
+AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+AWS_S3_FILE_OVERWRITE = False
+AWS_DEFAULT_ACL =  None
+AWS_S3_VERITY = True
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 CONTENT_SECURITY_POLICY = {
     "EXCLUDE_URL_PREFIXES": ["/excluded-path/"],
