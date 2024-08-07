@@ -14,21 +14,12 @@ ENV PIP_DEFAULT_TIMEOUT=100 \
 RUN apt-get update && apt-get install -y \
     python3-pip \
     python3-brotli \
-    libpango1.0-0 \
-    libpangoft2-1.0-0 \
-    libharfbuzz-subset0 \
-    libffi-dev \
-    libcairo2 \
-    libcairo2-dev \
-    libjpeg62-turbo-dev \
-    libgdk-pixbuf2.0-0 \
-    libgdk-pixbuf2.0-dev \
-    libgobject-2.0-0 \
-    libgobject2.0-dev \
     build-essential \
     apt-get autoremove -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* 
+
+RUN apt install weasyprint
 
 # Set environment variables
 ENV LD_LIBRARY_PATH=/usr/lib:/usr/local/lib:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
