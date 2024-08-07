@@ -67,43 +67,13 @@ class AbstractUserProfile(AbstractBaseUser, PermissionsMixin):
         refresh = RefreshToken.for_user(self)
         return {'refresh': str(refresh), 'access': str(refresh.access_token)}
     
-
-# class CompanyManager(BaseUserManager):
-
-#     def create_company(self, 
-#                        first_name, 
-#                        last_name, 
-#                        company_name, 
-#                        company_logo, 
-#                        email, 
-#                        password=None, 
-#                        is_company=False,
-#                        **extra_fields,
-#                        ):
-#         """
-#         Creates and saves a Company profile with the given details.
-#         """
-#         if not email:
-#             raise ValueError('Companies must have an email address')
-#         company = Company(
-#             first_name=first_name,
-#             last_name=last_name,
-#             company_name=company_name,
-#             company_logo = company_logo,
-#             email=self.normalize_email(email),
-#             is_company=is_company,
-#         )
-#         company.set_password(password)
-#         company.save()
-#         return company
-
-
 class Company(AbstractUserProfile):
     first_name = models.CharField(max_length=100, db_index=True)
     last_name = models.CharField(max_length=100, db_index=True)
     company_name = models.CharField(max_length=255, db_index=True)
     company_logo = models.ImageField(upload_to='paqs/comp_logo/', blank=True)  # Optional logo
     is_company = models.BooleanField(default=False)
+    company_code = models.PositiveIntegerField(null=True, blank=True, unique=True)
 
     USERNAME_FIELD = "email"
     
@@ -112,6 +82,9 @@ class Company(AbstractUserProfile):
     class Meta:
         verbose_name = 'Company'
         verbose_name_plural = 'Companies'
+        indexes = [
+            models.Index(fields=['company_code'])
+        ]
 
     def __str__(self):
         return self.company_name

@@ -8,6 +8,7 @@ from rest_framework.exceptions import AuthenticationFailed
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
 from .models import User, Company
+import random
 
 
 '''''
@@ -154,8 +155,15 @@ class CompanyRegisterSerializer(serializers.ModelSerializer):
         model = Company
         fields = ['email', 'first_name', 'last_name', 'company_name', 'company_logo', 'password']
 
+    def generate_unique_company_code(self):
+        while True:
+            code = random.randint(000000, 999999)
+            if not Company.objects.filter(company_code=code).exists():
+                return code
+    
     def create(self, validated_data):
         # company = Company.objects.create_company(**validated_data)
+        validated_data['company_code'] = self.generate_unique_company_code()
         company = Company.objects.create_user(**validated_data)
         # Send verification email here (if applicable)
         return company
