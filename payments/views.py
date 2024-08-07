@@ -13,7 +13,7 @@ from .models import Payment
 from .serializer import PaymentSerializer
 from accounts.models import Company
 from rest_framework.permissions import IsAuthenticated
-from ..accounts.permissions import IsOwner
+from accounts.permissions import IsOwner
 from .prices import calculate_unit_price
 from PAQSBackend.settings import PAYSTACK_SECRET_KEY
 from django.utils import timezone

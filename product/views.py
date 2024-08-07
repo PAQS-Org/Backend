@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import ProductsInfo
 from rest_framework.permissions import IsAuthenticated
-from ..accounts.permissions import IsOwner, IsUser
+from accounts.permissions import IsOwner, IsUser
 from .serializer import ProductInfoSerializer
 from .task import scan_process_location, checkout_process_location
 
