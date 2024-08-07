@@ -62,6 +62,34 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+REDIS_URL = f"redis://{os.environ.get('REDISUSER', default='default')}:{os.environ.get('REDISPASSWORD', default='')}@{os.environ.get('REDISHOST', default='redis')}:{os.environ.get('REDISPORT', default=6379)}"
+
+CELERY_BROKER_URL = REDIS_URL
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", default="django-db")
+CELERY_BEAT_SCHEDULER = os.environ.get(
+    "CELERY_BEAT_SCHEDULER", default="django_celery_beat.schedulers.DatabaseScheduler"
+)
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_TIMEZONE = "UTC"
+CELERY_TASK_TRACK_STARTED = True
+CELERYD_HIJACK_ROOT_LOGGER = False
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [(os.environ.get("CHANNELS_URLS", "redis://localhost:6379/0"))],
+        },
+    },
+}
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": REDIS_URL,
+    }
+}
 
 ROOT_URLCONF = 'PAQSBackend.urls'
 
@@ -101,6 +129,7 @@ DATABASES = {
        'PASSWORD': os.getenv("DB_PASSWORD"),
        'HOST': os.getenv("DB_HOST"),
        'PORT': os.getenv("DB_PORT"),
+       "CONN_MAX_AGE": 60,
     }
 }
 
