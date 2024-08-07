@@ -1,6 +1,6 @@
 FROM python:3.11-slim-bullseye
 
-WORKDIR /PAQSBackend
+WORKDIR /app
 
 ENV PIP_DEFAULT_TIMEOUT=100 \
     # Allow statements and log messages to immediately appear
@@ -34,19 +34,17 @@ RUN apt-get update && apt-get install -y \
 ENV LD_LIBRARY_PATH=/usr/lib:/usr/local/lib:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
 
 # Set the working directory
-WORKDIR /PAQSBackend
 
 # Copy the application code
-COPY . /PAQSBackend/
+COPY . /app
 
 # Install Python dependencies
-RUN pip install --upgrade pip \
-    && pip install -r requirements.txt --no-cache-dir --compile
+RUN  pip install -r requirements.txt --no-cache-dir --compile
 
 RUN apt-get -y purge gcc libc-dev python3-dev
 
 # Add all application code from this folder, including deployment entrypoints
-COPY --chown=python:python ./ /PAQSBackend
+COPY --chown=python:python ./ /app
 
 
 # Create staticfiles folder
@@ -54,11 +52,11 @@ RUN mkdir -p staticfiles && \
     chown -R python:python staticfiles
 
 # Copy the WSGI entry point
-RUN chmod +x /PAQSBackend/deployment/server-entrypoint.sh && \
-    chmod +x /PAQSBackend/deployment/worker-entrypoint.sh
+RUN chmod +x /app/deployment/server-entrypoint.sh && \
+    chmod +x /app/deployment/worker-entrypoint.sh
 
 # Command to run the application
 # CMD ["gunicorn", "--bind", "0.0.0.0:8000", "PAQSBackend.wsgi"]
 
 EXPOSE 8000
-CMD [ "/PAQSBackend/deployment/server-entrypoint.sh" ]
+CMD [ "/app/deployment/server-entrypoint.sh" ]
