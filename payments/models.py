@@ -24,7 +24,7 @@ class Payment(models.Model):
         ordering = ("-date_created",)
 
     def __str__(self):
-        return f"Payment: {self.amount} for {self.product_name}"
+        return f"Payment: {self.amount} for {self.company}"
 
     def save(self, *args, **kwargs):
         # Automatically set company based on the logged-in user (if any)
