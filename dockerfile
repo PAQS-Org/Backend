@@ -25,16 +25,16 @@ COPY . /app
 
 RUN  pip install -r requirements.txt --no-cache-dir --compile
 
-RUN python manage.py collectstatic --noinput
+RUN python manage.py collectstatic --noinput --verbosity 2
 
 RUN apt-get -y purge gcc libc-dev python3-dev
 
 COPY --chown=python:python ./ /app
 
 
-# RUN mkdir -p staticfiles && \
-#     chown -R python:python staticfiles
-
+RUN mkdir -p staticfiles && \
+    chown -R python:python staticfiles
+    
 # Copy the WSGI entry point
 RUN chmod +x /app/deployment/server-entrypoint.sh && \
     chmod +x /app/deployment/worker-entrypoint.sh
