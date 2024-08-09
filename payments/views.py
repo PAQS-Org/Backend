@@ -162,3 +162,14 @@ class InvoiceViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         company = self.request.user.company
         return Payment.objects.filter(company=company)  
+    
+class CheckPaymentStatus(APIView):
+    def get(self, request, reference):
+        try:
+            payment = Payment.objects.get(transaction_id=reference)
+            return JsonResponse({
+                'status': payment.transaction_status,
+                'verified': payment.verified
+            })
+        except Payment.DoesNotExist:
+            return JsonResponse({'error': 'Transaction not found'}, status=404)
