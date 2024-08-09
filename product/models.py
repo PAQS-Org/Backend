@@ -43,8 +43,8 @@ class ProductsInfo(models.Model):
 # Concentrate on the generating of the codes. When you are done, then you come to this. do not over think.
 class ScanInfo(models.Model):
    code_key = models.CharField(max_length=255, blank=False, null=False)
-   company_name = models.ForeignKey(to=Company, on_delete=models.CASCADE, related_name="companyInfo")
-   product_name = models.ForeignKey(to=ProductsInfo)
+   company_name = models.ForeignKey(to=Company, on_delete=models.CASCADE, related_name="scanCompany")
+   product_name = models.ForeignKey(to=ProductsInfo, on_delete=models.CASCADE)
    user_name = models.ForeignKey(to=User, on_delete=models.CASCADE)
    location = models.CharField(max_length=255)
    country = models.CharField(max_length=255)
@@ -56,8 +56,8 @@ class ScanInfo(models.Model):
 
 class CheckoutInfo(models.Model):
    code_key = models.CharField(max_length=255, blank=False, null=False)
-   company_name = models.ForeignKey(to=Company, on_delete=models.CASCADE, related_name="companyInfo")
-   product_name = models.ForeignKey(to=ProductsInfo)
+   company_name = models.ForeignKey(to=Company, on_delete=models.CASCADE, related_name="checkoutCompany")
+   product_name = models.ForeignKey(to=ProductsInfo, on_delete=models.CASCADE)
    user_name = models.ForeignKey(to=User, on_delete=models.CASCADE)
    location = models.CharField(max_length=255)
    country = models.CharField(max_length=255)
@@ -66,3 +66,29 @@ class CheckoutInfo(models.Model):
    town = models.CharField(max_length=255, blank=True, null=True)
    street = models.CharField(max_length=255, blank=True, null=True)
 
+
+class LogProduct(models.Model):
+    company_code = models.ForeignKey(to=Company, on_delete=models.CASCADE, related_name="logCompany")
+    product_code = models.ForeignKey(to=ProductsInfo, on_delete=models.CASCADE)
+    batch_code = models.CharField(max_length=50)
+    qr_key = models.CharField(max_length=100)
+    message = models.CharField(max_length=100)
+    checkout = models.BooleanField(default=False)
+    checkout_message = models.CharField(max_length=100)
+    patch = models.BooleanField(default=False)
+    patch_message = models.CharField(max_length=100)
+
+    class Meta:
+        db_table = 'LogProduct'
+        managed = True
+        verbose_name = 'Logproduct'
+        verbose_name_plural = 'Logproducts'
+        indexes = [
+            models.Index(fields=['qr_key', 'company_code', 'product_code'])
+        ]
+
+    def __str__(self):
+        return self.batch_code
+
+    def __unicode__(self):
+        return self.qr_key

@@ -26,6 +26,7 @@ urlpatterns = [
     path('account/', include('accounts.urls')),
     path('payment/', include('payments.urls')),
     path('social/', include('social_auth.urls')),
+    path('product/', include('product.urls')),
     path("healthcheck/", example_views.health_check, name="health_check"),
     path("test-task/", example_views.test_task, name="test_task"),
 ] 
