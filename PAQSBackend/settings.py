@@ -267,9 +267,8 @@ CONTENT_SECURITY_POLICY = {
     "EXCLUDE_URL_PREFIXES": ["/excluded-path/"],
     "DIRECTIVES": {
         "default-src": ["'self'", "https://web-production-ef21.up.railway.app"],
-        "script-src": ["'self'",  "https://web-production-ef21.up.railway.app", "'blob:'"],
+        "script-src": ["'self'", "'unsafe-eval'"  "https://web-production-ef21.up.railway.app", "'blob:'"],
         "style-src": ["'self'"],
-        "img-src": ["'self'", "data:", "https://web-production-ef21.up.railway.app/images/"],
         "connect-src": ["'self'", "https://web-production-ef21.up.railway.app"],
         "font-src": ["'self'"],
         "object-src": ["'none'"],
