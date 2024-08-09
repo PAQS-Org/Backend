@@ -18,11 +18,6 @@ RUN apt-get update && apt-get install -y \
 
 RUN apt install weasyprint
 
-RUN apt install python3-pip \
-     libpango-1.0-0 \ 
-     libpangoft2-1.0-0 \
-      libharfbuzz-subset0
-
 # Set environment variables
 ENV LD_LIBRARY_PATH=/usr/lib:/usr/local/lib:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
 
@@ -37,6 +32,8 @@ COPY --chown=python:python ./ /app
 
 RUN mkdir -p staticfiles && \
     chown -R python:python staticfiles
+
+RUN python manage.py collectstatic --noinput
 
 # Copy the WSGI entry point
 RUN chmod +x /app/deployment/server-entrypoint.sh && \
