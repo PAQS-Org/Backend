@@ -12,6 +12,8 @@ from django.http import FileResponse
 from .models import Payment 
 from .serializer import PaymentSerializer
 from accounts.models import Company
+from product.models import LogProduct
+from product.serializer import LogProductSerializer
 from rest_framework.permissions import IsAuthenticated
 from accounts.permissions import IsOwner
 from .prices import calculate_unit_price
@@ -23,6 +25,9 @@ from rest_framework.pagination import PageNumberPagination
 # from weasyprint import HTML
 from django.template.loader import render_to_string
 from django.templatetags.static import static
+from .lib.generator import generate
+from .lib.messages import prodmessage
+
 
 class InitiatePayment(APIView):
     serializer_class = PaymentSerializer
@@ -32,13 +37,19 @@ class InitiatePayment(APIView):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         user_data = serializer.data
+
+        # Extract necessary data
         product_name = user_data.get('product_name')
         batch_number = user_data.get('batch_number')
+        prod_logo = user_data.get('prod_logo')
+        perish = user_data.get('perish')
+        manu_date = user_data.get('manu_date')
+        exp_date = user_data.get('exp_date')
+        qr_type = user_data.get('qr_type')
         quantity = user_data.get('quantity')
-        (amount, _, unit_price) = calculate_unit_price(quantity)
+        amount, _, unit_price = calculate_unit_price(quantity)
 
         comp = Company.objects.get(email=request.user)
-
 
         headers = {"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}"}
         payload = {
@@ -56,59 +67,74 @@ class InitiatePayment(APIView):
 
         # Save transaction details to the database
         transaction = Payment.objects.create(
-                    company = comp,
-                    quantity=quantity,
-                    amount=amount,
-                    product_name=product_name,
-                    batch_number=batch_number,
-                    unit_price=unit_price,
-                    transaction_id=data.get('data', {}).get('reference'),
-                    )
+            company=comp,
+            quantity=quantity,
+            amount=amount,
+            perishable=perish,
+            product_logo=prod_logo,
+            render_type=qr_type,
+            manufacture_date=manu_date,
+            expiry_date=exp_date,
+            product_name=product_name,
+            batch_number=batch_number,
+            unit_price=unit_price,
+            transaction_id=data.get('data', {}).get('reference'),
+        )
         return JsonResponse({"payment_url": data["data"]["authorization_url"]})
 
 
 @csrf_exempt
 def verify_payment(request):
-  # Get the request body content
-  hook = request.body.decode('utf-8')
-  hook_data = hook.strip()
+    hook = request.body.decode('utf-8')
+    signature = request.headers.get('x-paystack-signature')
 
-  # Verify the request signature using HMAC
-  signature = request.headers['x-paystack-signature']
-  computed_signature = hmac.new(
-                PAYSTACK_SECRET_KEY.encode('utf-8'),
-                hook_data.encode('utf-8'),
-                hashlib.sha512
-            ).hexdigest()
-  if not hmac.compare_digest(computed_signature, signature):
-      return HttpResponse("Signature verification failed.", status=400)
+    # Verify the signature
+    computed_signature = hmac.new(
+        PAYSTACK_SECRET_KEY.encode('utf-8'),
+        hook.encode('utf-8'),
+        hashlib.sha512
+    ).hexdigest()
 
-  # Parse the request data
-  try:
-      data = json.loads(hook_data)
-  except json.JSONDecodeError:
-      return HttpResponse("Invalid JSON payload", status=400)
+    if not hmac.compare_digest(computed_signature, signature):
+        return HttpResponse("Signature verification failed.", status=400)
 
-  # Check for the event type
-  event = data.get('event')
-  if event != 'charge.success':
-      return HttpResponse("Only charge.success event is processed.", status=400)
+    try:
+        data = json.loads(hook)
+    except json.JSONDecodeError:
+        return HttpResponse("Invalid JSON payload", status=400)
 
-  # Retrieve transaction details from the data
-  reference = data['data']['reference']
-  transaction_id = data['data']['id']
+    event = data.get('event')
+    reference = data['data']['reference']
 
-  try:
-      # Update the transaction status in your database
-      payment = Payment.objects.get(transaction_id=reference)
-      payment.transaction_status = 'paid'
-      payment.verified = True 
-      payment.save()
-  except Payment.DoesNotExist:
-      return HttpResponse("Transaction not found.", status=400)
+    try:
+        payment = Payment.objects.get(transaction_id=reference)
+        if event == 'charge.success':
+            payment.transaction_status = 'paid'
+            payment.verified = True
+            payment.save()
 
-  # Return a successful response
-  return HttpResponse("Transaction updated successfully.", status=200)
+            make_qr = generate(count=payment.quantity, format=payment.render_type, comp=payment.company, prod=payment.product_name, logo=payment.product_logo)
+
+            log_entries = [
+                LogProduct(
+                    company_name=payment.company,
+                    product_name=payment.product_name,
+                    batch_code=payment.batch_number,
+                    qr_key=make_qr[n],  # Store the path or identifier of the QR code
+                    message=prodmessage(company=payment.company, product=payment.product_name, perish=payment.perishable, man_date=payment.manufacture_date, exp_date=payment.expiry_date)
+                )
+                for n in range(payment.quantity)
+            ]
+            LogProduct.objects.bulk_create(log_entries)
+        else:
+            payment.transaction_status = data['data']['status']  # Assuming status is available in the payload
+            payment.verified = False
+            payment.save()
+
+    except Payment.DoesNotExist:
+        return HttpResponse("Transaction not found.", status=400)
+
+    return HttpResponse("Transaction updated successfully.", status=200)
 
 
 

@@ -12,6 +12,11 @@ class Payment(models.Model):
 
     product_name = models.CharField(max_length=120)
     batch_number = models.CharField(null=True)
+    perishable = models.BooleanField(default=False)
+    render_type = models.CharField(max_length=7)
+    product_logo = models.ImageField(upload_to='paqs/prod_logo/', blank=True)
+    manufacture_date = models.DateField(blank=True, null=True)
+    expiry_date = models.DateField(blank=True, null=True)
     quantity = models.PositiveIntegerField(null=True)
     unit_price = models.DecimalField(null=True, max_digits=5, decimal_places=2)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
