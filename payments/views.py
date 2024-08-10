@@ -38,6 +38,8 @@ class InitiatePayment(APIView):
         serializer.is_valid(raise_exception=True)
         user_data = serializer.data
         print("user data", user_data)
+        print("request", request)
+        print("request.data", request.data)
         # Extract necessary data
         product_name = user_data.get('product_name')
         batch_number = user_data.get('batch_number')

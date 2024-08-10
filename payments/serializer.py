@@ -7,4 +7,18 @@ class PaymentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Payment
-        fields = '__all__'
+        fields = [
+            'id',
+            'transaction_id',
+            'product_name', 
+            'batch_number',
+            'product_logo',
+            'render_type',
+            'perishable', 
+            'manufacture_date', 
+            'expiry_date',
+            'date_created', 
+            'unit_price',
+            'quantity', 
+            'amount', 
+            ]

@@ -30,7 +30,12 @@ class Payment(models.Model):
 
     def __str__(self):
         return f"Payment: {self.amount} for {self.company}"
-
+    
+    def get_image(self):
+        if self.product_logo:
+            return self.product_logo.url
+        return None 
+    
     def save(self, *args, **kwargs):
         # Automatically set company based on the logged-in user (if any)
         if self.company is None and self.request is not None:
