@@ -2,6 +2,9 @@ import qrcode
 import uuid
 import os
 import shutil
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+
 
 def makeImage(n: int, format: str, path: str, comp: str, prod: str, logo: str | None = None, ) -> str:
     app_url = "http://localhost"
@@ -16,7 +19,14 @@ def makeImage(n: int, format: str, path: str, comp: str, prod: str, logo: str | 
 
 def makeZip(path: str, gen_id: str) -> str:
     zipPath = shutil.make_archive(base_name=f"qrcodes/data/{gen_id}", format="zip", root_dir=path)
-    return zipPath
+    with open(zipPath, 'rb') as zip_file:
+        file_name = f"qrcodes/{gen_id}.zip"
+        content = ContentFile(zip_file.read())
+        s3_file_path = default_storage.save(file_name, content)
+    
+    os.remove(zipPath)
+    return default_storage.url(s3_file_path)
+    # return zipPath
 
 def generate(count: int, format: str, comp: str, prod: str, logo: str | None = None, ) -> str:
     if not os.path.exists("qrcodes/data"):
@@ -32,7 +42,7 @@ def generate(count: int, format: str, comp: str, prod: str, logo: str | None = N
         qr_code_data.append((qr_code_gen_id, filepath))
 
     zipFilePath = makeZip(path, gen_id)
-    return qr_code_data
+    return zipFilePath, qr_code_data
 
 # if __name__ == "__main__":
 #     result = generate(3, "jpg", "")
