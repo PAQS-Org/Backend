@@ -71,15 +71,15 @@ class LogProduct(models.Model):
     company_code = models.CharField(max_length=100)
     product_code = models.CharField(max_length=100)
     batch_code = models.CharField(max_length=50)
-    qr_key = models.CharField(max_length=100)
+    qr_key = models.CharField(max_length=300)
     perishable = models.CharField(max_length=100)
     manufacture_date = models.DateField(blank=True, null=True)
     expiry_date = models.DateField(blank=True, null=True)
-    message = models.CharField(max_length=100)
+    message = models.CharField(max_length=255)
     checkout = models.BooleanField(default=False)
-    checkout_message = models.CharField(max_length=100)
+    checkout_message = models.CharField(max_length=255)
     patch = models.BooleanField(default=False)
-    patch_message = models.CharField(max_length=100)
+    patch_message = models.CharField(max_length=255)
 
     class Meta:
         db_table = 'LogProduct'
