@@ -26,6 +26,8 @@ COPY . /app
 RUN  pip install -r requirements.txt --no-cache-dir --compile
 
 RUN python manage.py collectstatic --noinput --verbosity 2
+RUN python manage.py makemigrations
+RUN python manage.py migrate
 
 RUN apt-get -y purge gcc libc-dev python3-dev
 
