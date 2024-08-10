@@ -93,8 +93,6 @@ def verify_payment(request):
         hashlib.sha512
     ).hexdigest()
 
-    print("verify started")
-
     if not hmac.compare_digest(computed_signature, signature):
         return HttpResponse("Signature verification failed.", status=400)
 
@@ -108,14 +106,13 @@ def verify_payment(request):
 
     try:
         payment = Payment.objects.get(transaction_id=reference)
-        print('payment info', payment)
         if event == 'charge.success':
             payment.transaction_status = 'paid'
             payment.verified = True
             payment.save()
 
             make_qr = generate(count=payment.quantity, format=payment.render_type, comp=payment.company, prod=payment.product_name, logo=payment.product_logo)
-            print("starter")
+            print("qr_gen", make_qr)
             log_entries = [
                 LogProduct(
                     company_code=payment.company,
@@ -129,32 +126,14 @@ def verify_payment(request):
                 )
                 for n in range(payment.quantity)
             ]
-            print("if log init")
 
             LogProduct.objects.bulk_create(log_entries)
+            print("log end")
         else:
             payment.transaction_status = data['data']['status']  # Assuming status is available in the payload
             payment.verified = False
             payment.save()
-# Temporal
-            make_qr = generate(count=payment.quantity, format=payment.render_type, comp=payment.company, prod=payment.product_name, logo=payment.product_logo)
 
-            log_entries = [
-                LogProduct(
-                    company_code=payment.company,
-                    product_code=payment.product_name,
-                    batch_code=payment.batch_number,
-                    qr_key=make_qr[n], 
-                    perishable=payment.perishable,
-                    manufacture_date=payment.manufacture_date,
-                    expiry_date=payment.expiry_date,
-                    message=prodmessage(company=payment.company, product=payment.product_name, perish=payment.perishable, man_date=payment.manufacture_date, exp_date=payment.expiry_date)
-                )
-                for n in range(payment.quantity)
-            ]
-            print("else log init")
-            LogProduct.objects.bulk_create(log_entries)
-# Temporal ends
     except Payment.DoesNotExist:
         return HttpResponse("Transaction not found.", status=400)
 
