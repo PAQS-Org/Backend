@@ -37,7 +37,7 @@ class InitiatePayment(APIView):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         user_data = serializer.data
-        print(user_data)
+        print("user data", user_data)
         # Extract necessary data
         product_name = user_data.get('product_name')
         batch_number = user_data.get('batch_number')
@@ -80,6 +80,7 @@ class InitiatePayment(APIView):
             unit_price=unit_price,
             transaction_id=data.get('data', {}).get('reference'),
         )
+        print("transaction:", transaction)
         return JsonResponse({"payment_url": data["data"]["authorization_url"]})
 
 
