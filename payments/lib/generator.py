@@ -13,7 +13,7 @@ def makeImage(n: int, format: str, path: str, comp: str, prod: str, logo: str | 
     product = f"{prod}"
     code = f"{app_url}/{gen_id}/{company}/{product}"
     qr = qrcode.make(code)
-    filepath = f"{path}/{product}.{format}"
+    filepath = f"{path}/{company}.{format}"
     qr.save(filepath)
     return gen_id, filepath
 
@@ -25,6 +25,7 @@ def makeZip(path: str, gen_id: str) -> str:
         s3_file_path = default_storage.save(file_name, content)
     
     os.remove(zipPath)
+    print("creating the zip")
     return default_storage.url(s3_file_path)
     # return zipPath
 
@@ -42,8 +43,6 @@ def generate(count: int, format: str, comp: str, prod: str, logo: str | None = N
         qr_code_data.append((qr_code_gen_id, filepath))
 
     zipFilePath = makeZip(path, gen_id)
+    print("zipPath", zipFilePath)
     return zipFilePath, qr_code_data
 
-# if __name__ == "__main__":
-#     result = generate(3, "jpg", "")
-#     print(result)
