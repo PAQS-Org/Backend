@@ -141,8 +141,8 @@ def verify_payment(request):
 
             log_entries = [
                 LogProduct(
-                    company_name=payment.company,
-                    product_name=payment.product_name,
+                    company_code=payment.company,
+                    product_code=payment.product_name,
                     batch_code=payment.batch_number,
                     qr_key=make_qr[n], 
                     perishable=payment.perishable,
