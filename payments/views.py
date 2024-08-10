@@ -41,11 +41,11 @@ class InitiatePayment(APIView):
         # Extract necessary data
         product_name = user_data.get('product_name')
         batch_number = user_data.get('batch_number')
-        prod_logo = user_data.get('prod_logo')
-        perish = user_data.get('perish')
-        manu_date = user_data.get('manu_date')
-        exp_date = user_data.get('exp_date')
-        qr_type = user_data.get('qr_type')
+        prod_logo = user_data.get('product_logo')
+        perish = user_data.get('perishable')
+        manu_date = user_data.get('manufacture_date')
+        exp_date = user_data.get('expiry_date')
+        qr_type = user_data.get('render_type')
         quantity = user_data.get('quantity')
         amount, _, unit_price = calculate_unit_price(quantity)
 
@@ -120,7 +120,10 @@ def verify_payment(request):
                     company_name=payment.company,
                     product_name=payment.product_name,
                     batch_code=payment.batch_number,
-                    qr_key=make_qr[n],  # Store the path or identifier of the QR code
+                    qr_key=make_qr[n], 
+                    perishable=payment.perishable,
+                    manufacture_date=payment.manufacture_date,
+                    expiry_date=payment.expiry_date,
                     message=prodmessage(company=payment.company, product=payment.product_name, perish=payment.perishable, man_date=payment.manufacture_date, exp_date=payment.expiry_date)
                 )
                 for n in range(payment.quantity)

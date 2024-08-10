@@ -68,10 +68,13 @@ class CheckoutInfo(models.Model):
 
 
 class LogProduct(models.Model):
-    company_code = models.ForeignKey(to=Company, on_delete=models.CASCADE, related_name="logCompany")
-    product_code = models.ForeignKey(to=ProductsInfo, on_delete=models.CASCADE)
+    company_code = models.CharField(max_length=100)
+    product_code = models.CharField(max_length=100)
     batch_code = models.CharField(max_length=50)
     qr_key = models.CharField(max_length=100)
+    perishable = models.CharField(max_length=100)
+    manufacture_date = models.CharField(max_length=100)
+    expiry_date = models.CharField(max_length=100)
     message = models.CharField(max_length=100)
     checkout = models.BooleanField(default=False)
     checkout_message = models.CharField(max_length=100)
