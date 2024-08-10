@@ -210,7 +210,7 @@ SESSION_COOKIE_SECURE = True
 SECURE_SSL_REDIRECT = False
 CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:7200/", 'https://*.ngrok.io', 'https://web-production-ef21.up.railway.app'
+    "http://localhost:7200/", 'https://web-production-ef21.up.railway.app'
 ]
 
 CORS_ALLOW_HEADERS = [
