@@ -125,7 +125,7 @@ def verify_payment(request):
                     perishable=payment.perishable,
                     manufacture_date=payment.manufacture_date,
                     expiry_date=payment.expiry_date,
-                    message=prodmessage(company=payment.company, product=payment.product_name, perish=payment.perishable, man_date=payment.manufacture_date, exp_date=payment.expiry_date)
+                    message=prodmessage(company=payment.company, product=payment.product_name, batch=payment.batch_number, perish=payment.perishable, man_date=payment.manufacture_date, exp_date=payment.expiry_date)
                 )
                 for n in range(payment.quantity)
             ]
