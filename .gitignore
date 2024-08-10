@@ -2,16 +2,16 @@
 .env
 # staticfiles
 # staticfiles_build
-*.pyc
-migrations
+# *.pyc
+# migrations
 .vercel
 *.sqlite3
 
 # Django #
 *.log
 *.pot
-*.pyc
-__pycache__
+# *.pyc
+# __pycache__
 db.sqlite3
 media
 

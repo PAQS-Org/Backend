@@ -13,7 +13,7 @@ class Payment(models.Model):
     product_name = models.CharField(max_length=120)
     batch_number = models.CharField(null=True)
     perishable = models.BooleanField(default=False)
-    render_type = models.CharField(max_length=7)
+    render_type = models.CharField(max_length=120)
     product_logo = models.ImageField(upload_to='paqs/prod_logo/', blank=True)
     manufacture_date = models.DateField(blank=True, null=True)
     expiry_date = models.DateField(blank=True, null=True)
