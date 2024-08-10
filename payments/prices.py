@@ -1,7 +1,7 @@
 def calculate_unit_price(quantity):
-    if quantity > 100000 or quantity < 200:
-        return "out of bounds"
-    elif quantity <= 100000:
+#     if quantity > 100000 or quantity < 200:
+#         return "out of bounds"
+    if quantity <= 100000:
         unit = 0.01
     elif quantity >= 50000:
         unit = 0.02
@@ -18,7 +18,7 @@ def calculate_unit_price(quantity):
     elif quantity <= 200:
         unit = 0.20
     else:
-        unit = 0
+        unit = 1
 
     total = quantity * unit
     return (total, quantity, unit)

@@ -13,7 +13,6 @@ from .models import Payment
 from .serializer import PaymentSerializer
 from accounts.models import Company
 from product.models import LogProduct
-from product.serializer import LogProductSerializer
 from rest_framework.permissions import IsAuthenticated
 from accounts.permissions import IsOwner
 from .prices import calculate_unit_price
@@ -37,9 +36,6 @@ class InitiatePayment(APIView):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         user_data = serializer.data
-        print("user data", user_data)
-        print("request", request)
-        print("request.data", request.data)
         # Extract necessary data
         product_name = user_data.get('product_name')
         batch_number = user_data.get('batch_number')
@@ -82,7 +78,6 @@ class InitiatePayment(APIView):
             unit_price=unit_price,
             transaction_id=data.get('data', {}).get('reference'),
         )
-        print("transaction:", transaction)
         return JsonResponse({"payment_url": data["data"]["authorization_url"]})
 
 
@@ -98,6 +93,8 @@ def verify_payment(request):
         hashlib.sha512
     ).hexdigest()
 
+    print("verify started")
+
     if not hmac.compare_digest(computed_signature, signature):
         return HttpResponse("Signature verification failed.", status=400)
 
@@ -111,11 +108,35 @@ def verify_payment(request):
 
     try:
         payment = Payment.objects.get(transaction_id=reference)
+        print('payment info', payment)
         if event == 'charge.success':
             payment.transaction_status = 'paid'
             payment.verified = True
             payment.save()
 
+            make_qr = generate(count=payment.quantity, format=payment.render_type, comp=payment.company, prod=payment.product_name, logo=payment.product_logo)
+            print("starter")
+            log_entries = [
+                LogProduct(
+                    company_name=payment.company,
+                    product_name=payment.product_name,
+                    batch_code=payment.batch_number,
+                    qr_key=make_qr[n], 
+                    perishable=payment.perishable,
+                    manufacture_date=payment.manufacture_date,
+                    expiry_date=payment.expiry_date,
+                    message=prodmessage(company=payment.company, product=payment.product_name, perish=payment.perishable, man_date=payment.manufacture_date, exp_date=payment.expiry_date)
+                )
+                for n in range(payment.quantity)
+            ]
+            print("if log init")
+
+            LogProduct.objects.bulk_create(log_entries)
+        else:
+            payment.transaction_status = data['data']['status']  # Assuming status is available in the payload
+            payment.verified = False
+            payment.save()
+# Temporal
             make_qr = generate(count=payment.quantity, format=payment.render_type, comp=payment.company, prod=payment.product_name, logo=payment.product_logo)
 
             log_entries = [
@@ -131,12 +152,9 @@ def verify_payment(request):
                 )
                 for n in range(payment.quantity)
             ]
+            print("else log init")
             LogProduct.objects.bulk_create(log_entries)
-        else:
-            payment.transaction_status = data['data']['status']  # Assuming status is available in the payload
-            payment.verified = False
-            payment.save()
-
+# Temporal ends
     except Payment.DoesNotExist:
         return HttpResponse("Transaction not found.", status=400)
 
