@@ -118,13 +118,14 @@ def verify_payment(request):
                     company_code=payment.company,
                     product_code=payment.product_name,
                     batch_code=payment.batch_number,
-                    qr_key=make_qr[n], 
+                    qr_key=gen_id, 
                     perishable=payment.perishable,
                     manufacture_date=payment.manufacture_date,
                     expiry_date=payment.expiry_date,
                     message=prodmessage(company=payment.company, product=payment.product_name, batch=payment.batch_number, perish=payment.perishable, man_date=payment.manufacture_date, exp_date=payment.expiry_date)
                 )
-                for n in range(payment.quantity)
+                # for n in range(payment.quantity)
+                for gen_id, _ in make_qr 
             ]
 
             LogProduct.objects.bulk_create(log_entries)

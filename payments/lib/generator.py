@@ -12,7 +12,7 @@ def makeImage(n: int, format: str, path: str, comp: str, prod: str, logo: str | 
     qr = qrcode.make(code)
     filepath = f"{path}/{product}.{format}"
     qr.save(filepath)
-    return filepath
+    return gen_id, filepath
 
 def makeZip(path: str, gen_id: str) -> str:
     zipPath = shutil.make_archive(base_name=f"qrcodes/data/{gen_id}", format="zip", root_dir=path)
@@ -26,12 +26,13 @@ def generate(count: int, format: str, comp: str, prod: str, logo: str | None = N
     path = f"qrcodes/data/{gen_id}"
     
     os.mkdir(path)
-    
+    qr_code_data = []
     for n in range(count):
-        makeImage(n+1, format, path, comp, prod, logo)
-        
+        qr_code_gen_id, filepath= makeImage(n+1, format, path, comp, prod, logo)
+        qr_code_data.append((qr_code_gen_id, filepath))
+
     zipFilePath = makeZip(path, gen_id)
-    return zipFilePath
+    return qr_code_data
 
 # if __name__ == "__main__":
 #     result = generate(3, "jpg", "")
