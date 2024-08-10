@@ -19,7 +19,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = [ '127.0.0.1', 'localhost', 'web-production-ef21.up.railway.app']
+ALLOWED_HOSTS = [ '127.0.0.1', 'localhost', 'company-six-liard.vercel.app', 'web-production-ef21.up.railway.app']
 
 SITE_ID = 1
 
@@ -266,16 +266,17 @@ DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 CONTENT_SECURITY_POLICY = {
     "EXCLUDE_URL_PREFIXES": ["/excluded-path/"],
     "DIRECTIVES": {
-        "default-src": ["'self'", "https://web-production-ef21.up.railway.app"],
-        "script-src": ["'self'", "'unsafe-eval'"  "https://web-production-ef21.up.railway.app", "'blob:'"],
+         "default-src": ["'self'", "https://web-production-ef21.up.railway.app"],
+        "script-src": ["'self'", "'unsafe-eval'", "https://web-production-ef21.up.railway.app", "'blob:'"],
         "style-src": ["'self'"],
         "connect-src": ["'self'", "https://web-production-ef21.up.railway.app"],
+        "img-src": ["'self'", "blob:", "data:", "https://web-production-ef21.up.railway.app"],
         "font-src": ["'self'"],
         "object-src": ["'none'"],
         "frame-ancestors": ["'self'"],
         "form-action": ["'self'"],
         "base-uri": ["'self'"],
-        "report-uri": "/csp-report/",
+        "report-uri": "https://company-six-liard.vercel.app/account/csp-report/",
         "upgrade-insecure-requests": True,
     },
 }
