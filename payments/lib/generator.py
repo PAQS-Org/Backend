@@ -46,3 +46,6 @@ def generate(count: int, format: str, comp: str, prod: str, logo: str | None = N
     print("zipPath", zipFilePath)
     return zipFilePath, qr_code_data
 
+# if __name__ == "__main__":
+#     result = generate(3, "jpg", "scala", "papa")
+#     print(result)
