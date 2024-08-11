@@ -3,11 +3,6 @@ from accounts.models import Company, User
 import string
 import random
 
-# def generate_unique_id(batch_code):
-#   # Generate a random alphanumeric code (length 6)
-#   random_code = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(6))
-#   return batch_code + random_code
-
 class ProductsInfo(models.Model):
     date_created = models.DateTimeField(auto_now_add=True)
     company_name = models.ForeignKey(to=Company, on_delete=models.CASCADE, related_name="companyInfo")
@@ -91,7 +86,7 @@ class LogProduct(models.Model):
         ]
 
     def __str__(self):
-        return self.batch_code
+        return f"{self.company_code}-{self.company_code}-{self.batch_code}"
 
     def __unicode__(self):
         return self.qr_key

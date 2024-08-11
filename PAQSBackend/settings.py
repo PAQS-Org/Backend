@@ -261,7 +261,9 @@ AWS_DEFAULT_ACL =  None
 AWS_S3_VERITY = True
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
-
+print("aws doubt", AWS_SECRET_ACCESS_KEY)
+print("aws bucket doubt", AWS_STORAGE_BUCKET_NAME)
+print("aws access key", AWS_ACCESS_KEY_ID)
 
 # CONTENT_SECURITY_POLICY = {
 #     "EXCLUDE_URL_PREFIXES": ["/excluded-path/"],
