@@ -257,13 +257,10 @@ AWS_S3_REGION_NAME = os.getenv("BUCKET_LOCATION")
 AWS_S3_SIGNATURE_NAME = os.getenv("SIGNATURE")
 AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
 AWS_S3_FILE_OVERWRITE = False
-AWS_DEFAULT_ACL =  None
+AWS_DEFAULT_ACL =  'public-read'
 AWS_S3_VERITY = True
+AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-
-print("aws doubt", AWS_SECRET_ACCESS_KEY)
-print("aws bucket doubt", AWS_STORAGE_BUCKET_NAME)
-print("aws access key", AWS_ACCESS_KEY_ID)
 
 # CONTENT_SECURITY_POLICY = {
 #     "EXCLUDE_URL_PREFIXES": ["/excluded-path/"],
