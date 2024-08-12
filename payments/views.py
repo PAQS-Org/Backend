@@ -28,30 +28,75 @@ from .lib.generator import generate
 from .lib.messages import prodmessage
 
 
+# class InitiatePayment(APIView):
+#     serializer_class = PaymentSerializer
+#     permission_classes = (IsAuthenticated, IsOwner)
+
+#     def post(self, request):
+#         serializer = self.serializer_class(data=request.data)
+#         serializer.is_valid(raise_exception=True)
+#         user_data = serializer.data
+#         # Extract necessary data
+#         product_name = user_data.get('product_name')
+#         batch_number = user_data.get('batch_number')
+#         prod_logo = request.FILES['product_logo']
+#         # prod_logo = user_data.get('product_logo')
+#         perish = user_data.get('perishable')
+#         manu_date = user_data.get('manufacture_date')
+#         exp_date = user_data.get('expiry_date')
+#         qr_type = user_data.get('render_type')
+#         quantity = user_data.get('quantity')
+#         amount, _, unit_price = calculate_unit_price(quantity)
+
+#         comp = Company.objects.get(email=request.user)
+
+#         headers = {"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}"}
+#         payload = {
+#             "amount": amount * 100,
+#             "email": request.user.email,
+#             "currency": "GHS",
+#         }
+
+#         response = requests.post(
+#             "https://api.paystack.co/transaction/initialize",
+#             json=payload,
+#             headers=headers,
+#         )
+#         data = response.json()
+
+#         # Save transaction details to the database
+#         transaction = Payment.objects.create(
+#             company=comp,
+#             quantity=quantity,
+#             amount=amount,
+#             perishable=perish,
+#             product_logo=prod_logo,
+#             render_type=qr_type,
+#             manufacture_date=manu_date,
+#             expiry_date=exp_date,
+#             product_name=product_name,
+#             batch_number=batch_number,
+#             unit_price=unit_price,
+#             transaction_id=data.get('data', {}).get('reference'),
+#         )
+#         return JsonResponse({"payment_url": data["data"]["authorization_url"]})
+
+
 class InitiatePayment(APIView):
     serializer_class = PaymentSerializer
     permission_classes = (IsAuthenticated, IsOwner)
 
     def post(self, request):
-        serializer = self.serializer_class(data=request.data)
+        serializer = self.serializer_class(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
-        user_data = serializer.data
-        # Extract necessary data
-        product_name = user_data.get('product_name')
-        batch_number = user_data.get('batch_number')
-        prod_logo = user_data.get('product_logo')
-        perish = user_data.get('perishable')
-        manu_date = user_data.get('manufacture_date')
-        exp_date = user_data.get('expiry_date')
-        qr_type = user_data.get('render_type')
-        quantity = user_data.get('quantity')
-        amount, _, unit_price = calculate_unit_price(quantity)
 
-        comp = Company.objects.get(email=request.user)
-
+        # Call the serializer's save method to create the Payment instance
+        payment_instance = serializer.save()
+        print(payment_instance)
+        # Prepare the Paystack payment
         headers = {"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}"}
         payload = {
-            "amount": amount * 100,
+            "amount": payment_instance.amount * 100,
             "email": request.user.email,
             "currency": "GHS",
         }
@@ -63,22 +108,12 @@ class InitiatePayment(APIView):
         )
         data = response.json()
 
-        # Save transaction details to the database
-        transaction = Payment.objects.create(
-            company=comp,
-            quantity=quantity,
-            amount=amount,
-            perishable=perish,
-            product_logo=prod_logo,
-            render_type=qr_type,
-            manufacture_date=manu_date,
-            expiry_date=exp_date,
-            product_name=product_name,
-            batch_number=batch_number,
-            unit_price=unit_price,
-            transaction_id=data.get('data', {}).get('reference'),
-        )
+        # Update transaction ID after the response
+        payment_instance.transaction_id = data.get('data', {}).get('reference')
+        payment_instance.save()
+
         return JsonResponse({"payment_url": data["data"]["authorization_url"]})
+
 
 
 @csrf_exempt

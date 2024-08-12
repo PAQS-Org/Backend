@@ -171,9 +171,43 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
-STATIC_URL = '/static/'
+import logging
+
+# Configure logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s %(levelname)s %(message)s',
+)
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_USE_TLS = True
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+PAYSTACK_SECRET_KEY = os.getenv("PAYSTACK_SECRET_KEY")
+PAYSTACK_PUBLIC_KEY = os.getenv("PAYSTACK_PUBLIC_KEY")
+GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
+GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
+SOCIAL_AUTH_PASSWORD = os.getenv('SOCIAL_AUTH_PASSWORD')
+
+AWS_ACCESS_KEY_ID = os.getenv("ACCESS_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("SECRET_ACCESS_KEY")
+AWS_STORAGE_BUCKET_NAME = os.getenv("BUCKET_NAME")
+AWS_S3_REGION_NAME = os.getenv("BUCKET_LOCATION")
+AWS_S3_SIGNATURE_NAME = os.getenv("SIGNATURE")
+AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+AWS_S3_FILE_OVERWRITE = False
+AWS_DEFAULT_ACL =  None
+AWS_S3_VERITY = True
+AWS_LOCATION = 'static'
+AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
+STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_LOCATION}/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles_build', 'static')
-MEDIA_URL = "/images/"
+MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, "static/images/paqs")
 STATICFILES_DIRS = [
     os.path.join(
@@ -182,6 +216,7 @@ STATICFILES_DIRS = [
     ),
 ]
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
@@ -229,38 +264,13 @@ AUTHENTICATION_BACKENDS = [
 
 AUTH_USER_MODEL = "accounts.AbstractUserProfile"
 
-import logging
-
-# Configure logging
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s %(levelname)s %(message)s',
-)
+print('key', AWS_ACCESS_KEY_ID)
+print('buck', AWS_STORAGE_BUCKET_NAME)
+print('access', AWS_SECRET_ACCESS_KEY)
+print('cust', AWS_S3_CUSTOM_DOMAIN)
 
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_USE_TLS = True
-EMAIL_HOST = "smtp.gmail.com"
-EMAIL_PORT = 587
-EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
-PAYSTACK_SECRET_KEY = os.getenv("PAYSTACK_SECRET_KEY")
-PAYSTACK_PUBLIC_KEY = os.getenv("PAYSTACK_PUBLIC_KEY")
-GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
-GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
-SOCIAL_AUTH_PASSWORD = os.getenv('SOCIAL_AUTH_PASSWORD')
 
-AWS_ACCESS_KEY_ID = os.getenv("ACCESS_ID")
-AWS_SECRET_ACCESS_KEY = os.getenv("SECRET_ACCESS_KEY")
-AWS_STORAGE_BUCKET_NAME = os.getenv("BUCKET_NAME")
-AWS_S3_REGION_NAME = os.getenv("BUCKET_LOCATION")
-AWS_S3_SIGNATURE_NAME = os.getenv("SIGNATURE")
-AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
-AWS_S3_FILE_OVERWRITE = False
-AWS_DEFAULT_ACL =  'public-read'
-AWS_S3_VERITY = True
-AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 # CONTENT_SECURITY_POLICY = {
 #     "EXCLUDE_URL_PREFIXES": ["/excluded-path/"],
