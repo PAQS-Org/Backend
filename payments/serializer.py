@@ -37,7 +37,6 @@ class PaymentSerializer(serializers.ModelSerializer):
             unit_price=unit_price,
             **validated_data,
         )
-        print(payment)
         return payment
     
 

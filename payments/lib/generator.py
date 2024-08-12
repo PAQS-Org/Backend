@@ -26,13 +26,12 @@ def makeZip(path: str, gen_id: str) -> str:
         s3_file_path = default_storage.save(file_name, content)
     
     os.remove(zipPath)
-    print("creating the zip")
     return default_storage.url(s3_file_path)
     # return zipPath
 
 def generate(count: int, format: str, comp: str, batch: str, prod: str, logo: str | None = None, ) -> str:
     if not os.path.exists("qrcodes/data"):
-        os.mkdir("qrcodes/data")
+        os.mkdir(f"qrcodes/data/{comp}/{batch}/")
     
     gen_id = str(uuid.uuid4()) 
     path = f"qrcodes/data/{comp}/{batch}/{gen_id}"
@@ -44,9 +43,5 @@ def generate(count: int, format: str, comp: str, batch: str, prod: str, logo: st
         qr_code_data.append((qr_code_gen_id, filepath))
 
     zipFilePath = makeZip(path, gen_id)
-    print("zipPath", zipFilePath)
     return zipFilePath, qr_code_data
 
-# if __name__ == "__main__":
-#     result = generate(3, "jpg", "scala", "papa")
-#     print(result)

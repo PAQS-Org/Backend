@@ -264,14 +264,6 @@ AUTHENTICATION_BACKENDS = [
 
 AUTH_USER_MODEL = "accounts.AbstractUserProfile"
 
-print('key', AWS_ACCESS_KEY_ID)
-print('buck', AWS_STORAGE_BUCKET_NAME)
-print('access', AWS_SECRET_ACCESS_KEY)
-print('cust', AWS_S3_CUSTOM_DOMAIN)
-
-
-
-
 # CONTENT_SECURITY_POLICY = {
 #     "EXCLUDE_URL_PREFIXES": ["/excluded-path/"],
 #     "DIRECTIVES": {
