@@ -13,7 +13,7 @@ def makeImage(n: int, format: str, path: str,batch: str, comp: str, prod: str, l
     product = f"{prod}"
     logo = f"{logo}"
     batch = f"{batch}"
-    code = f"{app_url}/{gen_id}/{company}/{product}/{logo}"
+    code = f"{app_url}/{gen_id}/{company}/{product}"
     qr = qrcode.make(code)
     filepath = f"{path}/{company}/{prod}/{batch}_{n}.{format}"
     qr.save(filepath)
