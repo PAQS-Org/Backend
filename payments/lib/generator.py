@@ -11,9 +11,10 @@ def makeImage(n: int, format: str, path: str, comp: str, prod: str, logo: str | 
     gen_id = str(uuid.uuid4())  # Generate a new UUID for each QR code
     company = f"{comp}"
     product = f"{prod}"
-    code = f"{app_url}/{gen_id}/{company}/{product}"
+    logo = f"{logo}"
+    code = f"{app_url}/{gen_id}/{company}/{product}/{logo}"
     qr = qrcode.make(code)
-    filepath = f"{path}/{company}.{format}"
+    filepath = f"{path}/{company}_{n}.{format}"
     qr.save(filepath)
     return gen_id, filepath
 
@@ -29,12 +30,12 @@ def makeZip(path: str, gen_id: str) -> str:
     return default_storage.url(s3_file_path)
     # return zipPath
 
-def generate(count: int, format: str, comp: str, prod: str, logo: str | None = None, ) -> str:
+def generate(count: int, format: str, comp: str, batch: str, prod: str, logo: str | None = None, ) -> str:
     if not os.path.exists("qrcodes/data"):
         os.mkdir("qrcodes/data")
     
     gen_id = str(uuid.uuid4()) 
-    path = f"qrcodes/data/{gen_id}"
+    path = f"qrcodes/data/{comp}/{batch}/{gen_id}"
     
     os.mkdir(path)
     qr_code_data = []
