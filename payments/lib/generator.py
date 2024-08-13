@@ -15,23 +15,24 @@ def makeImage(n: int, format: str, path: str, comp: str, prod: str, batch: str, 
     code = f"{app_url}/{gen_id}/{company}/{product}"
     qr = qrcode.make(code)
     
-    qr = qr.convert("RGBA")
+    qr = qr.convert("RGBA")  # Ensure QR code is in RGBA mode
     
     # Add the logo in the middle of the QR code if provided
     if logo:
-        logo_image = Image.open(logo).convert("RGBA")
+        logo_image = Image.open(logo).convert("RGBA")  # Ensure the logo is in RGBA mode
         logo_image = logo_image.resize((qr.size[0] // 4, qr.size[1] // 4))  # Resize logo as needed
         
-        # Create a transparent image for overlaying the logo
-        logo_box = (qr.size[0] // 2 - logo_image.size[0] // 2, qr.size[1] // 2 - logo_image.size[1] // 2)
-        qr.paste(logo_image, logo_box, logo_image)
-
+        # Calculate the position where the logo will be placed
+        logo_box = (qr.size[0] // 2 - logo_image.size[0] // 2, 
+                    qr.size[1] // 2 - logo_image.size[1] // 2)
+        
+        # Paste the logo onto the QR code, using the logo's alpha channel to maintain transparency
+        qr.paste(logo_image, logo_box, mask=logo_image)
 
     draw = ImageDraw.Draw(qr)
     font = ImageFont.load_default()  # You can use a custom font here
-    text = f"This is managed  by PAQS for {comp}"
+    text = f"This is managed by PAQS for {comp}"
     
-    # Get the bounding box of the text
     text_bbox = draw.textbbox((0, 0), text, font=font)
     text_width = text_bbox[2] - text_bbox[0]
     text_height = text_bbox[3] - text_bbox[1]
@@ -39,15 +40,15 @@ def makeImage(n: int, format: str, path: str, comp: str, prod: str, batch: str, 
     text_position = ((qr.size[0] - text_width) // 2, qr.size[1] - text_height - 10)  # Position it just above the bottom
     draw.text(text_position, text, font=font, fill=(0, 0, 0))
 
-    # Convert back to RGB if saving as JPEG
     if format.lower() == "jpeg" or format.lower() == "jpg":
-        qr = qr.convert("RGB")
+        qr = qr.convert("RGB")  # Convert to RGB if the final format is JPEG
 
-    # Save the QR code with the specified naming convention
     filepath = f"{path}/{company}_{product}_{batch_number}_{n}.{format}"  # Updated filepath format
     os.makedirs(os.path.dirname(filepath), exist_ok=True)  # Create directories if they don't exist
     qr.save(filepath)
     return gen_id, filepath
+
+
 
 def makeZip(path: str, comp: str, prod: str, batch: str, gen_id: str) -> str:
     zip_filename = f"{comp}_{prod}_{batch}_{gen_id}.zip"  # Updated zip file name format
@@ -60,6 +61,7 @@ def makeZip(path: str, comp: str, prod: str, batch: str, gen_id: str) -> str:
     os.remove(zipPath)
     print("creating the zip")
     return default_storage.url(s3_file_path)
+
 
 def generate(count: int, format: str, comp: str, prod: str, batch: str, logo: str | None = None) -> str:
     if not os.path.exists("qrcodes/data"):
