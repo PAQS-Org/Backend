@@ -86,7 +86,7 @@ class LogProduct(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.company_code}-{self.company_code}-{self.batch_code}"
+        return f"{self.company_code}-{self.product_code}-{self.batch_code}"
 
     def __unicode__(self):
         return self.qr_key
