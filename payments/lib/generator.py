@@ -13,14 +13,14 @@ def makeImage(n: int, format: str, path: str, comp: str, prod: str, batch: str, 
     batch_number = f"{batch}"
     code = f"{app_url}/{gen_id}/{company}/{product}"
     qr = qrcode.make(code)
-    filepath = f"{path}/{company}/{product}/{batch_number}_{n}.{format}"  # Updated filepath format
+    filepath = f"{path}/{company}_{product}_{batch_number}_{n}.{format}"  # Updated filepath format
     os.makedirs(os.path.dirname(filepath), exist_ok=True)  # Create directories if they don't exist
     qr.save(filepath)
     return gen_id, filepath
 
 
 def makeZip(path: str, comp: str, prod: str, batch: str, gen_id: str) -> str:
-    zip_filename = f"{comp}/{prod}/{batch}/{gen_id}.zip"  # Updated zip file name format
+    zip_filename = f"{comp}_{prod}_{batch}_{gen_id}.zip"  # Updated zip file name format
     zipPath = shutil.make_archive(base_name=f"qrcodes/data/{gen_id}", format="zip", root_dir=path)
     with open(zipPath, 'rb') as zip_file:
         file_name = f"qrcodes/{zip_filename}"
