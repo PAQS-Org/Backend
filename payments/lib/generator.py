@@ -15,14 +15,18 @@ def makeImage(n: int, format: str, path: str, comp: str, prod: str, batch: str, 
     code = f"{app_url}/{gen_id}/{company}/{product}"
     qr = qrcode.make(code)
     
+    qr = qr.convert("RGBA")
+    
     # Add the logo in the middle of the QR code if provided
     if logo:
-        logo_image = Image.open(logo)
+        logo_image = Image.open(logo).convert("RGBA")
+        logo_image = logo_image.resize((qr.size[0] // 4, qr.size[1] // 4))  # Resize logo as needed
+        
+        # Create a transparent image for overlaying the logo
         logo_box = (qr.size[0] // 2 - logo_image.size[0] // 2, qr.size[1] // 2 - logo_image.size[1] // 2)
-        qr.paste(logo_image, logo_box)
+        qr.paste(logo_image, logo_box, logo_image)
 
-    # Add "Scan Me" text below the QR code
-    qr = qr.convert("RGBA")
+
     draw = ImageDraw.Draw(qr)
     font = ImageFont.load_default()  # You can use a custom font here
     text = f"This is managed  by PAQS for {comp}"
