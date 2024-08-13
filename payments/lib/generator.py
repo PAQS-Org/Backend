@@ -35,6 +35,10 @@ def makeImage(n: int, format: str, path: str, comp: str, prod: str, batch: str, 
     text_position = ((qr.size[0] - text_width) // 2, qr.size[1] - text_height - 10)  # Position it just above the bottom
     draw.text(text_position, text, font=font, fill=(0, 0, 0))
 
+    # Convert back to RGB if saving as JPEG
+    if format.lower() == "jpeg" or format.lower() == "jpg":
+        qr = qr.convert("RGB")
+
     # Save the QR code with the specified naming convention
     filepath = f"{path}/{company}_{product}_{batch_number}_{n}.{format}"  # Updated filepath format
     os.makedirs(os.path.dirname(filepath), exist_ok=True)  # Create directories if they don't exist
