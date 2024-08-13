@@ -26,7 +26,7 @@ def makeImage(n: int, format: str, path: str, comp: str, prod: str, batch: str, 
     draw = ImageDraw.Draw(qr)
     font = ImageFont.load_default()  # You can use a custom font here
     text = f"This is managed by PAQS for {comp}"
-    text_width, text_height = draw.textsize(text, font=font)
+    text_width, text_height = draw.textlength(text, font=font)
     text_position = ((qr.size[0] - text_width) // 2, qr.size[1] - text_height - 10)  # Position it just above the bottom
     draw.text(text_position, text, font=font, fill=(0, 0, 0))
 
