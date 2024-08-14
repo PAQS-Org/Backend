@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
     'rest_framework.authtoken',
+    'django_celery_beat',
     'django_celery_results',
     'rest_auth',
     'corsheaders',
@@ -64,13 +65,11 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-REDIS_URL = f"redis://{os.environ.get('REDISUSER', default='default')}:{os.environ.get('REDISPASSWORD', default='')}@{os.environ.get('REDISHOST', default='redis')}:{os.environ.get('REDISPORT', default=6379)}"
+REDIS_URL = f"redis://{os.environ.get('REDISUSER')}:{os.environ.get('REDISPASSWORD')}@{os.environ.get('REDISHOST')}:{os.environ.get('REDISPORT')}"
 
 CELERY_BROKER_URL = REDIS_URL
-CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", default="django-db")
-CELERY_BEAT_SCHEDULER = os.environ.get(
-    "CELERY_BEAT_SCHEDULER", default="django_celery_beat.schedulers.DatabaseScheduler"
-)
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND")
+CELERY_BEAT_SCHEDULER = os.environ.get("CELERY_BEAT_SCHEDULER")
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_TIMEZONE = "UTC"
@@ -82,7 +81,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [(os.environ.get("CHANNELS_URLS", "redis://localhost:6379/0"))],
+            "hosts": [(os.environ.get("CHANNELS_URLS"))],
         },
     },
 }
