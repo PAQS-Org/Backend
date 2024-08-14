@@ -10,8 +10,8 @@ def generate_qr_codes(payment_id):
     from .models import Payment  # Import here to avoid circular imports
 
     try:
-        payment = Payment.objects.get(id=payment_id)
-        
+        payment = Payment.objects.get(transaction_id=payment_id)
+        print('payment', payment)
         # Create a unique cache key based on the payment details
         cache_key = f"qr_codes_{payment.transaction_id}"
         cached_data = cache.get(cache_key)

@@ -80,7 +80,7 @@ def verify_payment(request):
             payment.verified = True
             payment.save()
 
-            generate_qr_codes.delay(payment.id)
+            generate_qr_codes.delay(payment.transaction_id)
            
         else:
             payment.transaction_status = data['data']['status']  # Assuming status is available in the payload
