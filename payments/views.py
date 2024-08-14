@@ -4,18 +4,13 @@ import requests
 # Create your views here.
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt  # Handle POST requests securely
-from io import BytesIO
 import json
 import hmac
 import hashlib
-from django.http import FileResponse
 from .models import Payment 
 from .serializer import PaymentSerializer
-from accounts.models import Company
-from product.models import LogProduct
 from rest_framework.permissions import IsAuthenticated
 from accounts.permissions import IsOwner
-from .prices import calculate_unit_price
 from PAQSBackend.settings import PAYSTACK_SECRET_KEY
 from django.utils import timezone
 from rest_framework.views import APIView
@@ -24,8 +19,7 @@ from rest_framework.pagination import PageNumberPagination
 # from weasyprint import HTML
 from django.template.loader import render_to_string
 from django.templatetags.static import static
-from .lib.generator import generate
-from .lib.messages import prodmessage
+from .task import generate_qr_codes
 
 class InitiatePayment(APIView):
     serializer_class = PaymentSerializer
@@ -86,30 +80,8 @@ def verify_payment(request):
             payment.verified = True
             payment.save()
 
-            s3_url,make_qr = generate(count=payment.quantity, batch=payment.batch_number, format=payment.render_type, comp=payment.company, prod=payment.product_name, logo=payment.product_logo)
-            print('s3_url',s3_url)
-            log_entries = [
-                LogProduct(
-                    company_code=payment.company,
-                    product_code=payment.product_name,
-                    batch_code=payment.batch_number,
-                    qr_key=gen_id, 
-                    perishable=payment.perishable,
-                    manufacture_date=payment.manufacture_date,
-                    expiry_date=payment.expiry_date,
-                    message=prodmessage(
-                        company=payment.company, 
-                        product=payment.product_name, 
-                        batch=payment.batch_number, 
-                        perish=payment.perishable, 
-                        man_date=payment.manufacture_date, 
-                        exp_date=payment.expiry_date
-                        )
-                )
-                for gen_id, _ in make_qr 
-            ]
-
-            LogProduct.objects.bulk_create(log_entries)
+            generate_qr_codes.delay(payment.id)
+           
         else:
             payment.transaction_status = data['data']['status']  # Assuming status is available in the payload
             payment.verified = False

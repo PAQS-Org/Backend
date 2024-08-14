@@ -1,58 +1,68 @@
 import qrcode
-from PIL import Image, ImageDraw, ImageFont
 import uuid
 import os
 import shutil
+import redis
+from PIL import Image, ImageDraw, ImageFont
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
+from celery import shared_task
+from io import BytesIO
 
+redis_client = redis.StrictRedis(host='localhost', port=6379, db=0)
+
+@shared_task
 def makeImage(n: int, format: str, path: str, comp: str, prod: str, batch: str, logo: str | None = None) -> str:
     app_url = "http://localhost"
     gen_id = str(uuid.uuid4())  # Generate a new UUID for each QR code
-    company = f"{comp}"
-    product = f"{prod}"
-    batch_number = f"{batch}"
-    code = f"{app_url}/{gen_id}/{company}/{product}"
+    code = f"{app_url}/{gen_id}/{comp}/{prod}"
+    
+    # Cache key for QR code
+    cache_key = f"qr_code:{comp}:{prod}:{batch}:{n}"
+    cached_qr = redis_client.get(cache_key)
+
+    if cached_qr:
+        filepath = cached_qr.decode("utf-8")
+        return gen_id, filepath
+
     qr = qrcode.make(code)
-    
-    qr = qr.convert("RGBA")  # Ensure QR code is in RGBA mode
-    
-    # Add the logo in the middle of the QR code if provided
+    qr = qr.convert("RGBA")
+
     if logo:
-        logo_image = Image.open(logo).convert("RGBA")  # Ensure the logo is in RGBA mode
-        logo_image = logo_image.resize((qr.size[0] // 4, qr.size[1] // 4))  # Resize logo as needed
-        
-        # Calculate the position where the logo will be placed
+        logo_image = Image.open(logo).convert("RGBA") 
+        logo_image = logo_image.resize((qr.size[0] // 4, qr.size[1] // 4)) 
         logo_box = (qr.size[0] // 2 - logo_image.size[0] // 2, 
                     qr.size[1] // 2 - logo_image.size[1] // 2)
-        
-        # Paste the logo onto the QR code, using the logo's alpha channel to maintain transparency
         qr.paste(logo_image, logo_box, mask=logo_image)
 
+    # Draw additional text
     draw = ImageDraw.Draw(qr)
-    font = ImageFont.load_default()  # You can use a custom font here
+    font = ImageFont.load_default()  
     text = f"This is managed by PAQS for {comp}"
-    
     text_bbox = draw.textbbox((0, 0), text, font=font)
-    text_width = text_bbox[2] - text_bbox[0]
-    text_height = text_bbox[3] - text_bbox[1]
-    
-    text_position = ((qr.size[0] - text_width) // 2, qr.size[1] - text_height - 10)  # Position it just above the bottom
+    text_position = ((qr.size[0] - text_bbox[2]) // 2, qr.size[1] - text_bbox[3] - 10)
     draw.text(text_position, text, font=font, fill=(0, 0, 0))
 
-    if format.lower() == "jpeg" or format.lower() == "jpg":
-        qr = qr.convert("RGB")  # Convert to RGB if the final format is JPEG
+    if format.lower() in ["jpeg", "jpg"]:
+        qr = qr.convert("RGB")
 
-    filepath = f"{path}/{company}_{product}_{batch_number}_{n}.{format}"  # Updated filepath format
-    os.makedirs(os.path.dirname(filepath), exist_ok=True)  # Create directories if they don't exist
-    qr.save(filepath)
+    buffer = BytesIO()
+    qr.save(buffer, format=format.upper())
+    buffer.seek(0)
+
+    filepath = f"qrcodes/{comp}_{prod}_{batch}_{n}.{format}"
+    default_storage.save(filepath, ContentFile(buffer.read()))
+
+    redis_client.setex(cache_key, 3600, filepath)
+
     return gen_id, filepath
 
 
-
+@shared_task
 def makeZip(path: str, comp: str, prod: str, batch: str, gen_id: str) -> str:
     zip_filename = f"{comp}_{prod}_{batch}_{gen_id}.zip"  # Updated zip file name format
     zipPath = shutil.make_archive(base_name=f"qrcodes/data/{gen_id}", format="zip", root_dir=path)
+    
     with open(zipPath, 'rb') as zip_file:
         file_name = f"qrcodes/{zip_filename}"
         content = ContentFile(zip_file.read())
@@ -62,22 +72,26 @@ def makeZip(path: str, comp: str, prod: str, batch: str, gen_id: str) -> str:
     print("creating the zip")
     return default_storage.url(s3_file_path)
 
-
+@shared_task
 def generate(count: int, format: str, comp: str, prod: str, batch: str, logo: str | None = None) -> str:
-    if not os.path.exists("qrcodes/data"):
-        os.mkdir("qrcodes/data")
-    
-    gen_id = str(uuid.uuid4()) 
+    gen_id = str(uuid.uuid4())
     path = f"qrcodes/data/{gen_id}"
-    
-    os.mkdir(path)
+    os.makedirs(path, exist_ok=True)
+
     qr_code_data = []
+    tasks = []
+    
     for n in range(count):
-        qr_code_gen_id, filepath = makeImage(n+1, format, path, comp, prod, batch, logo)
+        task = makeImage.delay(n+1, format, comp, prod, batch, logo)
+        tasks.append(task)
+
+    # Collect results as they complete
+    for task in tasks:
+        qr_code_gen_id, filepath = task.get()
         qr_code_data.append((qr_code_gen_id, filepath))
 
-    zipFilePath = makeZip(path, comp, prod, batch, gen_id)
-    print("zipPath", zipFilePath)
-    return zipFilePath, qr_code_data
+    zip_file_path = makeZip(path, comp, prod, batch, gen_id).get()
+
+    return zip_file_path, qr_code_data
 
 
