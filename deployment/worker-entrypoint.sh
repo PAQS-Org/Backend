@@ -1,2 +1,2 @@
 #!/bin/sh
-celery -A PAQSBackend worker --beat -l INFO
+celery -A PAQSBackend worker --beat --concurrency -l INFO
