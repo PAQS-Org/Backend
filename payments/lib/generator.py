@@ -9,8 +9,8 @@ from django.core.files.base import ContentFile
 from celery import shared_task
 from io import BytesIO
 
-redis_client = redis.StrictRedis(host='localhost', port=6379, db=0)
-
+redis_client = redis.StrictRedis(host=os.environ.get('REDISHOST'), port=6379, db=0)
+print("redis client", redis_client)
 @shared_task
 def makeImage(n: int, format: str, path: str, comp: str, prod: str, batch: str, logo: str | None = None) -> str:
     app_url = "http://localhost"
