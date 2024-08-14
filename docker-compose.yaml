@@ -41,8 +41,16 @@ services:
   redis:
     restart: unless-stopped
     image: redis:latest
-    expose:
-      - 6379
+    ports:
+      - "6379:6379"
+
+  web:
+    build: .
+    command: python manage.py runserver
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+    depends_on:
+      - redis
 
   db:
     image: postgres:14.0-alpine
