@@ -86,10 +86,19 @@ CHANNEL_LAYERS = {
     },
 }
 
+import redis
+
+r = redis.Redis(
+    host=os.environ.get('REDISHOST'),
+    port=int(os.environ.get('REDISPORT')),
+    password=os.environ.get('REDISPASSWORD'),
+    decode_responses=True
+)
+
 print("CELERY_BROKER_URL", CELERY_BROKER_URL)
 print("CELERY_RESULT_BACKEND", CELERY_RESULT_BACKEND)
 print("CELERY_BEAT_SCHEDULER", CELERY_BEAT_SCHEDULER)
-
+print('redis', r)
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
