@@ -81,29 +81,19 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [(os.environ.get("CHANNELS_URLS"))],
+            "hosts": [(os.environ.get("REDISHOST"), 6379)],
         },
     },
 }
 
-import redis
-
-r = redis.Redis(
-    host=os.environ.get('REDISHOST'),
-    port=int(os.environ.get('REDISPORT')),
-    password=os.environ.get('REDISPASSWORD'),
-    decode_responses=True
-)
-
-print("CELERY_BROKER_URL", CELERY_BROKER_URL)
-print("CELERY_RESULT_BACKEND", CELERY_RESULT_BACKEND)
-print("CELERY_BEAT_SCHEDULER", CELERY_BEAT_SCHEDULER)
-print('redis', r)
 
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": REDIS_URL,
+        "LOCATION": "redis://redis:6379",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient"
+        },
     }
 }
 
