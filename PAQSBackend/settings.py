@@ -86,6 +86,10 @@ CHANNEL_LAYERS = {
     },
 }
 
+print("CELERY_BROKER_URL", CELERY_BROKER_URL)
+print("CELERY_RESULT_BACKEND", CELERY_RESULT_BACKEND)
+print("CELERY_BEAT_SCHEDULER", CELERY_BEAT_SCHEDULER)
+
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
