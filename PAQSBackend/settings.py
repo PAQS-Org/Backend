@@ -99,6 +99,15 @@ print("CELERY_BROKER_URL", CELERY_BROKER_URL)
 print("CELERY_RESULT_BACKEND", CELERY_RESULT_BACKEND)
 print("CELERY_BEAT_SCHEDULER", CELERY_BEAT_SCHEDULER)
 print('redis', r)
+
+# Set a value
+redis.set("mykey", "myvalue")
+
+# Get a value
+value = redis.get("mykey")
+print(value)
+
+
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
