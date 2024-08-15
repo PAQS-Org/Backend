@@ -65,7 +65,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
+REDIS_URL = os.environ.get("REDIS_URL")
 
 CELERY_BROKER_URL = CELERY_RESULT_BACKEND = REDIS_URL
 
