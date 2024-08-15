@@ -17,7 +17,6 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-import PAQSBackend.view_config as example_views
 
 
 urlpatterns = [
@@ -27,8 +26,6 @@ urlpatterns = [
     path('payment/', include('payments.urls')),
     path('social/', include('social_auth.urls')),
     path('product/', include('product.urls')),
-    path("healthcheck/", example_views.health_check, name="health_check"),
-    path("test-task/", example_views.test_task, name="test_task"),
 ] 
 urlpatterns += static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

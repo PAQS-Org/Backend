@@ -64,23 +64,10 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-REDIS_URL = f"redis://{os.environ.get('REDISUSER')}:{os.environ.get('REDISPASSWORD')}@{os.environ.get('REDISHOST')}:{os.environ.get('REDISPORT')}"
 
-# CELERY CONFIG
-CELERY_BROKER_URL = REDIS_URL
-CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND")
-CELERY_BEAT_SCHEDULER = os.environ.get("CELERY_BEAT_SCHEDULER")
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 
-# REDIS CACHE CONFIG
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": REDIS_URL,
-    }
-}
-
-print('redis_url', REDIS_URL)
-print('result backend', CELERY_RESULT_BACKEND)
+CELERY_BROKER_URL = CELERY_RESULT_BACKEND = REDIS_URL
 
 ROOT_URLCONF = 'PAQSBackend.urls'
 
