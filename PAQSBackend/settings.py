@@ -79,6 +79,8 @@ CACHES = {
     }
 }
 
+print('redis_url', REDIS_URL)
+print('result backend', CELERY_RESULT_BACKEND)
 
 ROOT_URLCONF = 'PAQSBackend.urls'
 
