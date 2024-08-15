@@ -14,7 +14,6 @@ load_dotenv()
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("SECRET_KEY")
-print('secret', SECRET_KEY)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -65,37 +64,21 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-REDIS_URL = f"redis://{os.environ.get('REDISUSER')}:{os.environ.get('REDISPASSWORD')}@web.railway.internal:6379"
+REDIS_URL = f"redis://{os.environ.get('REDISUSER')}:{os.environ.get('REDISPASSWORD')}@{os.environ.get('REDISHOST')}:{os.environ.get('REDISPORT')}"
 
+# CELERY CONFIG
 CELERY_BROKER_URL = REDIS_URL
 CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND")
 CELERY_BEAT_SCHEDULER = os.environ.get("CELERY_BEAT_SCHEDULER")
-CELERY_ACCEPT_CONTENT = ["json"]
-CELERY_TASK_SERIALIZER = "json"
-CELERY_TIMEZONE = "UTC"
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TASK_TRACK_STARTED = True
-CELERY_HIJACK_ROOT_LOGGER = False
 
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [(os.environ.get("REDISHOST"), 6379)],
-        },
-    },
-}
-
-
+# REDIS CACHE CONFIG
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": "redis://redis:6379",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient"
-        },
+        "LOCATION": REDIS_URL,
     }
 }
+
 
 ROOT_URLCONF = 'PAQSBackend.urls'
 

@@ -21,7 +21,6 @@ services:
       REDISPORT: ${REDISPORT}
       REDISUSER: ${REDISUSER}
       REDISPASSWORD: ${REDISPASSWORD}
-      REDIS_URL: ${REDIS_URL}
     depends_on: &app-depends-on
       - db
       - redis
@@ -36,21 +35,13 @@ services:
     build: *app-build
     environment: *app-environment
     depends_on: *app-depends-on
-    command: /PAQSBackend/deployment/worker-entrypoint.sh
+    command: /app/deployment/worker-entrypoint.sh
 
   redis:
     restart: unless-stopped
     image: redis:latest
     ports:
       - "6379:6379"
-
-  web:
-    build: .
-    command: python manage.py runserver
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-    depends_on:
-      - redis
 
   db:
     image: postgres:14.0-alpine
