@@ -34,7 +34,7 @@ def makeImage(n: int, format: str, path: str, comp: str, prod: str, batch: str, 
         logo_box = (qr.size[0] // 2 - logo_image.size[0] // 2, 
                     qr.size[1] // 2 - logo_image.size[1] // 2)
         qr.paste(logo_image, logo_box, mask=logo_image)
-
+    print('logo')
     # Draw additional text
     draw = ImageDraw.Draw(qr)
     font = ImageFont.load_default()  
@@ -80,7 +80,7 @@ def generate(count: int, format: str, comp: str, prod: str, batch: str, logo: st
 
     qr_code_data = []
     tasks = []
-    
+    print("generate task")
     for n in range(count):
         task = makeImage.delay(n+1, format, comp, prod, batch, logo)
         tasks.append(task)
