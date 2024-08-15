@@ -19,7 +19,7 @@ print('secret', SECRET_KEY)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [ '127.0.0.1', 'localhost', 'company-six-liard.vercel.app', 'web-production-ef21.up.railway.app']
+ALLOWED_HOSTS = [ '127.0.0.1', 'localhost', 'company-six-liard.vercel.app', 'backend-production-7888.up.railway.app']
 
 SITE_ID = 1
 
@@ -231,7 +231,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOWED_ORIGINS = [
     'https://company-six-liard.vercel.app', #company temporal
     'https://users-rouge.vercel.app', #user temporal
-    "https://web-production-ef21.up.railway.app", # backend url
+    "https://backend-production-7888.up.railway.app", # backend url
     "http://localhost:8080",
     "http://localhost:7200",
     "http://localhost:9000",
@@ -250,7 +250,7 @@ SESSION_COOKIE_SECURE = True
 SECURE_SSL_REDIRECT = False
 CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:7200/", 'https://web-production-ef21.up.railway.app'
+    "http://localhost:7200/", 'https://backend-production-7888.up.railway.app'
 ]
 
 CORS_ALLOW_HEADERS = [
@@ -272,11 +272,11 @@ AUTH_USER_MODEL = "accounts.AbstractUserProfile"
 # CONTENT_SECURITY_POLICY = {
 #     "EXCLUDE_URL_PREFIXES": ["/excluded-path/"],
 #     "DIRECTIVES": {
-#          "default-src": ["'self'", "https://web-production-ef21.up.railway.app"],
-#         "script-src": ["'self'", "'unsafe-eval'", "https://web-production-ef21.up.railway.app", "'blob:'"],
+#          "default-src": ["'self'", "https://backend-production-7888.up.railway.app"],
+#         "script-src": ["'self'", "'unsafe-eval'", "https://backend-production-7888.up.railway.app", "'blob:'"],
 #         "style-src": ["'self'"],
-#         "connect-src": ["'self'", "https://web-production-ef21.up.railway.app"],
-#         "img-src": ["'self'", "blob:", "data:", "https://web-production-ef21.up.railway.app"],
+#         "connect-src": ["'self'", "https://backend-production-7888.up.railway.app"],
+#         "img-src": ["'self'", "blob:", "data:", "https://backend-production-7888.up.railway.app"],
 #         "font-src": ["'self'"],
 #         "object-src": ["'none'"],
 #         "frame-ancestors": ["'self'"],
