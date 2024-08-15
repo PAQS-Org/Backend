@@ -8,7 +8,7 @@ from django.core.cache import cache
 @shared_task
 def generate_qr_codes(payment_id):
     from .models import Payment  # Import here to avoid circular imports
-
+    print("generate begins")
     try:
         payment = Payment.objects.get(transaction_id=payment_id)
         print('payment', payment)
@@ -50,6 +50,7 @@ def generate_qr_codes(payment_id):
             )
             for gen_id, _ in qr_data 
         ]
+        print('hit the db')
         LogProduct.objects.bulk_create(log_entries)
         payment.QRcode_status = 'completed'
         payment.save()

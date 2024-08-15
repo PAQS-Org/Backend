@@ -79,9 +79,9 @@ def verify_payment(request):
             payment.transaction_status = 'paid'
             payment.verified = True
             payment.save()
-
+            print("about to generate")
             generate_qr_codes.delay(payment.transaction_id)
-           
+            print('generate ended')
         else:
             payment.transaction_status = data['data']['status']  # Assuming status is available in the payload
             payment.verified = False
