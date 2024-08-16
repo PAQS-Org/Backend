@@ -18,7 +18,7 @@ def makeImage(n: int, format: str, path: str, comp: str, prod: str, batch: str, 
     code = f"{app_url}/{gen_id}/{comp}/{prod}"
     
     # Cache key for QR code
-    cache_key = f"qr_code:{comp}:{prod}:{batch}:{n}"
+    cache_key = f"qr_code:{comp}:{prod}:{batch}:{gen_id}:{n}"
     cached_qr = redis_client.get(cache_key)
 
     if cached_qr:
@@ -82,7 +82,7 @@ def generate(count: int, format: str, comp: str, prod: str, batch: str, logo: st
     tasks = []
     print("generate task")
     for n in range(count):
-        task = makeImage.delay(n+1, format, comp, prod, batch, logo)
+        task = makeImage(n+1, format, comp, prod, batch, logo)
         tasks.append(task)
 
     # Collect results as they complete
