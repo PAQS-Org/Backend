@@ -238,18 +238,13 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
-
 AUTH_USER_MODEL = "accounts.AbstractUserProfile"
 
-
-
-CSP_DEFAULT_SRC = ("'self'",)
-CSP_SCRIPT_SRC = ("'self'", "https://paqsstoragebucket.s3.amazonaws.com")
-CSP_STYLE_SRC = ("'self'", "https://paqsstoragebucket.s3.amazonaws.com", "'unsafe-inline'")
-CSP_IMG_SRC = ("'self'", "https://paqsstoragebucket.s3.amazonaws.com")
-CSP_FONT_SRC = ("'self'", "https://paqsstoragebucket.s3.amazonaws.com")
-CSP_SCRIPT_SRC = ("'self'", "https://paqsstoragebucket.s3.amazonaws.com", "'unsafe-eval'")
-
+CSP_DEFAULT_SRC = ("'self'", "*")
+CSP_SCRIPT_SRC = ("'self'", "*", "'unsafe-inline'", "'unsafe-eval'")
+CSP_STYLE_SRC = ("'self'", "*", "'unsafe-inline'")
+CSP_IMG_SRC = ("'self'", "*")
+CSP_FONT_SRC = ("'self'", "*")
 
 # CONTENT_SECURITY_POLICY = {
 #     "EXCLUDE_URL_PREFIXES": ["/excluded-path/"],
