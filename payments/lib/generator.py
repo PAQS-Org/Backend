@@ -7,9 +7,10 @@ from PIL import Image, ImageDraw, ImageFont
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from celery import shared_task
+from django.conf import settings
 from io import BytesIO
 
-redis_client = redis.StrictRedis(host=os.environ.get("REDIS_URL"), port=6379, db=0)
+redis_client = redis.StrictRedis(host=settings.CELERY_BROKER_URL, port=6379, db=0)
 
 @shared_task
 def makeImage(n: int, format: str, path: str, comp: str, prod: str, batch: str, logo: str | None = None) -> str:
