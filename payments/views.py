@@ -6,6 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 import hmac
 import hashlib
+from django.contrib.auth.decorators import login_required
 from django.http import FileResponse
 from .models import Payment 
 from .serializer import PaymentSerializer
@@ -22,6 +23,13 @@ from django.template.loader import render_to_string
 from django.templatetags.static import static
 from .lib.generator import generate
 from .lib.messages import prodmessage
+import boto3
+from django.conf import settings
+from django.core.cache import cache
+import logging
+
+# Set up the logger
+logger = logging.getLogger('django')
 
 class InitiatePayment(APIView):
     serializer_class = PaymentSerializer
@@ -82,8 +90,9 @@ def verify_payment(request):
             payment.verified = True
             payment.save()
 
-            s3_url,make_qr = generate.delay(count=payment.quantity, batch=payment.batch_number, format=payment.render_type, comp=payment.company, prod=payment.product_name, logo=payment.product_logo)
-
+            gen = generate.delay(count=payment.quantity, batch=payment.batch_number, format=payment.render_type, comp=payment.company, prod=payment.product_name, logo=payment.product_logo)
+            s3_url, make_qr, gen_id = gen.get() 
+            print('s3_url', s3_url)
             log_entries = [
                 LogProduct(
                     company_code=payment.company,
@@ -107,6 +116,7 @@ def verify_payment(request):
 
             LogProduct.objects.bulk_create(log_entries)
             payment.QRcode_status = 'completed'
+            payment.file_id = gen_id
             payment.save()
         else:
             payment.transaction_status = data['data']['status']  # Assuming status is available in the payload
@@ -171,6 +181,17 @@ class InvoiceViewSet(viewsets.ModelViewSet):
         company = self.request.user.company
         return Payment.objects.filter(company=company)  
     
+class QRCodeViewSet(viewsets.ModelViewSet):
+    queryset = Payment.objects.all()
+    serializer_class = PaymentSerializer
+    pagination_class = StandardResultsSetPagination
+    permission_classes = [IsAuthenticated, IsOwner]
+
+    def get_queryset(self):
+        company = self.request.user.company
+        return Payment.objects.filter(company=company, QRcode_status='completed')
+
+    
 class CheckPaymentStatus(APIView):
     def get(self, request, reference):
         try:
@@ -181,3 +202,41 @@ class CheckPaymentStatus(APIView):
             })
         except Payment.DoesNotExist:
             return JsonResponse({'error': 'Transaction not found'}, status=404)
+        
+
+def generate_presigned_url(company_name, product_name, batch_number, uuid, expiration=3600):
+    file_key = f"static/qrcodes/{company_name}/{product_name}/{batch_number}_{uuid}.zip"
+    s3_client = boto3.client('s3', aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                                  aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                                  region_name=settings.AWS_S3_REGION_NAME)
+    try:
+        response = s3_client.generate_presigned_url('get_object',
+                                                    Params={'Bucket': settings.AWS_STORAGE_BUCKET_NAME,
+                                                            'Key': file_key},
+                                                    ExpiresIn=expiration)
+    except Exception as e:
+        print(f"Error generating presigned URL: {e}")
+        return None
+    return response
+
+
+def get_cached_presigned_url(company_name, product_name, batch_number, uuid):
+    cache_key = f"{company_name}/{product_name}/{batch_number}_{uuid}"
+    url = cache.get(cache_key)
+    if not url:
+        url = generate_presigned_url(company_name, product_name, batch_number, uuid)
+        cache.set(cache_key, url, timeout=3600)  # Cache for 1 hour
+    return url
+
+@login_required
+def get_user_file(request, company_name, product_name, batch_number, uuid):
+    user = request.user    
+    presigned_url = get_cached_presigned_url(company_name, product_name, batch_number, uuid)
+    if presigned_url:
+        log_file_access(user, company_name, product_name, batch_number, uuid)
+        return JsonResponse({'url': presigned_url})
+    return JsonResponse({'error': 'Could not generate URL'}, status=400)
+
+
+def log_file_access(user, company_name, product_name, batch_number, uuid):
+    logger.info(f"User {user.username} accessed {company_name}/{product_name}/{batch_number}_{uuid}.zip")

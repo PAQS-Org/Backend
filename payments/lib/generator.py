@@ -53,7 +53,7 @@ def makeImage(n: int, format: str, path: str, comp: str, prod: str, batch: str, 
 
 @shared_task
 def makeZip(path: str, comp: str, prod: str, batch: str, gen_id: str) -> str:
-    zip_filename = f"{comp}_{prod}_{batch}_{gen_id}.zip"  # Updated zip file name format
+    zip_filename = f"{comp}/{prod}/{batch}_{gen_id}.zip"  # Updated zip file name format
     zipPath = shutil.make_archive(base_name=f"qrcodes/data/{gen_id}", format="zip", root_dir=path)
     with open(zipPath, 'rb') as zip_file:
         file_name = f"qrcodes/{zip_filename}"
@@ -80,6 +80,6 @@ def generate(count: int, format: str, comp: str, prod: str, batch: str, logo: st
 
     zipFilePath = makeZip.delay(path, comp, prod, batch, gen_id)
     print("zipPath", zipFilePath)
-    return zipFilePath, qr_code_data
+    return zipFilePath, qr_code_data, gen_id
 
 

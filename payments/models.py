@@ -23,6 +23,7 @@ class Payment(models.Model):
     transaction_id = models.CharField(max_length=100, blank=True, null=True)
     transaction_status = models.CharField(max_length=20)
     QRcode_status = models.CharField(max_length=20, default="Not generated")
+    file_id = models.CharField(max_length=255, blank=True, null=True)
     verified = models.BooleanField(default=False)
     date_created = models.DateTimeField(auto_now_add=True)
 
