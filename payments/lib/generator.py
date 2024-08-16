@@ -5,7 +5,9 @@ import os
 import shutil
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
+from celery import shared_task
 
+@shared_task
 def makeImage(n: int, format: str, path: str, comp: str, prod: str, batch: str, logo: str | None = None) -> str:
     app_url = "http://localhost"
     gen_id = str(uuid.uuid4())  # Generate a new UUID for each QR code
@@ -49,7 +51,7 @@ def makeImage(n: int, format: str, path: str, comp: str, prod: str, batch: str, 
     return gen_id, filepath
 
 
-
+@shared_task
 def makeZip(path: str, comp: str, prod: str, batch: str, gen_id: str) -> str:
     zip_filename = f"{comp}_{prod}_{batch}_{gen_id}.zip"  # Updated zip file name format
     zipPath = shutil.make_archive(base_name=f"qrcodes/data/{gen_id}", format="zip", root_dir=path)
@@ -62,7 +64,7 @@ def makeZip(path: str, comp: str, prod: str, batch: str, gen_id: str) -> str:
     print("creating the zip")
     return default_storage.url(s3_file_path)
 
-
+@shared_task
 def generate(count: int, format: str, comp: str, prod: str, batch: str, logo: str | None = None) -> str:
     if not os.path.exists("qrcodes/data"):
         os.mkdir("qrcodes/data")
@@ -73,10 +75,10 @@ def generate(count: int, format: str, comp: str, prod: str, batch: str, logo: st
     os.mkdir(path)
     qr_code_data = []
     for n in range(count):
-        qr_code_gen_id, filepath = makeImage(n+1, format, path, comp, prod, batch, logo)
+        qr_code_gen_id, filepath = makeImage.delay(n+1, format, path, comp, prod, batch, logo)
         qr_code_data.append((qr_code_gen_id, filepath))
 
-    zipFilePath = makeZip(path, comp, prod, batch, gen_id)
+    zipFilePath = makeZip.delay(path, comp, prod, batch, gen_id)
     print("zipPath", zipFilePath)
     return zipFilePath, qr_code_data
 

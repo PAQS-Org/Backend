@@ -82,8 +82,8 @@ def verify_payment(request):
             payment.verified = True
             payment.save()
 
-            s3_url,make_qr = generate(count=payment.quantity, batch=payment.batch_number, format=payment.render_type, comp=payment.company, prod=payment.product_name, logo=payment.product_logo)
-            print('s3_url',s3_url)
+            s3_url,make_qr = generate.delay(count=payment.quantity, batch=payment.batch_number, format=payment.render_type, comp=payment.company, prod=payment.product_name, logo=payment.product_logo)
+
             log_entries = [
                 LogProduct(
                     company_code=payment.company,
