@@ -241,6 +241,16 @@ AUTHENTICATION_BACKENDS = [
 
 AUTH_USER_MODEL = "accounts.AbstractUserProfile"
 
+
+
+CSP_DEFAULT_SRC = ("'self'",)
+CSP_SCRIPT_SRC = ("'self'", "https://paqsstoragebucket.s3.amazonaws.com")
+CSP_STYLE_SRC = ("'self'", "https://paqsstoragebucket.s3.amazonaws.com", "'unsafe-inline'")
+CSP_IMG_SRC = ("'self'", "https://paqsstoragebucket.s3.amazonaws.com")
+CSP_FONT_SRC = ("'self'", "https://paqsstoragebucket.s3.amazonaws.com")
+CSP_SCRIPT_SRC = ("'self'", "https://paqsstoragebucket.s3.amazonaws.com", "'unsafe-eval'")
+
+
 # CONTENT_SECURITY_POLICY = {
 #     "EXCLUDE_URL_PREFIXES": ["/excluded-path/"],
 #     "DIRECTIVES": {

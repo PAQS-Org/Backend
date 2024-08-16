@@ -106,6 +106,8 @@ def verify_payment(request):
             ]
 
             LogProduct.objects.bulk_create(log_entries)
+            payment.QRcode_status = 'completed'
+            payment.save()
         else:
             payment.transaction_status = data['data']['status']  # Assuming status is available in the payload
             payment.verified = False
