@@ -6,7 +6,7 @@ from .prices import calculate_unit_price
 
 class PaymentSerializer(serializers.ModelSerializer):
     amount = serializers.CharField(read_only=True)
-
+    company = serializers.CharField(source='company.name', read_only=True)
     class Meta:
         model = Payment
         fields = [

@@ -25,10 +25,10 @@ from .lib.messages import prodmessage
 import boto3
 from django.conf import settings
 from django.core.cache import cache
-# import logging
+import logging
 
 # Set up the logger
-# logger = logging.getLogger('django')
+logger = logging.getLogger('django')
 
 class InitiatePayment(APIView):
     serializer_class = PaymentSerializer
@@ -234,10 +234,10 @@ def get_user_file(request, company_name, product_name, batch_number, uuid):
     user = request.user    
     presigned_url = get_cached_presigned_url(company_name, product_name, batch_number, uuid)
     if presigned_url:
-        # log_file_access(user, company_name, product_name, batch_number, uuid)
+        log_file_access(user, company_name, product_name, batch_number, uuid)
         return JsonResponse({'url': presigned_url})
     return JsonResponse({'error': 'Could not generate URL'}, status=400)
 
 
-# def log_file_access(user, company_name, product_name, batch_number, uuid):
-#     logger.info(f"User {user.email} accessed {company_name}/{product_name}/{batch_number}_{uuid}.zip")
+def log_file_access(user, company_name, product_name, batch_number, uuid):
+    logger.info(f"User {user.email} accessed {company_name}/{product_name}/{batch_number}_{uuid}.zip")
