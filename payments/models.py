@@ -21,7 +21,7 @@ class Payment(models.Model):
     unit_price = models.DecimalField(null=True, max_digits=5, decimal_places=2)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     transaction_id = models.CharField(max_length=100, blank=True, null=True)
-    transaction_status = models.CharField(max_length=20)
+    transaction_status = models.CharField(max_length=20, default='Failed')
     QRcode_status = models.CharField(max_length=20, default="Not generated")
     file_id = models.CharField(max_length=255, blank=True, null=True)
     verified = models.BooleanField(default=False)
