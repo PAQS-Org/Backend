@@ -90,9 +90,12 @@ def verify_payment(request):
             payment.verified = True
             payment.save()
 
-            s3_url, make_qr, gen_id = generate(count=payment.quantity, batch=payment.batch_number, format=payment.render_type, comp=payment.company, prod=payment.product_name, logo=payment.product_logo)
+            s3_url, make_qr= generate(count=payment.quantity, batch=payment.batch_number, format=payment.render_type, comp=payment.company, prod=payment.product_name, logo=payment.product_logo)
              
             print('s3_url', s3_url)
+
+            gen_id = s3_url.split('/')[-1].split('_')[-1].replace('.zip', '')
+
             log_entries = [
                 LogProduct(
                     company_code=payment.company,
@@ -119,7 +122,7 @@ def verify_payment(request):
             payment.file_id = gen_id
             payment.save()
         else:
-            payment.transaction_status = data['data']['status']  # Assuming status is available in the payload
+            payment.transaction_status = data['data']['status'] 
             payment.verified = False
             payment.save()
 

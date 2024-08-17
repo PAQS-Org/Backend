@@ -5,7 +5,6 @@ import os
 import shutil
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
-from celery import shared_task
 
 
 def makeImage(n: int, format: str, path: str, comp: str, prod: str, batch: str, logo: str | None = None) -> str:
@@ -79,6 +78,6 @@ def generate(count: int, format: str, comp: str, prod: str, batch: str, logo: st
 
     zipFilePath = makeZip(path, comp, prod, batch, gen_id)
     print("zipPath", zipFilePath)
-    return zipFilePath, qr_code_data, gen_id
+    return zipFilePath, qr_code_data
 
 
