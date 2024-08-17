@@ -240,4 +240,4 @@ def get_user_file(request, company_name, product_name, batch_number, uuid):
 
 
 def log_file_access(user, company_name, product_name, batch_number, uuid):
-    logger.info(f"User {user.email} accessed {company_name}/{product_name}/{batch_number}_{uuid}.zip")
+    logger.info(f"User {user} accessed {company_name}/{product_name}/{batch_number}_{uuid}.zip")
