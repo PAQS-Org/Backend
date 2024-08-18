@@ -63,10 +63,10 @@ class CheckoutInfo(models.Model):
 
 
 class LogProduct(models.Model):
-    company_code = models.CharField(max_length=100)
-    product_code = models.CharField(max_length=100)
-    batch_code = models.CharField(max_length=50)
-    qr_key = models.CharField(max_length=300)
+    company_name = models.CharField(max_length=100)
+    product_name = models.CharField(max_length=100)
+    batch_number = models.CharField(max_length=50)
+    code_key = models.CharField(max_length=300)
     perishable = models.CharField(max_length=100)
     manufacture_date = models.DateField(blank=True, null=True)
     expiry_date = models.DateField(blank=True, null=True)
@@ -82,11 +82,11 @@ class LogProduct(models.Model):
         verbose_name = 'Logproduct'
         verbose_name_plural = 'Logproducts'
         indexes = [
-            models.Index(fields=['qr_key', 'company_code', 'product_code'])
+            models.Index(fields=['code_key', 'company_name', 'product_name', 'batch_number'])
         ]
 
     def __str__(self):
-        return f"{self.company_code}-{self.product_code}-{self.batch_code}"
+        return f"{self.company_name}-{self.product_name}-{self.batch_number}"
 
     def __unicode__(self):
-        return self.qr_key
+        return self.code_key

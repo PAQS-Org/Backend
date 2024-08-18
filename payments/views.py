@@ -38,7 +38,6 @@ class InitiatePayment(APIView):
         serializer = self.serializer_class(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         payment_instance = serializer.save()
-        print(payment_instance)
         headers = {"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}"}
         payload = {
             "amount": payment_instance.amount * 100,

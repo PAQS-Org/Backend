@@ -13,7 +13,7 @@ def makeImage(n: int, format: str, path: str, comp: str, prod: str, batch: str, 
     company = f"{comp}"
     product = f"{prod}"
     batch_number = f"{batch}"
-    code = f"{app_url}/{gen_id}/{company}/{product}"
+    code = f"{app_url}/{gen_id}/{company}/{product}/{batch_number}"
     qr = qrcode.make(code)
     
     qr = qr.convert("RGBA")  # Ensure QR code is in RGBA mode

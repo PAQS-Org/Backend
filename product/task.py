@@ -1,50 +1,63 @@
 # tasks.py
 from celery import shared_task
-from .models import ScanInfo, CheckoutInfo
-from .serializer import ScanInfoSerializer, CheckoutInfoSerializer
+from .models import ScanInfo, LogProduct
+from .serializer import CheckoutInfoSerializer, ScanInfoSerializer
 import requests
 from django.core.cache import cache
 
+
 @shared_task
-def scan_process_location(data):
-    location = data.get('location')
-    
-    # Check cache for geocoding results
-    geocode_data = cache.get(location)
+def scan_process_location(location, validated_data):
+    # Geocoding location
+    cache_key = f"geocode_{location}"
+    geocode_data = cache.get(cache_key)
+
     if not geocode_data:
-        # Use a geocoding service to decode the location
         geocode_url = f"https://nominatim.openstreetmap.org/reverse?format=json&lat={location.split(',')[0]}&lon={location.split(',')[1]}"
         response = requests.get(geocode_url)
         if response.status_code != 200:
             return {'error': 'Could not decode location'}
-        
+
         geocode_data = response.json()
-        # Cache the geocoding result
-        cache.set(location, geocode_data, timeout=86400)  # Cache for 24 hours
-    
+        cache.set(cache_key, geocode_data, timeout=86400)
+
     address = geocode_data.get('address', {})
-    
-    country = address.get('country', '')
-    region = address.get('state', '')
-    city = address.get('city', '') or address.get('town', '') or address.get('village', '')
-    town = address.get('town', '') or address.get('village', '')
-    street = address.get('road', '')
-    
-    # Update data with decoded location fields
-    data.update({
-        'country': country,
-        'region': region,
-        'city': city,
-        'town': town,
-        'street': street,
+    decoded_data = {
+        'country': address.get('country', ''),
+        'region': address.get('state', ''),
+        'city': address.get('city', '') or address.get('town', '') or address.get('village', ''),
+        'town': address.get('town', '') or address.get('village', ''),
+        'street': address.get('road', ''),
         'raw_location': location
-    })
-    
-    serializer = ScanInfoSerializer(data=data)
+    }
+
+    validated_data.update(decoded_data)
+    serializer = ScanInfoSerializer(data=validated_data)
     if serializer.is_valid():
         serializer.save()
-        return serializer.data
-    return serializer.errors
+
+@shared_task
+def hierarchical_search(company_code, product_code, batch_code, code_key):
+    cache_key = f"log_product_{company_code}_{product_code}_{batch_code}_{code_key}"
+    cached_result = cache.get(cache_key)
+
+    if cached_result:
+        return cached_result
+
+    try:
+        log_product = LogProduct.objects.get(
+            company_code=company_code,
+            product_code=product_code,
+            batch_code=batch_code,
+            code_key=code_key
+        )
+    except LogProduct.DoesNotExist:
+        return {'error': 'Product not found'}
+
+    result = {'message': log_product.patch_message if log_product.patch else log_product.checkout_message if log_product.checkout else log_product.message}
+    cache.set(cache_key, result, timeout=86400)
+    return result
+
 
 
 @shared_task
