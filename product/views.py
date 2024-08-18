@@ -43,7 +43,7 @@ class ScanInfoView(APIView):
                 'code_key': code_key,
                 'company_name': company_name,
                 'product_name': product_name,
-                'user_name': request.user,
+                # 'user_name': request.user,
                 'location': location,
             }
 
