@@ -37,10 +37,11 @@ class ProductsInfo(models.Model):
 
 # Concentrate on the generating of the codes. When you are done, then you come to this. do not over think.
 class ScanInfo(models.Model):
+   date_time = models.DateField(auto_now_add=True)
    code_key = models.CharField(max_length=255, blank=False, null=False)
    company_name = models.ForeignKey(to=Company, on_delete=models.CASCADE, related_name="scanCompany")
    product_name = models.ForeignKey(to=ProductsInfo, on_delete=models.CASCADE)
-   user_name = models.ForeignKey(to=User, on_delete=models.CASCADE)
+   user_name = models.CharField(max_length=255)
    location = models.CharField(max_length=255)
    country = models.CharField(max_length=255)
    region = models.CharField(max_length=255)
@@ -50,10 +51,11 @@ class ScanInfo(models.Model):
 
 
 class CheckoutInfo(models.Model):
+   date_time = models.DateField(auto_now_add=True)
    code_key = models.CharField(max_length=255, blank=False, null=False)
    company_name = models.ForeignKey(to=Company, on_delete=models.CASCADE, related_name="checkoutCompany")
    product_name = models.ForeignKey(to=ProductsInfo, on_delete=models.CASCADE)
-   user_name = models.ForeignKey(to=User, on_delete=models.CASCADE)
+   user_name = models.CharField(max_length=255)
    location = models.CharField(max_length=255)
    country = models.CharField(max_length=255)
    region = models.CharField(max_length=255)
