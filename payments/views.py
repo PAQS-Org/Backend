@@ -93,10 +93,10 @@ def verify_payment(request):
 
             log_entries = [
                 LogProduct(
-                    company_code=payment.company,
-                    product_code=payment.product_name,
-                    batch_code=payment.batch_number,
-                    qr_key=gen_id, 
+                    company_name=payment.company,
+                    product_name=payment.product_name,
+                    batch_number=payment.batch_number,
+                    code_key=gen_id, 
                     perishable=payment.perishable,
                     manufacture_date=payment.manufacture_date,
                     expiry_date=payment.expiry_date,
