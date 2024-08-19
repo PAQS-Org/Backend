@@ -168,7 +168,7 @@ LOGGING = {
     'loggers': {
         'django': {
             'handlers': ['console'],
-            'level': 'ERROR',
+            'level': ['ERROR', 'WARNING', 'INFO', 'DEBUG', 'FATAL', 'CRITICAL'],
             'propagate': True,
         },
         'botocore': {
