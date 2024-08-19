@@ -38,8 +38,9 @@ class ScanInfoView(APIView):
 
         # Hierarchical search in LogProduct table
         try:
-            search_result = hierarchical_search.delay(company_name, product_name, batch_number, code_key)
-            result = search_result.get(timeout=5000)
+            search_result = hierarchical_search(company_name, product_name, batch_number, code_key)
+            # result = search_result.get(timeout=5000)
+            result = search_result
             # Store the scan information in the database
             
             scan_data = {
@@ -54,7 +55,7 @@ class ScanInfoView(APIView):
             if serializer.is_valid():
                 scan_info = serializer.save()
                 # Process location asynchronously
-                scan_process_location.delay(scan_info.id)
+                scan_process_location(scan_info.id)
 
             return Response({'message': result}, status=status.HTTP_200_OK)
         

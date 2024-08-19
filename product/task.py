@@ -6,7 +6,7 @@ import requests
 from django.core.cache import cache
 
 
-@shared_task
+
 def scan_process_location(location, validated_data):
     # Geocoding location
     cache_key = f"geocode_{location}"
@@ -36,7 +36,7 @@ def scan_process_location(location, validated_data):
     if serializer.is_valid():
         serializer.save()
 
-@shared_task
+
 def hierarchical_search(company_code, product_code, batch_code, code_key):
     cache_key = f"log_product_{company_code}_{product_code}_{batch_code}_{code_key}"
     cached_result = cache.get(cache_key)
