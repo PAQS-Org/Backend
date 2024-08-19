@@ -32,9 +32,9 @@ def generate_qr_codes(payment_id):
         
         log_entries = [
             LogProduct(
-                company_code=payment.company,
-                product_code=payment.product_name,
-                batch_code=payment.batch_number,
+                company_name=payment.company,
+                product_name=payment.product_name,
+                batch_number=payment.batch_number,
                 qr_key=gen_id, 
                 perishable=payment.perishable,
                 manufacture_date=payment.manufacture_date,

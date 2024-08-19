@@ -37,8 +37,8 @@ def scan_process_location(location, validated_data):
         serializer.save()
 
 
-def hierarchical_search(company_code, product_code, batch_code, code_key):
-    cache_key = f"log_product_{company_code}_{product_code}_{batch_code}_{code_key}"
+def hierarchical_search(company_name, product_name, batch_number, code_key):
+    cache_key = f"log_product_{company_name}_{product_name}_{batch_number}_{code_key}"
     cached_result = cache.get(cache_key)
 
     if cached_result:
@@ -46,9 +46,9 @@ def hierarchical_search(company_code, product_code, batch_code, code_key):
 
     try:
         log_product = LogProduct.objects.get(
-            company_code=company_code,
-            product_code=product_code,
-            batch_code=batch_code,
+            company_name=company_name,
+            product_name=product_name,
+            batch_number=batch_number,
             code_key=code_key
         )
     except LogProduct.DoesNotExist:
