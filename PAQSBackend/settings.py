@@ -59,7 +59,7 @@ MIDDLEWARE = [
      "csp.middleware.CSPMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -253,7 +253,6 @@ SESSION_COOKIE_SECURE = True
 SECURE_SSL_REDIRECT = False
 CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:7200/", 
     'https://backend-production-7888.up.railway.app', 
     'https://company-six-liard.vercel.app',
     'https://users-rouge.vercel.app'
