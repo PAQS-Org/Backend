@@ -18,7 +18,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [ '127.0.0.1', 'localhost', 'company-six-liard.vercel.app', 'backend-production-7888.up.railway.app']
+ALLOWED_HOSTS = [ '127.0.0.1', 'localhost','users-rouge.vercel.app' , 'company-six-liard.vercel.app', 'backend-production-7888.up.railway.app']
 
 SITE_ID = 1
 
