@@ -160,7 +160,7 @@ LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'handlers': {
-        'file': {
+        'console': {  
             'level': 'INFO',
             'class': 'logging.StreamHandler',
         },
@@ -171,20 +171,20 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': True,
         },
-        'botocore':{
-            'handlers':['console'],
+        'botocore': {
+            'handlers': ['console'],
             'level': 'WARNING',
         },
-        'boto3':{
-            'handlers':['console'],
+        'boto3': {
+            'handlers': ['console'],
             'level': 'WARNING',
         },
-        's3transfer':{
-            'handlers':['console'],
+        's3transfer': {
+            'handlers': ['console'],
             'level': 'WARNING',
         },
-        'urllib3':{
-            'handlers':['console'],
+        'urllib3': {
+            'handlers': ['console'],
             'level': 'WARNING',
         },
     },
