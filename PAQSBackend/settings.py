@@ -161,14 +161,14 @@ LOGGING = {
     'disable_existing_loggers': False,
     'handlers': {
         'console': {  
-            'level': 'INFO',
+            'level': 'DEBUG',
             'class': 'logging.StreamHandler',
         },
     },
     'loggers': {
         'django': {
             'handlers': ['console'],
-            'level': ['ERROR', 'WARNING', 'INFO', 'DEBUG', 'FATAL', 'CRITICAL'],
+            'level': 'DEBUG',
             'propagate': True,
         },
         'botocore': {
