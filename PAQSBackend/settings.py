@@ -260,7 +260,10 @@ SESSION_COOKIE_SECURE = True
 SECURE_SSL_REDIRECT = False
 CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:7200/", 'https://backend-production-7888.up.railway.app'
+    "http://localhost:7200/", 
+    'https://backend-production-7888.up.railway.app', 
+    'https://company-six-liard.vercel.app',
+    'https://users-rouge.vercel.app'
 ]
 
 CORS_ALLOW_HEADERS = [
