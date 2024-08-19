@@ -16,7 +16,7 @@ load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [ '127.0.0.1', 'localhost','users-rouge.vercel.app' , 'company-six-liard.vercel.app', 'backend-production-7888.up.railway.app']
 
@@ -174,18 +174,22 @@ LOGGING = {
         'botocore': {
             'handlers': ['console'],
             'level': 'WARNING',
+            'propagate': False,
         },
         'boto3': {
             'handlers': ['console'],
             'level': 'WARNING',
+            'propagate': False,
         },
         's3transfer': {
             'handlers': ['console'],
             'level': 'WARNING',
+            'propagate': False,
         },
         'urllib3': {
             'handlers': ['console'],
             'level': 'WARNING',
+            'propagate': False,
         },
     },
 }
