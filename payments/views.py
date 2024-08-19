@@ -89,9 +89,6 @@ def verify_payment(request):
             payment.save()
 
             s3_url, make_qr= generate(count=payment.quantity, batch=payment.batch_number, format=payment.render_type, comp=payment.company, prod=payment.product_name, logo=payment.product_logo)
-             
-            print('s3_url', s3_url)
-
             gen_id = s3_url.split('/')[-1].split('_')[-1].replace('.zip', '')
 
             log_entries = [

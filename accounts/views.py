@@ -333,6 +333,6 @@ def csp_report(request):
         report = json.loads(request.body.decode('utf-8'))
         # Process the report (e.g., log to a file, database, etc.)
         # For now, let's just print it
-        print(report)
+        print('csp', report)
         return JsonResponse({'status': 'ok'}, status=204)  # 204 No Content is a typical response
     return JsonResponse({'status': 'method not allowed'}, status=405)
