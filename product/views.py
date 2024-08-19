@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from accounts.permissions import IsOwner, IsUser
 from .serializer import ProductInfoSerializer, LogProductSerializer, ScanInfoSerializer
 from .task import scan_process_location, checkout_process_location, hierarchical_search
+from django.views.decorators.csrf import csrf_exempt  
 
 class CreateProductItems(APIView):
   permission_classes = (IsAuthenticated, IsOwner)
@@ -21,7 +22,7 @@ class CreateProductItems(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     return Response({"message": "Order items created successfully", "data": ProductInfoSerializer(order_items, many=True).data})
 
-
+@csrf_exempt
 class ScanInfoView(APIView):
     permission_classes = (IsAuthenticated, IsUser, IsOwner)
     serializer_class = ScanInfoSerializer
