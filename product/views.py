@@ -1,3 +1,5 @@
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -22,6 +24,7 @@ class CreateProductItems(APIView):
     return Response({"message": "Order items created successfully", "data": ProductInfoSerializer(order_items, many=True).data})
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class ScanInfoView(APIView):
     permission_classes = (IsAuthenticated, IsUser, IsOwner)
     serializer_class = ScanInfoSerializer
