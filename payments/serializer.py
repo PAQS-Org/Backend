@@ -9,21 +9,7 @@ class PaymentSerializer(serializers.ModelSerializer):
     company = serializers.CharField(read_only=True)
     class Meta:
         model = Payment
-        fields = [
-            'id',
-            'transaction_id',
-            'company',
-            'product_name', 
-            'batch_number',
-            'product_logo',
-            'date_created',
-            'QRcode_status',
-            'transaction_status',
-            'file_id',
-            'unit_price',
-            'quantity', 
-            'amount', 
-            ]
+        fields = '__all__'
     
     def create(self, validated_data):
         request = self.context.get('request')
