@@ -34,7 +34,7 @@ class ScanInfoView(APIView):
         qr_code = request.data.get('qr_code')
         email = request.data.get('email')
         location = request.data.get('location')
-        _, code_key, company_name, product_name, batch_number  = qr_code.split('/')
+        x,y,z,code_key, company_name, product_name, batch_number  = qr_code.split('/')
 
         # Hierarchical search in LogProduct table
         try:
