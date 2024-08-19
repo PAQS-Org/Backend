@@ -162,15 +162,30 @@ LOGGING = {
     'handlers': {
         'file': {
             'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': 'file_access.log',
+            'class': 'logging.StreamHandler',
         },
     },
     'loggers': {
         'django': {
-            'handlers': ['file'],
-            'level': 'INFO',
+            'handlers': ['console'],
+            'level': 'ERROR',
             'propagate': True,
+        },
+        'botocore':{
+            'handlers':['console'],
+            'level': 'WARNING',
+        },
+        'boto3':{
+            'handlers':['console'],
+            'level': 'WARNING',
+        },
+        's3transfer':{
+            'handlers':['console'],
+            'level': 'WARNING',
+        },
+        'urllib3':{
+            'handlers':['console'],
+            'level': 'WARNING',
         },
     },
 }
