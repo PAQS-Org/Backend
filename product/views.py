@@ -39,7 +39,7 @@ class ScanInfoView(APIView):
         # Hierarchical search in LogProduct table
         try:
             search_result = hierarchical_search.delay(company_name, product_name, batch_number, code_key)
-            result = search_result.get(timeout=10)
+            result = search_result.get(timeout=5000)
             # Store the scan information in the database
             
             scan_data = {
