@@ -242,20 +242,13 @@ CORS_ALLOWED_ORIGINS = [
     'https://company-six-liard.vercel.app', #company temporal
     'https://users-rouge.vercel.app', #user temporal
     "https://backend-production-7888.up.railway.app", # backend url
-    "http://localhost:8080",
-    "http://localhost:7200",
-    "http://localhost:9000",
-    "http://localhost:9200",
-    "http://localhost:9201",
-    "http://localhost:9202",
-    "http://127.0.0.1:9000",
     "https://paqs-l46fiysct-osahenes-projects.vercel.app",
     "https://vercel.com",
 ]
 
 CSRF_COOKIE_SECURE = True
 CSRF_HEADER_NAME = "X_CSRFToken"
-
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTOCOL", "https")
 SESSION_COOKIE_SECURE = True
 SECURE_SSL_REDIRECT = False
 CORS_ALLOW_CREDENTIALS = True
