@@ -1,4 +1,4 @@
-# tasks.py
+import re
 from celery import shared_task
 from .models import ScanInfo, LogProduct
 from .serializer import CheckoutInfoSerializer, ScanInfoSerializer
@@ -6,10 +6,12 @@ import requests
 from django.core.cache import cache
 
 
+def sanitize_cache_key(key):
+    return re.sub(r'[^A-Za-z0-9_]', '_', key)
 
 def scan_process_location(location, validated_data):
     # Geocoding location
-    cache_key = f"geocode_{location}"
+    cache_key = sanitize_cache_key(f"geocode_{location}")
     geocode_data = cache.get(cache_key)
 
     print('geo cache key', cache_key)
@@ -45,7 +47,7 @@ def scan_process_location(location, validated_data):
 
 
 def hierarchical_search(company_name, product_name, batch_number, code_key):
-    cache_key = f"log_product_{company_name}_{product_name}_{batch_number}_{code_key}"
+    cache_key = sanitize_cache_key(f"log_product_{company_name}_{product_name}_{batch_number}_{code_key}")
     cached_result = cache.get(cache_key)
 
     if cached_result:
