@@ -6,22 +6,8 @@ from rest_framework import status
 from .models import ProductsInfo, LogProduct, ScanInfo
 from rest_framework.permissions import IsAuthenticated
 from accounts.permissions import IsOwner, IsUser
-from .serializer import ProductInfoSerializer, LogProductSerializer, ScanInfoSerializer
+from .serializer import CheckoutInfoSerializer, ScanInfoSerializer
 from .task import scan_process_location, checkout_process_location, hierarchical_search
-
-class CreateProductItems(APIView):
-  permission_classes = (IsAuthenticated, IsOwner)
-  def post(self, request):
-    data_list = request.data.get('items', [])  # Assuming 'items' is the key in request data
-    order_items = []
-    for item in data_list:
-      serializer = ProductInfoSerializer(data=item)
-      if serializer.is_valid():
-        order_item = serializer.save()
-        order_items.append(order_item)
-      else:
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    return Response({"message": "Order items created successfully", "data": ProductInfoSerializer(order_items, many=True).data})
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -77,15 +63,62 @@ class ScanInfoView(APIView):
 
         except LogProduct.DoesNotExist:
             return Response({'message': 'Last part of the code not found'}, status=status.HTTP_404_NOT_FOUND)
-     
 
+
+@method_decorator(csrf_exempt, name='dispatch')
 class CheckoutInfoView(APIView):
-    permission_classes = (IsAuthenticated, IsUser)
+    permission_classes = (IsAuthenticated, IsUser, IsOwner)
+    serializer_class = CheckoutInfoSerializer  # Assuming ScanInfoSerializer will be used for storing checkout information as well
 
     def post(self, request):
-        data = request.data
-        task = checkout_process_location.delay(data)
-        return Response({'task_id': task.id}, status=status.HTTP_202_ACCEPTED)
+        qr_code = request.data.get('qr_code')
+        email = request.data.get('email')
+        location = request.data.get('location')
+
+        try:
+            # Extract QR code information
+            x, y, z, code_key, company_name, product_name, batch = qr_code.split('/')
+            batch_number = batch[:-1]
+
+            # Find the item in LogProduct table
+            try:
+                log_product = LogProduct.objects.get(
+                    code_key=code_key,
+                    company_name=company_name,
+                    product_name=product_name,
+                    batch_number=batch_number
+                )
+
+                # Update checkout status and message
+                log_product.checkout = True
+                log_product.checkout_message = f"{product_name} from {company_name} has been purchased"
+                log_product.save()
+
+                # Store the checkout information in the CheckoutInfo table
+                checkout_data = {
+                    'code_key': code_key,
+                    'company_name': company_name,
+                    'product_name': product_name,
+                    'user_name': email,
+                    'location': location,
+                }
+
+                serializer = self.serializer_class(data=checkout_data, context={'request': request})
+                if serializer.is_valid():
+                    checkout_info = serializer.save()
+                    # Process location asynchronously
+                    scan_process_location(checkout_info.location, serializer)
+
+                # Return the checkout message
+                return Response({'message': log_product.checkout_message}, status=status.HTTP_200_OK)
+
+            except LogProduct.DoesNotExist:
+                return Response({'message': 'Product does not exist'}, status=status.HTTP_404_NOT_FOUND)
+
+        except ValueError:
+            return Response({'message': 'Invalid QR code format'}, status=status.HTTP_400_BAD_REQUEST)
+
+     
 
 
 
