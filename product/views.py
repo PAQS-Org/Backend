@@ -33,11 +33,16 @@ class ScanInfoView(APIView):
         qr_code = request.data.get('qr_code')
         email = request.data.get('email')
         location = request.data.get('location')
-        x,y,z,code_key, company_name, product_name, batch  = qr_code.split('/')
-        batch_number = batch[:-1]
+
+        if not qr_code or '/' not in qr_code or qr_code.startswith('http://'):
+            return Response({'message': 'Invalid qr code'}, status=status.HTTP_404_NOT_FOUND)
 
         # Hierarchical search in LogProduct table
         try:
+
+            x,y,z,code_key, company_name, product_name, batch  = qr_code.split('/')
+            batch_number = batch[:-1]
+
             search_result = hierarchical_search(company_name, product_name, batch_number, code_key)
             # result = search_result.get(timeout=5000)
             result = search_result
@@ -55,12 +60,9 @@ class ScanInfoView(APIView):
             print('scan data', scan_data)
 
             serializer = self.serializer_class(data=scan_data, context={'request': request})
-            print('valid serializer', serializer.is_valid())
-            print('serializer errors', serializer.errors)
             if serializer.is_valid():
                 scan_info = serializer.save()
                 # Process location asynchronously
-                print('scan info to location', scan_info)
                 scan_process_location(scan_info.location, serializer)
 
             return Response({'message': result}, status=status.HTTP_200_OK)
