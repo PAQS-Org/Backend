@@ -17,9 +17,10 @@ def scan_process_location(location, validated_data):
     print('geo cache key', cache_key)
     print('geocode_data', geocode_data)
 
+    headers = {'User-Agent': 'backendPAQS/1.0 (bra.kwameadu3@gmail.com)'}
     if not geocode_data:
         geocode_url = f"https://nominatim.openstreetmap.org/reverse?format=json&lat={location['latitude']}&lon={location['longitude']}"
-        response = requests.get(geocode_url)
+        response = requests.get(geocode_url, headers=headers)
         print('geo_response', response)
         if response.status_code != 200:
             return {'error': 'Could not decode location'}
