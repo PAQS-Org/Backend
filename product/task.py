@@ -11,14 +11,14 @@ def sanitize_cache_key(key):
 
 def scan_process_location(location, validated_data):
     # Geocoding location
-    cache_key = sanitize_cache_key(f"geocode_{location}")
+    cache_key = sanitize_cache_key(f"geocode_{location['latitude']},{location['longitude']}")
     geocode_data = cache.get(cache_key)
 
     print('geo cache key', cache_key)
     print('geocode_data', geocode_data)
 
     if not geocode_data:
-        geocode_url = f"https://nominatim.openstreetmap.org/reverse?format=json&lat={location.split(',')[0]}&lon={location.split(',')[1]}"
+        geocode_url = f"https://nominatim.openstreetmap.org/reverse?format=json&lat={location['latitude']}&lon={location['longitude']}"
         response = requests.get(geocode_url)
         print('geo_response', response)
         if response.status_code != 200:
