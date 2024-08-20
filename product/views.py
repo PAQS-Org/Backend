@@ -35,13 +35,13 @@ class ScanInfoView(APIView):
         location = request.data.get('location')
 
         if not qr_code or '/' not in qr_code or qr_code.startswith('http://'):
-            return Response({'message': 'Invalid qr code'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'message': f'{qr_code} is not the expected data'}, status=status.HTTP_404_NOT_FOUND)
 
         try:
             x, y, z, code_key, company_name, product_name, batch = qr_code.split('/')
             batch_number = batch[:-1]
         except ValueError:
-            return Response({'message': 'Invalid qr code format'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message': f'{qr_code} is an invalid format'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             search_result = hierarchical_search(company_name, product_name, batch_number, code_key)
