@@ -26,6 +26,7 @@ class ScanInfoView(APIView):
         try:
             x, y, z, code_key, company_name, product_name, batch = qr_code.split('/')
             batch_number = batch[:-1]
+            print('batch number', batch_number)
         except ValueError:
             return Response({'message': f'{qr_code} is an invalid format'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -33,6 +34,7 @@ class ScanInfoView(APIView):
             search_result = hierarchical_search(company_name, product_name, batch_number, code_key)
             # result = search_result.get(timeout=5000)
             result = search_result
+            print('res', result)
 
             if ScanInfo.objects.filter(
                 code_key=code_key,
@@ -52,8 +54,11 @@ class ScanInfoView(APIView):
                 'user_name': email,
                 'location': location,
             }
-
+            print('scan_data', scan_data)
             serializer = self.serializer_class(data=scan_data, context={'request': request})
+            print('serializer to db', serializer)
+            print('serializer valid', serializer.is_valid())
+            print('serializer error', serializer.errors)
             if serializer.is_valid():
                 scan_info = serializer.save()
                 # Process location asynchronously
