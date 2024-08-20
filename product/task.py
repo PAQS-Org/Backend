@@ -70,7 +70,11 @@ def hierarchical_search(company_name, product_name, batch_number, code_key):
     except LogProduct.DoesNotExist:
         return {'error': 'Product not found'}
 
-    result = {'message': log_product.patch_message if log_product.patch else log_product.checkout_message if log_product.checkout else log_product.message}
+    result = {
+                'message': log_product.patch_message if log_product.patch else log_product.checkout_message if log_product.checkout else log_product.message,
+                'company_name': log_product.company_name,
+                'product_name': log_product.product_name
+              }
     cache.set(cache_key, result, timeout=86400)
     return result
 
