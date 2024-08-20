@@ -9,7 +9,7 @@ from django.core.cache import cache
 def sanitize_cache_key(key):
     return re.sub(r'[^A-Za-z0-9_]', '_', key)
 
-def scan_process_location(location, validated_data):
+def scan_process_location(location, serializer):
     # Geocoding location
     cache_key = sanitize_cache_key(f"geocode_{location['latitude']},{location['longitude']}")
     geocode_data = cache.get(cache_key)
@@ -40,13 +40,18 @@ def scan_process_location(location, validated_data):
     }
     print('decoded message', decoded_data)
 
+    # Merge decoded data with existing validated data
+    validated_data = serializer.validated_data.copy()
     validated_data.update(decoded_data)
-    serializer = ScanInfoSerializer(data=validated_data)
-    print('geo_serializer', serializer)
-    if serializer.is_valid():
-        serializer.save()
+
+    # Save the updated data
+    updated_serializer = ScanInfoSerializer(data=validated_data)
+    print('geo_serializer', updated_serializer)
+    if updated_serializer.is_valid():
+        updated_serializer.save()
     else:
-        print('Validation errors:', serializer.errors)
+        print('Validation errors:', updated_serializer.errors)
+
 
 
 def hierarchical_search(company_name, product_name, batch_number, code_key):
