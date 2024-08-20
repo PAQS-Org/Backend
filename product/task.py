@@ -29,7 +29,7 @@ def scan_process_location(location, validated_data):
         cache.set(cache_key, geocode_data, timeout=86400)
 
     address = geocode_data.get('address', {})
-    print('geo_address', address)
+    
     decoded_data = {
         'country': address.get('country', ''),
         'region': address.get('state', ''),
@@ -45,6 +45,8 @@ def scan_process_location(location, validated_data):
     print('geo_serializer', serializer)
     if serializer.is_valid():
         serializer.save()
+    else:
+        print('Validation errors:', serializer.errors)
 
 
 def hierarchical_search(company_name, product_name, batch_number, code_key):
