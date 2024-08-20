@@ -55,6 +55,7 @@ class ScanInfoView(APIView):
             print('scan data', scan_data)
 
             serializer = self.serializer_class(data=scan_data, context={'request': request})
+            print('valid serializer', serializer.is_valid())
             print('save serializer', serializer.save())
             if serializer.is_valid():
                 scan_info = serializer.save()
