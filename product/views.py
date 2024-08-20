@@ -61,7 +61,7 @@ class ScanInfoView(APIView):
                 scan_info = serializer.save()
                 # Process location asynchronously
                 print('scan info to location', scan_info)
-                scan_process_location(scan_info.location)
+                scan_process_location(scan_info.location, serializer)
 
             return Response({'message': result}, status=status.HTTP_200_OK)
         
