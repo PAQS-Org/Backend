@@ -12,9 +12,13 @@ def scan_process_location(location, validated_data):
     cache_key = f"geocode_{location}"
     geocode_data = cache.get(cache_key)
 
+    print('geo cache key', cache_key)
+    print('geocode_data', geocode_data)
+
     if not geocode_data:
         geocode_url = f"https://nominatim.openstreetmap.org/reverse?format=json&lat={location.split(',')[0]}&lon={location.split(',')[1]}"
         response = requests.get(geocode_url)
+        print('geo_response', response)
         if response.status_code != 200:
             return {'error': 'Could not decode location'}
 
@@ -22,6 +26,7 @@ def scan_process_location(location, validated_data):
         cache.set(cache_key, geocode_data, timeout=86400)
 
     address = geocode_data.get('address', {})
+    print('geo_address', address)
     decoded_data = {
         'country': address.get('country', ''),
         'region': address.get('state', ''),
@@ -30,9 +35,11 @@ def scan_process_location(location, validated_data):
         'street': address.get('road', ''),
         'raw_location': location
     }
+    print('decoded message', decoded_data)
 
     validated_data.update(decoded_data)
     serializer = ScanInfoSerializer(data=validated_data)
+    print('geo_serializer', serializer)
     if serializer.is_valid():
         serializer.save()
 
@@ -44,6 +51,8 @@ def hierarchical_search(company_name, product_name, batch_number, code_key):
     if cached_result:
         return cached_result
 
+    print('hierachical cache result', cached_result)
+
     try:
         log_product = LogProduct.objects.get(
             company_name=company_name,
@@ -51,10 +60,12 @@ def hierarchical_search(company_name, product_name, batch_number, code_key):
             batch_number=batch_number,
             code_key=code_key
         )
+        print('fetching log_product', log_product)
     except LogProduct.DoesNotExist:
         return {'error': 'Product not found'}
 
     result = {'message': log_product.patch_message if log_product.patch else log_product.checkout_message if log_product.checkout else log_product.message}
+    print('after search', result)
     cache.set(cache_key, result, timeout=86400)
     return result
 

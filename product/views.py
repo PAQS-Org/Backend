@@ -35,10 +35,16 @@ class ScanInfoView(APIView):
         email = request.data.get('email')
         location = request.data.get('location')
         x,y,z,code_key, company_name, product_name, batch_number  = qr_code.split('/')
+        print('post code_key', code_key)
+        print('post company_name', company_name)
+        print('post product_name', product_name)
+        print('post batch_number', batch_number)
+        print('post qr_code', qr_code)
 
         # Hierarchical search in LogProduct table
         try:
             search_result = hierarchical_search(company_name, product_name, batch_number, code_key)
+            print('hierachical search result', search_result)
             # result = search_result.get(timeout=5000)
             result = search_result
             # Store the scan information in the database
@@ -51,16 +57,20 @@ class ScanInfoView(APIView):
                 'location': location,
             }
 
+            print('scan data', scan_data)
+
             serializer = self.serializer_class(data=scan_data, context={'request': request})
+            print('scan data to serializer', serializer)
             if serializer.is_valid():
                 scan_info = serializer.save()
                 # Process location asynchronously
+                print('scan info to location', scan_info)
                 scan_process_location(scan_info.id)
 
             return Response({'message': result}, status=status.HTTP_200_OK)
         
         except LogProduct.DoesNotExist:
-            return Response({'message': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'message': 'Last part of the code not found'}, status=status.HTTP_404_NOT_FOUND)
         
 
 class CheckoutInfoView(APIView):
