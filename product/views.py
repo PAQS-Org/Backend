@@ -56,7 +56,7 @@ class ScanInfoView(APIView):
 
             serializer = self.serializer_class(data=scan_data, context={'request': request})
             print('valid serializer', serializer.is_valid())
-            print('save serializer', serializer.save())
+            print('serializer errors', serializer.errors)
             if serializer.is_valid():
                 scan_info = serializer.save()
                 # Process location asynchronously
