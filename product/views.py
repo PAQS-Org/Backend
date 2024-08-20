@@ -34,7 +34,8 @@ class ScanInfoView(APIView):
         qr_code = request.data.get('qr_code')
         email = request.data.get('email')
         location = request.data.get('location')
-        x,y,z,code_key, company_name, product_name, batch_number  = qr_code.split('/')
+        x,y,z,code_key, company_name, product_name, batch  = qr_code.split('/')
+        batch_number = batch[:-1]
         print('post code_key', code_key)
         print('post company_name', company_name)
         print('post product_name', product_name)
@@ -53,6 +54,7 @@ class ScanInfoView(APIView):
                 'code_key': code_key,
                 'company_name': company_name,
                 'product_name': product_name,
+                'batch_number':batch_number,
                 'user_name': email,
                 'location': location,
             }
