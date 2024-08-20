@@ -3,7 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import ProductsInfo, LogProduct
+from .models import ProductsInfo, LogProduct, ScanInfo
 from rest_framework.permissions import IsAuthenticated
 from accounts.permissions import IsOwner, IsUser
 from .serializer import ProductInfoSerializer, LogProductSerializer, ScanInfoSerializer
@@ -40,27 +40,32 @@ class ScanInfoView(APIView):
         try:
             x, y, z, code_key, company_name, product_name, batch = qr_code.split('/')
             batch_number = batch[:-1]
-
         except ValueError:
             return Response({'message': 'Invalid qr code format'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Hierarchical search in LogProduct table
         try:
             search_result = hierarchical_search(company_name, product_name, batch_number, code_key)
             # result = search_result.get(timeout=5000)
             result = search_result
+
+            if ScanInfo.objects.filter(
+                code_key=code_key,
+                company_name=company_name,
+                product_name=product_name,
+                batch_number=batch_number,
+                user_name=email
+            ).exists():
+                return Response({'message': result}, status=status.HTTP_200_OK)
+
             # Store the scan information in the database
-            
             scan_data = {
                 'code_key': code_key,
                 'company_name': company_name,
                 'product_name': product_name,
-                'batch_number':batch_number,
+                'batch_number': batch_number,
                 'user_name': email,
                 'location': location,
             }
-
-            print('scan data', scan_data)
 
             serializer = self.serializer_class(data=scan_data, context={'request': request})
             if serializer.is_valid():
@@ -69,10 +74,10 @@ class ScanInfoView(APIView):
                 scan_process_location(scan_info.location, serializer)
 
             return Response({'message': result}, status=status.HTTP_200_OK)
-        
+
         except LogProduct.DoesNotExist:
             return Response({'message': 'Last part of the code not found'}, status=status.HTTP_404_NOT_FOUND)
-        
+     
 
 class CheckoutInfoView(APIView):
     permission_classes = (IsAuthenticated, IsUser)
