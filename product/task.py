@@ -50,9 +50,6 @@ def hierarchical_search(company_name, product_name, batch_number, code_key):
 
     if cached_result:
         return cached_result
-
-    print('hierachical cache result', cached_result)
-
     try:
         log_product = LogProduct.objects.get(
             company_name=company_name,
@@ -60,12 +57,10 @@ def hierarchical_search(company_name, product_name, batch_number, code_key):
             batch_number=batch_number,
             code_key=code_key
         )
-        print('fetching log_product', log_product)
     except LogProduct.DoesNotExist:
         return {'error': 'Product not found'}
 
     result = {'message': log_product.patch_message if log_product.patch else log_product.checkout_message if log_product.checkout else log_product.message}
-    print('after search', result)
     cache.set(cache_key, result, timeout=86400)
     return result
 

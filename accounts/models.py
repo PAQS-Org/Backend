@@ -67,6 +67,9 @@ class AbstractUserProfile(AbstractBaseUser, PermissionsMixin):
         refresh = RefreshToken.for_user(self)
         return {'refresh': str(refresh), 'access': str(refresh.access_token)}
     
+    def get_short_name(self):
+        return self.email
+    
 class Company(AbstractUserProfile):
     first_name = models.CharField(max_length=100, db_index=True)
     last_name = models.CharField(max_length=100, db_index=True)
@@ -101,6 +104,9 @@ class Company(AbstractUserProfile):
     def get_full_name(self):
         return f"{self.first_name.title()} {self.last_name.title()}"
     
+    def get_short_name(self):
+        return self.first_name 
+    
 
 class User(AbstractUserProfile):
     first_name = models.CharField(max_length=100, db_index=True)
@@ -114,3 +120,6 @@ class User(AbstractUserProfile):
     @property
     def get_full_name(self):
         return f"{self.first_name.title()} {self.last_name.title()}"
+    
+    def get_short_name(self):
+        return self.first_name 

@@ -30,22 +30,15 @@ class ScanInfoView(APIView):
     serializer_class = ScanInfoSerializer
 
     def post(self, request):
-        # Parse QR code data
         qr_code = request.data.get('qr_code')
         email = request.data.get('email')
         location = request.data.get('location')
         x,y,z,code_key, company_name, product_name, batch  = qr_code.split('/')
         batch_number = batch[:-1]
-        print('post code_key', code_key)
-        print('post company_name', company_name)
-        print('post product_name', product_name)
-        print('post batch_number', batch_number)
-        print('post qr_code', qr_code)
 
         # Hierarchical search in LogProduct table
         try:
             search_result = hierarchical_search(company_name, product_name, batch_number, code_key)
-            print('hierachical search result', search_result)
             # result = search_result.get(timeout=5000)
             result = search_result
             # Store the scan information in the database
