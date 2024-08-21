@@ -49,7 +49,12 @@ class ScanInfo(models.Model):
    city = models.CharField(max_length=255, blank=True, null=True)
    town = models.CharField(max_length=255, blank=True, null=True)
    street = models.CharField(max_length=255, blank=True, null=True)
-
+   
+   class Meta:
+        indexes = [
+            models.Index(fields=['company_name', 'product_name', 'batch_number', 'code_key' ])
+        ]
+        unique_together = ('code_key', 'company_name', 'product_name', 'batch_number', 'user_name')
 
 class CheckoutInfo(models.Model):
    date_time = models.DateField(auto_now_add=True)
@@ -64,6 +69,12 @@ class CheckoutInfo(models.Model):
    city = models.CharField(max_length=255, blank=True, null=True)
    town = models.CharField(max_length=255, blank=True, null=True)
    street = models.CharField(max_length=255, blank=True, null=True)
+   
+   class Meta:
+        indexes = [
+            models.Index(fields=['company_name', 'product_name', 'batch_number', 'code_key' ])
+        ]
+        unique_together = ('code_key', 'company_name', 'product_name', 'batch_number', 'user_name')
 
 
 class LogProduct(models.Model):

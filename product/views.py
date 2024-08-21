@@ -8,7 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from accounts.permissions import IsOwner, IsUser
 from .serializer import CheckoutInfoSerializer, ScanInfoSerializer
 from .task import scan_process_location, checkout_process_location, hierarchical_search
-
+from django.db import IntegrityError
 
 @method_decorator(csrf_exempt, name='dispatch')
 class ScanInfoView(APIView):
@@ -26,7 +26,6 @@ class ScanInfoView(APIView):
         try:
             x, y, z, code_key, company_name, product_name, batch = qr_code.split('/')
             batch_number = batch[:-1]
-            print('batch number', batch_number)
         except ValueError:
             return Response({'message': f'{qr_code} is an invalid format'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -34,14 +33,13 @@ class ScanInfoView(APIView):
             search_result = hierarchical_search(company_name, product_name, batch_number, code_key)
             # result = search_result.get(timeout=5000)
             result = search_result
-            print('res', result)
 
             if ScanInfo.objects.filter(
-                code_key=code_key,
-                company_name=company_name,
-                product_name=product_name,
-                batch_number=batch_number,
-                user_name=email
+                code_key__iexact=code_key,
+                company_name__iexact=company_name,
+                product_name__iexact=product_name,
+                batch_number__iexact=batch_number,
+                user_name__iexact=email
             ).exists():
                 return Response({'message': result}, status=status.HTTP_200_OK)
 
@@ -54,17 +52,14 @@ class ScanInfoView(APIView):
                 'user_name': email,
                 'location': location,
             }
-            print('scan_data', scan_data)
-            serializer = self.serializer_class(data=scan_data, context={'request': request})
-            print('serializer to db', serializer)
-            print('serializer valid', serializer.is_valid())
-            print('serializer error', serializer.errors)
-            if serializer.is_valid():
-                scan_info = serializer.save()
-                # Process location asynchronously
-                scan_process_location(scan_info.location, serializer)
-
-            return Response({'message': result}, status=status.HTTP_200_OK)
+            try:
+                serializer = self.serializer_class(data=scan_data, context={'request': request})
+                if serializer.is_valid():
+                    scan_info = serializer.save()
+                    # Process location asynchronously
+                    scan_process_location(scan_info.location, serializer)
+            except IntegrityError:
+                return Response({'message': result}, status=status.HTTP_200_OK)
 
         except LogProduct.DoesNotExist:
             return Response({'message': 'Last part of the code not found'}, status=status.HTTP_404_NOT_FOUND)
