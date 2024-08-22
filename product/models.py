@@ -2,6 +2,8 @@ from django.db import models
 from accounts.models import Company, User
 import string
 import random
+import re
+from django.core.cache import cache
 
 class ProductsInfo(models.Model):
     date_created = models.DateTimeField(auto_now_add=True)
@@ -105,3 +107,18 @@ class LogProduct(models.Model):
 
     def __unicode__(self):
         return self.code_key
+    
+    def save(self, *args, **kwargs):
+        # Invalidate or update the cache if patch or checkout changes
+        if self.pk:
+            # Fetch the previous state of the object
+            previous = LogProduct.objects.get(pk=self.pk)
+            if previous.patch != self.patch or previous.checkout != self.checkout:
+                cache_key = sanitize_cache_key(f"log_product_{self.company_name}_{self.product_name}_{self.batch_number}_{self.code_key}")
+                cache.delete(cache_key)
+        
+        super().save(*args, **kwargs)
+
+
+def sanitize_cache_key(key):
+    return re.sub(r'[^A-Za-z0-9_]', '_', key)

@@ -74,7 +74,7 @@ class CheckoutInfoView(APIView):
         qr_code = request.data.get('qr_code')
         email = request.data.get('email')
         location = request.data.get('location')
-
+        print('i have started')
         try:
             # Extract QR code information
             x, y, z, code_key, company_name, product_name, batch = qr_code.split('/')
@@ -102,8 +102,11 @@ class CheckoutInfoView(APIView):
                     'user_name': email,
                     'location': location,
                 }
-
+                print('checkout to db', checkout_data)
                 serializer = self.serializer_class(data=checkout_data, context={'request': request})
+                print('ser to db', serializer)
+                print('ser val', serializer.is_valid())
+                print('ser err', serializer.errors)
                 if serializer.is_valid():
                     checkout_info = serializer.save()
                     # Process location asynchronously
