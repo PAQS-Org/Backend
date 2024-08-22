@@ -41,7 +41,7 @@ class ScanInfoView(APIView):
                 batch_number__iexact=batch_number,
                 user_name__iexact=email
             ).exists():
-                return Response({'message': result}, status=status.HTTP_200_OK)
+                return Response({'message': result})
 
             # Store the scan information in the database
             scan_data = {
@@ -59,7 +59,7 @@ class ScanInfoView(APIView):
                     # Process location asynchronously
                     scan_process_location(scan_info.location, serializer)
             except IntegrityError:
-                return Response({'message': result}, status=status.HTTP_200_OK)
+                return Response({'message': result})
 
         except LogProduct.DoesNotExist:
             return Response({'message': 'Last part of the code not found'}, status=status.HTTP_404_NOT_FOUND)
@@ -112,7 +112,7 @@ class CheckoutInfoView(APIView):
                 if serializer.is_valid():
                     checkout_info = serializer.save()
                     # Process location asynchronously
-                    scan_process_location(checkout_info.location, serializer)
+                    checkout_process_location(checkout_info.location, serializer)
 
                 # Return the checkout message
                 return Response({'message': log_product.checkout_message}, status=status.HTTP_200_OK)
