@@ -6,7 +6,7 @@ import requests
 from django.core.cache import cache
 from rest_framework.response import Response
 from rest_framework import status
-
+from rest_framework.renderers import JSONRenderer
 
 
 
@@ -73,23 +73,30 @@ def hierarchical_search(company_name, product_name, batch_number, code_key):
     except LogProduct.DoesNotExist:
         return {'error': 'Product not found'}
 
-    
     if log_product.patch:
-        message = log_product.patch_message
-        status_code = status.HTTP_404_NOT_FOUND
+        message = Response(log_product.patch_message, status=status.HTTP_404_NOT_FOUND)
+        message.accepted_renderer = JSONRenderer()
+        message.accepted_media_type = "application/json"
+        message.renderer_context = {}
+        message.render()
+        print('patch mess', message)
+        return message
     elif log_product.checkout:
-        message = log_product.checkout_message
-        status_code = status.HTTP_404_NOT_FOUND
+        message = Response(log_product.checkout_message, status=status.HTTP_404_NOT_FOUND)
+        message.accepted_renderer = JSONRenderer()
+        message.accepted_media_type = "application/json"
+        message.renderer_context = {}
+        message.render()
+        print('checkout mess', message)
+        return message
     else:
         message = log_product.message
-        status_code = status.HTTP_200_OK
 
     result = {
         'message': message,
         'company_name': log_product.company_name,
         'product_name': log_product.product_name,
         'batch_number': log_product.batch_number,
-        'status': status_code
     }
     
     cache.set(cache_key, result, timeout=86400)
