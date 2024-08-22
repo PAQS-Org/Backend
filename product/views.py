@@ -32,7 +32,8 @@ class ScanInfoView(APIView):
         try:
             search_result = hierarchical_search(company_name, product_name, batch_number, code_key)
             # result = search_result.get(timeout=5000)
-            result = search_result
+            result = search_result.get('message')
+            status_code = search_result.get('status', status.HTTP_200_OK)
 
             if ScanInfo.objects.filter(
                 code_key__iexact=code_key,
@@ -41,7 +42,7 @@ class ScanInfoView(APIView):
                 batch_number__iexact=batch_number,
                 user_name__iexact=email
             ).exists():
-                return Response({'message': result})
+                return Response({'message': result}, status=status_code)
 
             # Store the scan information in the database
             scan_data = {
@@ -59,7 +60,7 @@ class ScanInfoView(APIView):
                     # Process location asynchronously
                     scan_process_location(scan_info.location, serializer)
             except IntegrityError:
-                return Response({'message': result})
+                return Response({'message': result}, status=status_code)
 
         except LogProduct.DoesNotExist:
             return Response({'message': 'Last part of the code not found'}, status=status.HTTP_404_NOT_FOUND)
@@ -104,11 +105,7 @@ class CheckoutInfoView(APIView):
                     'user_name': email,
                     'location': location,
                 }
-                print('checkout to db', checkout_data)
                 serializer = self.serializer_class(data=checkout_data, context={'request': request})
-                print('ser to db', serializer)
-                print('ser val', serializer.is_valid())
-                print('ser err', serializer.errors)
                 if serializer.is_valid():
                     checkout_info = serializer.save()
                     # Process location asynchronously
