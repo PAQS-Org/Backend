@@ -3,12 +3,15 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import ProductsInfo, LogProduct, ScanInfo
+from .models import LogProduct, ScanInfo
 from rest_framework.permissions import IsAuthenticated
 from accounts.permissions import IsOwner, IsUser
-from .serializer import CheckoutInfoSerializer, ScanInfoSerializer
+from .serializer import CheckoutInfoSerializer, ScanInfoSerializer, LogProductSerializer
 from .task import scan_process_location, checkout_process_location, hierarchical_search
-from django.db import IntegrityError
+from django.core.mail import send_mail, BadHeaderError
+from django.conf import settings
+import logging
+from smtplib import SMTPException
 
 @method_decorator(csrf_exempt, name='dispatch')
 class ScanInfoView(APIView):
@@ -140,9 +143,69 @@ class CheckoutInfoView(APIView):
         except ValueError:
             return Response({'message': 'Invalid QR code format'}, status=status.HTTP_400_BAD_REQUEST)
 
-     
 
+@method_decorator(csrf_exempt, name='dispatch')    
+class PatchInfoView(APIView):
+    permission_classes = (IsAuthenticated, IsOwner)
+    serializer_class = LogProductSerializer
 
+    def post(self, request):
+        comp_name = request.data.get('company_name')
+        prod_name = request.data.get('product_name')
+        batch_number = request.data.get('batch_number')
+        patch_reason = request.data.get('patch_reason')
+        patch_message = request.data.get('patch_message')
 
+        # Validate that all required fields are provided
+        if not all([comp_name, prod_name, batch_number, patch_reason, patch_message]):
+            return Response({"error": "All fields are required."}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Filter LogProduct objects based on the given company_name, product_name, and batch_number
+        log_products = LogProduct.objects.filter(
+            company_name=comp_name,
+            product_name=prod_name,
+            batch_number=batch_number
+        )
+
+        if log_products.exists():
+            # Update the patch-related fields for all matching LogProduct objects
+            log_products.update(
+                patch=True,
+                patch_reason=patch_reason,
+                patch_message=patch_message
+            )
+
+            for log_product in log_products:
+                if log_product.checkout and log_product.checkout_user_email:
+                    user_email = log_product.checkout_user_email
+                    self.send_checkout_email(user_email, log_product)
+            return Response({"message": "Patch information updated successfully."}, status=status.HTTP_200_OK)
+        else:
+            return Response({"error": "No matching product found."}, status=status.HTTP_404_NOT_FOUND)
+
+    
+    
+    def send_checkout_email(self, user_email, log_product):
+        subject = f"Product Update: {log_product.product_name} of {log_product.batch_number}"
+        message = (
+            f"Hello,\n\n"
+            f"{log_product.company_name} has updated the information for {log_product.product_name} "
+            f"of batch number {log_product.batch_number} with the following message:\n\n"
+            f"\"{log_product.patch_message}\"\n\n"
+            f"Please take note of the message and its necessary instructions.\n\n"
+            f"Best regards,\n"
+            f"Your Company"
+        )
+        from_email = settings.DEFAULT_FROM_EMAIL  # Ensure you have this set in your settings.py
+
+        try:
+            # Attempt to send the email
+            send_mail(subject, message, from_email, [user_email])
+            logging.info(f"Email sent successfully to {user_email}")
+        except BadHeaderError:
+            logging.error(f"Invalid header found when sending email to {user_email}")
+        except SMTPException as e:
+            logging.error(f"SMTP error occurred when sending email to {user_email}: {str(e)}")
+        except Exception as e:
+            logging.error(f"Unexpected error occurred when sending email to {user_email}: {str(e)}")
 

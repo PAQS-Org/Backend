@@ -91,6 +91,7 @@ class LogProduct(models.Model):
     checkout = models.BooleanField(default=False)
     checkout_message = models.CharField(max_length=255)
     patch = models.BooleanField(default=False)
+    patch_reason = models.CharField(max_length=100, blank=True, null=True)
     patch_message = models.CharField(max_length=255)
 
     class Meta:
