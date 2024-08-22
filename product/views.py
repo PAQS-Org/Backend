@@ -90,6 +90,7 @@ class CheckoutInfoView(APIView):
                 )
 
                 # Update checkout status and message
+                log_product.checkout_user_email = email
                 log_product.checkout = True
                 log_product.checkout_message = f"{product_name} from {company_name} has been purchased"
                 log_product.save()
@@ -99,6 +100,7 @@ class CheckoutInfoView(APIView):
                     'code_key': code_key,
                     'company_name': company_name,
                     'product_name': product_name,
+                    'batch_number': batch_number,
                     'user_name': email,
                     'location': location,
                 }
