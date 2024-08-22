@@ -45,8 +45,13 @@ def scan_process_location(location, serializer):
     validated_data.update(decoded_data)
 
     # Save the updated data
-    serializer.instance.location = validated_data
-    serializer.save()
+    updated_serializer = ScanInfoSerializer(data=validated_data)
+    print('geo_serializer', updated_serializer)
+    print('geo_serializer', updated_serializer.errors)
+    if updated_serializer.is_valid():
+        updated_serializer.save()
+    else:
+        print('Validation errors:', updated_serializer.errors)
 
 
 

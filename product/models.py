@@ -56,7 +56,6 @@ class ScanInfo(models.Model):
         indexes = [
             models.Index(fields=['company_name', 'product_name', 'batch_number', 'code_key' ])
         ]
-        unique_together = ('code_key', 'company_name', 'product_name', 'batch_number', 'user_name')
 
 class CheckoutInfo(models.Model):
    date_time = models.DateField(auto_now_add=True)
@@ -76,7 +75,6 @@ class CheckoutInfo(models.Model):
         indexes = [
             models.Index(fields=['company_name', 'product_name', 'batch_number', 'code_key' ])
         ]
-        unique_together = ('code_key', 'company_name', 'product_name', 'batch_number', 'user_name')
 
 
 class LogProduct(models.Model):
