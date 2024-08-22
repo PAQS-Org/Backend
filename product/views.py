@@ -34,14 +34,22 @@ class ScanInfoView(APIView):
             # result = search_result.get(timeout=5000)
             result = search_result
 
-            if ScanInfo.objects.filter(
+            scan_info = ScanInfo.objects.filter(
                 code_key__iexact=code_key,
                 company_name__iexact=company_name,
                 product_name__iexact=product_name,
                 batch_number__iexact=batch_number,
                 user_name__iexact=email
-            ).exists():
+            ).first()
+
+            if scan_info:
+                # If exists, update it with new data
+                serializer = self.serializer_class(scan_info, data={'location': location}, partial=True, context={'request': request})
+                if serializer.is_valid():
+                    scan_info = serializer.save()
+                    scan_process_location(scan_info.location, serializer)
                 return Response({'message': result}, status=status.HTTP_200_OK)
+
 
             # Store the scan information in the database
             scan_data = {
