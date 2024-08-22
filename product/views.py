@@ -34,6 +34,9 @@ class ScanInfoView(APIView):
 
             # Extract message and status code
             message = search_result.get('message')
+            company_name = search_result.get('company_name')
+            product_name = search_result.get('product_name')
+            batch_number = search_result.get('batch_number')
             status_code = search_result.get('status', status.HTTP_200_OK)
 
             if ScanInfo.objects.filter(
@@ -43,7 +46,12 @@ class ScanInfoView(APIView):
                 batch_number__iexact=batch_number,
                 user_name__iexact=email
             ).exists():
-                return Response({'message': message}, status=status_code)
+                return Response({
+                    'message': message, 
+                    'company_name':company_name,
+                    'product_name':product_name,
+                    'batch_number':batch_number,
+                    }, status=status_code)
 
             # Store the scan information in the database
             scan_data = {
@@ -63,7 +71,12 @@ class ScanInfoView(APIView):
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
             # Return the message after storing the scan information
-            return Response({'message': message}, status=status_code)
+            return Response({
+                    'message': message, 
+                    'company_name':company_name,
+                    'product_name':product_name,
+                    'batch_number':batch_number,
+                    }, status=status_code)
 
         except LogProduct.DoesNotExist:
             return Response({'message': 'Last part of the code not found'}, status=status.HTTP_404_NOT_FOUND)
