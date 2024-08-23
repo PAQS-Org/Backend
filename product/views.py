@@ -273,6 +273,9 @@ class CheckoutMetricsView(APIView):
         company_name = request.data.get('company_name')  # Assuming the user model has a company_name field
         cache_key = f"checkout_metrics_{company_name}"
         data = cache.get(cache_key)
+        print('comp', company_name)
+        print('cache key', cache_key)
+        print('cache_data', data)
 
         if not data:
             filtered_data = CheckoutInfo.objects.filter(
