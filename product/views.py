@@ -219,7 +219,7 @@ class ScanMetricsView(APIView):
     permission_classes = [IsAuthenticated, IsOwner]
 
     def get(self, request, *args, **kwargs):
-        company_name = request.data.company_name  # Assuming the user model has a company_name field
+        company_name = request.data.get('company_name')  # Assuming the user model has a company_name field
         cache_key = f"scan_metrics_{company_name}"
         data = cache.get(cache_key)
 
@@ -271,7 +271,7 @@ class CheckoutMetricsView(APIView):
     permission_classes = [IsAuthenticated, IsOwner]
 
     def get(self, request, *args, **kwargs):
-        company_name = request.data.company_name  # Assuming the user model has a company_name field
+        company_name = request.data.get('company_name')  # Assuming the user model has a company_name field
         cache_key = f"checkout_metrics_{company_name}"
         data = cache.get(cache_key)
 
@@ -321,7 +321,7 @@ class TopLocationMetrics(APIView):
     permission_classes = [IsAuthenticated, IsOwner]
 
     def get(self, request, *args, **kwargs):
-        company_name = request.data.company_name  # Assuming the user model has a company_name field
+        company_name = request.data.get('company_name')  # Assuming the user model has a company_name field
         cache_key = f"metrics_comparison_{company_name}"
         data = cache.get(cache_key)
 
@@ -375,7 +375,7 @@ class PerformanceMetricsView(APIView):
     permission_classes = [IsAuthenticated, IsOwner]
 
     def get(self, request, *args, **kwargs):
-        company_name = request.data.company_name  # Assuming the user model has a company_name field
+        company_name = request.data.get('company_name')  # Assuming the user model has a company_name field
         cache_key = f"performance_metrics_{company_name}"
         data = cache.get(cache_key)
 
