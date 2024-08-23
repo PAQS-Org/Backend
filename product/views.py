@@ -14,7 +14,7 @@ from django.conf import settings
 import logging
 from smtplib import SMTPException
 from django.core.cache import cache
-from django.db.models import Count, Avg, F, Max
+from django.db.models import Count, Avg, F, ExpressionWrapper, fields
 from django.utils import timezone
 import datetime
 
@@ -267,7 +267,6 @@ class ScanMetricsView(APIView):
     
 
 class CheckoutMetricsView(APIView):
-
     permission_classes = [IsAuthenticated, IsOwner]
 
     def get(self, request, *args, **kwargs):
@@ -276,7 +275,6 @@ class CheckoutMetricsView(APIView):
         data = cache.get(cache_key)
 
         if not data:
-            # Filter data by company and exclude rows with empty fields
             filtered_data = CheckoutInfo.objects.filter(
                 company_name=company_name
             ).exclude(
@@ -285,24 +283,35 @@ class CheckoutMetricsView(APIView):
                 city=''
             )
 
-            # Total number of rows
             total_rows = filtered_data.count()
-
-            # Sum of rows for the prevailing month
             current_month = timezone.now().month
             rows_current_month = filtered_data.filter(
                 date_time__month=current_month
             ).count()
-
-            # Average data received from the beginning of the year to the previous day of the current day
             current_year = timezone.now().year
             yesterday = timezone.now().date() - datetime.timedelta(days=1)
-            average_data_ytd = filtered_data.filter(
+            
+            print('row', total_rows)
+            print('c_month', current_month)
+            print('c_year', current_year)
+            print('yest', yesterday)
+            print('row_c_month', rows_current_month)
+            # Convert date_time to a Unix timestamp (seconds since the epoch)
+            average_timestamp_ytd = filtered_data.filter(
                 date_time__year=current_year,
                 date_time__lt=yesterday
-            ).aggregate(avg=Avg('date_time'))['avg']
+            ).annotate(
+                timestamp=ExpressionWrapper(F('date_time'), output_field=fields.FloatField())
+            ).aggregate(avg_timestamp=Avg('timestamp'))['avg_timestamp']
+            print('avg tmstp', average_data_ytd)
 
-            days_since_first_entry = (timezone.now().date() - filtered_data.earliest('date_time').date_time).days
+            if average_timestamp_ytd:
+                # Convert the average timestamp back to a datetime object
+                average_data_ytd = datetime.datetime.fromtimestamp(average_timestamp_ytd, tz=timezone.utc)
+            else:
+                average_data_ytd = None
+
+            days_since_first_entry = (timezone.now().date() - filtered_data.earliest('date_time').date_time.date()).days
             average_per_day = total_rows / days_since_first_entry if days_since_first_entry > 0 else total_rows
 
             data = {
@@ -311,6 +320,7 @@ class CheckoutMetricsView(APIView):
                 "average_data_ytd": average_data_ytd,
                 "average_per_day": average_per_day
             }
+            print('final', data)
 
             cache.set(cache_key, data, timeout=3600)  
 
