@@ -282,6 +282,7 @@ class CheckoutMetricsView(APIView):
                 region='',
                 city=''
             )
+            print('f_data', filtered_data)
 
             total_rows = filtered_data.count()
             current_month = timezone.now().month
