@@ -276,11 +276,11 @@ class CheckoutMetricsView(APIView):
 
         if not data:
             filtered_data = CheckoutInfo.objects.filter(
-                company_name=company_name
+                company_name__iexact=company_name
             ).exclude(
-                country='',
-                region='',
-                city=''
+                country__trim='',
+                region__trim='',
+                city__trim=''
             )
             print('f_data', filtered_data)
 
