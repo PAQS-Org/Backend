@@ -228,9 +228,9 @@ class ScanMetricsView(APIView):
             filtered_data = ScanInfo.objects.filter(
                 company_name__iexact=company_name
             ).exclude(
-                country__trim='',
-                region__trim='',
-                city__trim=''
+                country='',
+                region='',
+                city=''
             )
 
             # Total number of rows
@@ -278,9 +278,9 @@ class CheckoutMetricsView(APIView):
             filtered_data = CheckoutInfo.objects.filter(
                 company_name__iexact=company_name
             ).exclude(
-                country__trim='',
-                region__trim='',
-                city__trim=''
+                country='',
+                region='',
+                city=''
             )
             print('f_data', filtered_data)
 
@@ -349,10 +349,10 @@ class TopLocationMetrics(APIView):
 
             # ScanInfo Metrics
             scan_queryset = ScanInfo.objects.filter(company_name__iexact=company_name).exclude(
-                country__trim='',
-                region__trim='',
-                city__trim='',
-                town__trim='',
+                country='',
+                region='',
+                city='',
+                town='',
             )
             highest_scan_location, lowest_scan_location = get_location_metrics(scan_queryset, location_fields)
 
