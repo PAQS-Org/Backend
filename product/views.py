@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .models import LogProduct, ScanInfo, CheckoutInfo
+from django.db.models import Count, Avg, F,Q
 from rest_framework.permissions import IsAuthenticated
 from accounts.permissions import IsOwner, IsUser
 from .serializer import CheckoutInfoSerializer, ScanInfoSerializer, LogProductSerializer
@@ -14,9 +15,9 @@ from django.conf import settings
 import logging
 from smtplib import SMTPException
 from django.core.cache import cache
-from django.db.models import Count, Avg, F, ExpressionWrapper, fields
 from django.utils import timezone
 import datetime
+import calendar
 
 @method_decorator(csrf_exempt, name='dispatch')
 class ScanInfoView(APIView):
@@ -219,171 +220,223 @@ class ScanMetricsView(APIView):
     permission_classes = [IsAuthenticated, IsOwner]
 
     def get(self, request, *args, **kwargs):
-        company_name = request.data.get('company_name')  # Assuming the user model has a company_name field
-        cache_key = f"scan_metrics_{company_name}"
-        data = cache.get(cache_key)
+        company_name = request.query_params.get('company_name')
+        if company_name:
 
-        if not data:
-            # Filter data by company and exclude rows with empty fields
-            filtered_data = ScanInfo.objects.filter(
-                company_name__iexact=company_name
-            ).exclude(
-                country='',
-                region='',
-                city=''
-            )
+            cache_key = f"scan_metrics_{company_name}"
+            data = cache.get(cache_key)
 
-            # Total number of rows
-            total_rows = filtered_data.count()
+            if not data:
+                # Filter out rows with any null values
+                filtered_data = ScanInfo.objects.filter(
+                    company_name__iexact=company_name
+                ).exclude(
+                    Q(country__isnull=True) | Q(country='') |
+                    Q(region__isnull=True) | Q(region='') |
+                    Q(city__isnull=True) | Q(city='') 
+                )
 
-            # Sum of rows for the prevailing month
-            current_month = timezone.now().month
-            rows_current_month = filtered_data.filter(
-                date_time__month=current_month
-            ).count()
+                # Total rows with no null values
+                total_rows = filtered_data.count()
 
-            # Average data received from the beginning of the year to the previous day of the current day
-            current_year = timezone.now().year
-            yesterday = timezone.now().date() - datetime.timedelta(days=1)
-            average_data_ytd = filtered_data.filter(
-                date_time__year=current_year,
-                date_time__lt=yesterday
-            ).aggregate(avg=Avg('date_time'))['avg']
+                # Current month filter
+                current_month = timezone.now().month
+                rows_current_month = filtered_data.filter(
+                    date_time__month=current_month
+                ).count()
 
-            # Average data received per day
-            days_since_first_entry = (timezone.now().date() - filtered_data.earliest('date_time').date_time).days
-            average_per_day = total_rows / days_since_first_entry if days_since_first_entry > 0 else total_rows
+                # Growth rate per previous day
+                yesterday = timezone.now().date() - datetime.timedelta(days=1)
+                day_before_yesterday = timezone.now().date() - datetime.timedelta(days=2)
+                rows_yesterday = filtered_data.filter(
+                    date_time=yesterday
+                ).count()
+                rows_day_before_yesterday = filtered_data.filter(
+                    date_time=day_before_yesterday
+                ).count()
+                growth_rate_previous_day = (
+                    (rows_yesterday - rows_day_before_yesterday) / rows_day_before_yesterday
+                ) * 100 if rows_day_before_yesterday > 0 else None
 
-            data = {
-                "total_rows": total_rows,
-                "rows_current_month": rows_current_month,
-                "average_data_ytd": average_data_ytd,
-                "average_per_day": average_per_day
-            }
+                # Annual growth rate
+                current_year = timezone.now().year
+                rows_current_year = filtered_data.filter(
+                    date_time__year=current_year
+                ).count()
+                rows_last_year = filtered_data.filter(
+                    date_time__year=current_year - 1
+                ).count()
+                annual_growth_rate = (
+                    (rows_current_year - rows_last_year) / rows_last_year
+                ) * 100 if rows_last_year > 0 else None
 
-            cache.set(cache_key, data, timeout=3600)  
+                data = {
+                    "scan_total_rows": total_rows,
+                    "scan_current_month_name": calendar.month_name[datetime.date.today().month],
+                    "scan_rows_current_month": rows_current_month,
+                    "scan_growth_rate_previous_day": growth_rate_previous_day,
+                    "scan_annual_growth_rate": annual_growth_rate
+                }
+                print('final', data)
+                cache.set(cache_key, data, timeout=3600)
 
-        return Response(data)
+            return Response(data)
+        return Response({'message': "Company doesn't exist"}, status=status.HTTP_404_NOT_FOUND)
     
 
 class CheckoutMetricsView(APIView):
     permission_classes = [IsAuthenticated, IsOwner]
 
     def get(self, request, *args, **kwargs):
-        company_name = request.data.get('company_name')  # Assuming the user model has a company_name field
-        cache_key = f"checkout_metrics_{company_name}"
-        data = cache.get(cache_key)
-        print('comp', company_name)
-        print('cache key', cache_key)
-        print('cache_data', data)
+        company_name = request.query_params.get('company_name')
+        if company_name:
 
-        if not data:
-            filtered_data = CheckoutInfo.objects.filter(
-                company_name__iexact=company_name
-            ).exclude(
-                country='',
-                region='',
-                city=''
-            )
-            print('f_data', filtered_data)
+            cache_key = f"checkout_metrics_{company_name}"
+            data = cache.get(cache_key)
 
-            total_rows = filtered_data.count()
-            current_month = timezone.now().month
-            rows_current_month = filtered_data.filter(
-                date_time__month=current_month
-            ).count()
-            current_year = timezone.now().year
-            yesterday = timezone.now().date() - datetime.timedelta(days=1)
-            
-            print('row', total_rows)
-            print('c_month', current_month)
-            print('c_year', current_year)
-            print('yest', yesterday)
-            print('row_c_month', rows_current_month)
-            # Convert date_time to a Unix timestamp (seconds since the epoch)
-            average_timestamp_ytd = filtered_data.filter(
-                date_time__year=current_year,
-                date_time__lt=yesterday
-            ).annotate(
-                timestamp=ExpressionWrapper(F('date_time'), output_field=fields.FloatField())
-            ).aggregate(avg_timestamp=Avg('timestamp'))['avg_timestamp']
-            print('avg tmstp', average_data_ytd)
+            if not data:
+                # Filter out rows with any null values
+                filtered_data = CheckoutInfo.objects.filter(
+                    company_name__iexact=company_name
+                ).exclude(
+                    Q(country__isnull=True) | Q(country='') |
+                    Q(region__isnull=True) | Q(region='') |
+                    Q(city__isnull=True) | Q(city='') 
+                )
 
-            if average_timestamp_ytd:
-                # Convert the average timestamp back to a datetime object
-                average_data_ytd = datetime.datetime.fromtimestamp(average_timestamp_ytd, tz=timezone.utc)
-            else:
-                average_data_ytd = None
+                # Total rows with no null values
+                total_rows = filtered_data.count()
 
-            days_since_first_entry = (timezone.now().date() - filtered_data.earliest('date_time').date_time.date()).days
-            average_per_day = total_rows / days_since_first_entry if days_since_first_entry > 0 else total_rows
+                # Current month filter
+                current_month = timezone.now().month
+                rows_current_month = filtered_data.filter(date_time__month=current_month).count()
 
-            data = {
-                "total_rows": total_rows,
-                "rows_current_month": rows_current_month,
-                "average_data_ytd": average_data_ytd,
-                "average_per_day": average_per_day
-            }
-            print('final', data)
+                # Growth rate per previous day
+                yesterday = timezone.now().date() - datetime.timedelta(days=1)
+                day_before_yesterday = timezone.now().date() - datetime.timedelta(days=2)
+                rows_yesterday = filtered_data.filter(date_time=yesterday).count()
+                rows_day_before_yesterday = filtered_data.filter(
+                    date_time=day_before_yesterday
+                ).count()
+                growth_rate_previous_day = (
+                    (rows_yesterday - rows_day_before_yesterday) / rows_day_before_yesterday
+                ) * 100 if rows_day_before_yesterday > 0 else None
+                # Annual growth rate
+                current_year = timezone.now().year
+                rows_current_year = filtered_data.filter(
+                    date_time__year=current_year
+                ).count()
+                rows_last_year = filtered_data.filter(
+                    date_time__year=current_year - 1
+                ).count()
+                annual_growth_rate = (
+                    (rows_current_year - rows_last_year) / rows_last_year
+                ) * 100 if rows_last_year > 0 else None
 
-            cache.set(cache_key, data, timeout=3600)  
+                data = {
+                    "total_rows": total_rows,
+                    "current_month_name": calendar.month_name[datetime.date.today().month],
+                    "rows_current_month": rows_current_month,
+                    "growth_rate_previous_day": growth_rate_previous_day,
+                    "annual_growth_rate": annual_growth_rate
+                }
+                
 
-        return Response(data)
+                cache.set(cache_key, data, timeout=3600)
+
+            return Response(data)
+        return Response({'message': "Company doesn't exist"}, status=status.HTTP_404_NOT_FOUND)
     
+
 
 class TopLocationMetrics(APIView):
-    permission_classes = [IsAuthenticated, IsOwner]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        company_name = request.data.get('company_name')  # Assuming the user model has a company_name field
-        cache_key = f"metrics_comparison_{company_name}"
-        data = cache.get(cache_key)
+        company_name = request.query_params.get('company_name')
+        if company_name:
+            cache_key = f"location_metrics_comparison_{company_name}"
+            data = cache.get(cache_key)
 
-        if not data:
-            # Common function to get location with highest and lowest counts
-            def get_location_metrics(queryset, location_fields):
-                location_data = queryset.values(*location_fields).annotate(count=Count('id'))
-                highest_location = location_data.order_by('-count').first()
-                lowest_location = location_data.order_by('count').first()
-                return highest_location, lowest_location
+            if not data:
+                location_fields = ['country', 'region', 'city', 'town']
 
-            # Locations to consider in the order
-            location_fields = ['country', 'region', 'city', 'town']
+                # CheckoutInfo Metrics
+                checkout_queryset = CheckoutInfo.objects.filter(company_name=company_name).exclude(
+                    Q(country='') | Q(country__isnull=True) |
+                    Q(region='') | Q(region__isnull=True) |
+                    Q(city='') | Q(city__isnull=True) |
+                    Q(town='') | Q(town__isnull=True)
+                )
 
-            # ScanInfo Metrics
-            scan_queryset = ScanInfo.objects.filter(company_name__iexact=company_name).exclude(
-                country='',
-                region='',
-                city='',
-                town='',
-            )
-            highest_scan_location, lowest_scan_location = get_location_metrics(scan_queryset, location_fields)
+                # Get distinct location with highest count
+                highest_checkout_location = checkout_queryset.values(*location_fields).annotate(count=Count('id')).order_by('-count').first()
 
-            # CheckoutInfo Metrics
-            checkout_queryset = CheckoutInfo.objects.filter(company_name=company_name).exclude(
-                country='',
-                region='',
-                city='',
-                town='',
-            )
-            highest_checkout_location, lowest_checkout_location = get_location_metrics(checkout_queryset, location_fields)
+                # Get product_name with the highest count for that location
+                highest_checkout_product = checkout_queryset.filter(
+                    **{field: highest_checkout_location[field] for field in location_fields}
+                ).values('product_name').annotate(total=Count('id')).order_by('-total').first()
 
-            # Product with the highest checkout
-            highest_checkout_product = checkout_queryset.values('product_name').annotate(total=Count('id')).order_by('-total').first()
+                # Get the count value of the same distinct location from ScanInfo
+                scan_queryset = ScanInfo.objects.filter(company_name__iexact=company_name).exclude(
+                    Q(country='') | Q(country__isnull=True) |
+                    Q(region='') | Q(region__isnull=True) |
+                    Q(city='') | Q(city__isnull=True) |
+                    Q(town='') | Q(town__isnull=True)
+                )
+                matching_scan_location_count = scan_queryset.filter(
+                    **{field: highest_checkout_location[field] for field in location_fields}
+                ).count()
 
-            data = {
-                "highest_scan_location": highest_scan_location,
-                "lowest_scan_location": lowest_scan_location,
-                "highest_checkout_location": highest_checkout_location,
-                "lowest_checkout_location": lowest_checkout_location,
-                "highest_checkout_product": highest_checkout_product
-            }
+                # Current Month Metrics
+                current_month = timezone.now().month
+                current_month_checkout_queryset = checkout_queryset.filter(date_time__month=current_month)
+                current_month_scan_queryset = scan_queryset.filter(date_time__month=current_month)
 
-            # Cache the results
-            cache.set(cache_key, data, timeout=3600)  # Cache for 1 hour
+                # Distinct location with highest count for current month
+                highest_checkout_location_month = current_month_checkout_queryset.values(*location_fields).annotate(count=Count('id')).order_by('-count').first()
 
-        return Response(data)
-    
+                # Product_name with the highest count for that location in the current month
+                highest_checkout_product_month = current_month_checkout_queryset.filter(
+                    **{field: highest_checkout_location_month[field] for field in location_fields}
+                ).values('product_name').annotate(total=Count('id')).order_by('-total').first()
+                
+                highest_scan_product_month = current_month_scan_queryset.filter(
+                    **{field: highest_checkout_location_month[field] for field in location_fields}
+                ).values('product_name').annotate(total=Count('id')).order_by('-total').first()
+
+                # Get the count value of the same distinct location from ScanInfo for the current month
+                matching_scan_location_count_month = scan_queryset.filter(
+                    **{field: highest_checkout_location_month[field] for field in location_fields},
+                    date_time__month=current_month
+                ).count()
+                conversion = (highest_checkout_product_month['total'] / highest_scan_product_month['total']) * 100 if highest_scan_product_month['total'] != 0 else 0
+
+
+                data = {
+                    "highest_checkout_location": highest_checkout_location,
+                    "highest_checkout_product": highest_checkout_product,
+                    "matching_scan_location_count": matching_scan_location_count,
+                    "highest_checkout_location_month": {
+                        "location": highest_checkout_location_month,
+                        "value": highest_checkout_location_month['count'],
+                        "product_name": highest_checkout_product_month['product_name'],
+                        "product_value": highest_checkout_product_month['total'],
+                        "month": timezone.now().strftime("%B")
+                    },
+                    "matching_scan_location_count_month": matching_scan_location_count_month,
+                    "highest_scan_product_month": highest_scan_product_month,
+                    "conversion_rate":conversion
+                }
+                print('final', data)
+
+                cache.set(cache_key, data, timeout=3600)  # Cache for 1 hour
+
+            return Response(data)
+        return Response({'message': "Company doesn't exist"}, status=status.HTTP_404_NOT_FOUND)
+
+
+
 
 class PerformanceMetricsView(APIView):
     permission_classes = [IsAuthenticated, IsOwner]
