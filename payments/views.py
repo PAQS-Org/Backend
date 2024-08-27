@@ -1,5 +1,5 @@
 import requests
-
+import re
 # Create your views here.
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt  
@@ -30,6 +30,9 @@ import logging
 # Set up the logger
 logger = logging.getLogger('django')
 
+
+def sanitize_cache_key(key):
+    return re.sub(r'[^A-Za-z0-9_]', '_', key)
 class InitiatePayment(APIView):
     serializer_class = PaymentSerializer
     permission_classes = (IsAuthenticated, IsOwner)
@@ -219,7 +222,7 @@ def generate_presigned_url(company_name, product_name, batch_number, uuid, expir
 
 
 def get_cached_presigned_url(company_name, product_name, batch_number, uuid):
-    cache_key = f"{company_name}/{product_name}/{batch_number}_{uuid}"
+    cache_key = sanitize_cache_key(f"{company_name}/{product_name}/{batch_number}_{uuid}")
     url = cache.get(cache_key)
     if not url:
         url = generate_presigned_url(company_name, product_name, batch_number, uuid)
