@@ -6,6 +6,8 @@ from .views import (
     ProductAndUserMetricsView, 
     LineChartDataView, 
     BarChartDataView,
+    ProductName,
+    ProductMetricsView
     )
 
 urlpatterns = [
@@ -19,4 +21,6 @@ urlpatterns = [
     path('cust/', ProductAndUserMetricsView.as_view(), name='customer_products'),
     path('lineChart/', LineChartDataView.as_view(), name='line_data'),
     path('barChart/', BarChartDataView.as_view(), name='bar_data'),
+    path('prodName/', ProductName.as_view(), name='prod_name'),
+    path('prodInfo/', ProductMetricsView.as_view(), name='prod_info'),
 ]

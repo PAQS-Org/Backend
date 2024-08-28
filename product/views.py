@@ -1,11 +1,14 @@
-from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .models import LogProduct, ScanInfo, CheckoutInfo
-from django.db.models import Count, Avg, F,Q
+from django.db.models import Count, F,Q
+from django.core.cache import cache
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+from django.db.models.functions import TruncDay, TruncMonth, TruncYear
 from rest_framework.permissions import IsAuthenticated
 from accounts.permissions import IsOwner, IsUser
 from .serializer import CheckoutInfoSerializer, ScanInfoSerializer, LogProductSerializer
@@ -22,7 +25,7 @@ import re
 
 def sanitize_cache_key(key):
     return re.sub(r'[^A-Za-z0-9_]', '_', key)
-@method_decorator(csrf_exempt, name='dispatch')
+# @method_decorator(csrf_exempt, name='dispatch')
 class ScanInfoView(APIView):
     permission_classes = (IsAuthenticated, IsUser, IsOwner)
     serializer_class = ScanInfoSerializer
@@ -30,7 +33,7 @@ class ScanInfoView(APIView):
     def post(self, request):
         qr_code = request.data.get('qr_code')
         email = request.data.get('email')
-        location = request.data.get('location')
+        location = request.data.get('location')  
 
         if not qr_code or '/' not in qr_code or qr_code.startswith('http://'):
             return Response({'message': f'{qr_code} is not the expected data'}, status=status.HTTP_404_NOT_FOUND)
@@ -60,9 +63,9 @@ class ScanInfoView(APIView):
             ).exists():
                 return Response({
                     'message': message, 
-                    'company_name':company_name,
-                    'product_name':product_name,
-                    'batch_number':batch_number,
+                    'company_name': company_name,
+                    'product_name': product_name,
+                    'batch_number': batch_number,
                     }, status=status_code)
 
             # Store the scan information in the database
@@ -77,17 +80,19 @@ class ScanInfoView(APIView):
             serializer = self.serializer_class(data=scan_data, context={'request': request})
             if serializer.is_valid():
                 scan_info = serializer.save()
-                # Process location asynchronously
-                scan_process_location(scan_info.location, serializer)
+
+                # Process location asynchronously if provided
+                if location:
+                    scan_process_location(scan_info.location, serializer)
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
             # Return the message after storing the scan information
             return Response({
                     'message': message, 
-                    'company_name':company_name,
-                    'product_name':product_name,
-                    'batch_number':batch_number,
+                    'company_name': company_name,
+                    'product_name': product_name,
+                    'batch_number': batch_number,
                     }, status=status_code)
 
         except LogProduct.DoesNotExist:
@@ -97,12 +102,13 @@ class ScanInfoView(APIView):
 @method_decorator(csrf_exempt, name='dispatch')
 class CheckoutInfoView(APIView):
     permission_classes = (IsAuthenticated, IsUser, IsOwner)
-    serializer_class = CheckoutInfoSerializer  # Assuming ScanInfoSerializer will be used for storing checkout information as well
+    serializer_class = CheckoutInfoSerializer  
 
     def post(self, request):
         qr_code = request.data.get('qr_code')
         email = request.data.get('email')
-        location = request.data.get('location')
+        location = request.data.get('location') 
+        
         try:
             # Extract QR code information
             x, y, z, code_key, company_name, product_name, batch = qr_code.split('/')
@@ -135,8 +141,12 @@ class CheckoutInfoView(APIView):
                 serializer = self.serializer_class(data=checkout_data, context={'request': request})
                 if serializer.is_valid():
                     checkout_info = serializer.save()
-                    # Process location asynchronously
-                    checkout_process_location(checkout_info.location, serializer)
+                    
+           
+                    if location:
+                        checkout_process_location(checkout_info.location, serializer)
+                else:
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
                 # Return the checkout message
                 return Response({'message': log_product.checkout_message}, status=status.HTTP_200_OK)
@@ -146,6 +156,7 @@ class CheckoutInfoView(APIView):
 
         except ValueError:
             return Response({'message': 'Invalid QR code format'}, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 @method_decorator(csrf_exempt, name='dispatch')    
@@ -496,8 +507,6 @@ class PerformanceMetricsView(APIView):
 
         return Response(data)
     
-
-
 class ProductAndUserMetricsView(APIView):
     permission_classes = [IsAuthenticated, IsOwner]
 
@@ -642,7 +651,7 @@ class BarChartDataView(APIView):
         company_name = request.query_params.get('company_name')
         selected_criteria = request.query_params.get('Region')
         selected_range = request.query_params.get('High')
-        print('req', request)
+        
         # Ensure company name is provided
         if not company_name:
             return Response({'error': 'Company name is required'}, status=400)
@@ -703,3 +712,87 @@ class BarChartDataView(APIView):
             final_data = sorted_data[-5:][::-1]
 
         return Response(final_data)
+    
+class ProductName(APIView):
+    permission_classes = [IsAuthenticated, IsOwner]
+
+    def get(self, request, *args, **kwargs):
+        company_name = request.query_params.get('company_name')
+        try:
+             products = LogProduct.objects.filter(company_name=company_name).values_list('product_name', flat=True).distinct()
+             return Response(products, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+class ProductMetricsView(APIView):
+
+    def get_cache_key(self, company_name, product_name):
+        return f"product_metrics_{company_name}_{product_name}"
+
+    @method_decorator(cache_page(60 * 15))  # Optional: cache the entire view for 15 minutes
+    def get(self, request,*args, **kwargs):
+        company_name = request.query_params.get('company_name')
+        product_name = request.query_params.get('product_name')
+        cache_key = self.get_cache_key(company_name, product_name)
+        data = cache.get(cache_key)
+
+        if not data:
+            try:
+
+                scan_queryset = ScanInfo.objects.filter(
+                company_name__iexact=company_name,
+                product_name__iexact=product_name
+                ).exclude(
+                    Q(country='') | Q(country__isnull=True) |
+                    Q(region='') | Q(region__isnull=True) |
+                    Q(city='') | Q(city__isnull=True) |
+                    Q(town='') | Q(town__isnull=True)
+                )
+                checkout_queryset = CheckoutInfo.objects.filter(
+                    company_name__iexact=company_name,
+                    product_name__iexact=product_name
+                ).exclude(
+                    Q(country='') | Q(country__isnull=True) |
+                    Q(region='') | Q(region__isnull=True) |
+                    Q(city='') | Q(city__isnull=True) |
+                    Q(town='') | Q(town__isnull=True)
+                )
+
+                
+                # 4. Metrics calculations
+                checkout_today = checkout_queryset.annotate(day=TruncDay('date_time')).filter(day=F('day')).aggregate(total=Count('id'))['total'] or 0
+                checkout_month = checkout_queryset.annotate(month=TruncMonth('date_time')).filter(month=F('month')).aggregate(total=Count('id'))['total'] or 0
+                checkout_year = checkout_queryset.annotate(year=TruncYear('date_time')).filter(year=F('year')).aggregate(total=Count('id'))['total'] or 0
+                scan_today = scan_queryset.annotate(day=TruncDay('date_time')).filter(day=F('day')).aggregate(total=Count('id'))['total'] or 0
+                scan_month = scan_queryset.annotate(month=TruncMonth('date_time')).filter(month=F('month')).aggregate(total=Count('id'))['total'] or 0
+                scan_year = scan_queryset.annotate(year=TruncYear('date_time')).filter(year=F('year')).aggregate(total=Count('id'))['total'] or 0
+                acceptance_rate = (checkout_queryset.count() / scan_queryset.count()) * 100 if scan_queryset.count() > 0 else 0
+                highest_checkout_per_location = checkout_queryset.values('region', 'city', 'town', 'street').annotate(total=Count('id')).order_by('-total').first()
+                total_locations = list(checkout_queryset.values('region', 'city', 'town', 'street').annotate(total=Count('id')).order_by('total'))
+                median_location = total_locations[len(total_locations) // 2] if total_locations else None
+                lowest_checkout_per_location = checkout_queryset.values('region', 'city', 'town', 'street').annotate(total=Count('id')).order_by('total').first()
+
+                # Prepare the response data
+                data = {
+                    'metrics': {
+                        'checkout_today': checkout_today,
+                        'checkout_month': checkout_month,
+                        'checkout_year': checkout_year,
+                        'scan_today': scan_today,
+                        'scan_month': scan_month,
+                        'scan_year': scan_year,
+                        'acceptance_rate': acceptance_rate,
+                        'highest_checkout_per_location': highest_checkout_per_location,
+                        'median_checkout_per_location': median_location,
+                        'lowest_checkout_per_location': lowest_checkout_per_location,
+                    }
+                }
+
+                # Cache the result
+                cache.set(cache_key, data, timeout=60 * 15)  # Cache for 15 minutes
+                print('final', data)
+            except Exception as e:
+                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(data, status=status.HTTP_200_OK)

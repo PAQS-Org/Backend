@@ -18,9 +18,7 @@ from .views import (
     # csp report
     csp_report 
     )
-from rest_framework_simplejwt.views import (
-    TokenRefreshView,
-)
+from rest_framework_simplejwt.views import TokenRefreshView
 
 
 urlpatterns = [

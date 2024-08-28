@@ -32,6 +32,8 @@ from django.http import HttpResponsePermanentRedirect
 from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ValidationError
 from django.template.loader import render_to_string
+from rest_framework_simplejwt.views import TokenRefreshView
+from rest_framework.response import Response
 
 from django.http import JsonResponse
 import json
@@ -318,8 +320,6 @@ class UserPasswordTokenCheckAPI(generics.GenericAPIView):
             except UnboundLocalError as e:
                 return Response({'error': 'Token is not valid, please request a new one'}, status=status.HTTP_400_BAD_REQUEST)
 
-
-
 class UserSetNewPasswordAPIView(generics.GenericAPIView):
     serializer_class = SetNewPasswordSerializer
 
@@ -336,3 +336,28 @@ def csp_report(request):
         print('csp', report)
         return JsonResponse({'status': 'ok'}, status=204)  # 204 No Content is a typical response
     return JsonResponse({'status': 'method not allowed'}, status=405)
+
+
+class CustomTokenRefreshView(TokenRefreshView):
+    def post(self, request, *args, **kwargs):
+        print('req', request)
+        refresh = request.COOKIES.get('refresh')
+        if not refresh:
+            return Response({"error": "Refresh token is missing"}, status=400)
+        
+        # Pass the refresh token to SimpleJWT's validation
+        data = {"refresh": refresh}
+        request._full_data = data  # Mock request data for the SimpleJWT view
+
+        response = super().post(request, *args, **kwargs)
+        new_access_token = response.data['access']
+
+        # Set the new access token in a HTTP-Only cookie
+        response.set_cookie(
+            key="refresh",
+            value=new_access_token,
+            httponly=True,
+            secure=True,  # Use HTTPS in production
+            samesite='Lax',
+        )
+        return response
