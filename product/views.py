@@ -1,4 +1,3 @@
-from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -17,7 +16,6 @@ from django.core.mail import send_mail, BadHeaderError
 from django.conf import settings
 import logging
 from smtplib import SMTPException
-from django.core.cache import cache
 from django.utils import timezone
 import datetime
 import calendar
@@ -25,7 +23,7 @@ import re
 
 def sanitize_cache_key(key):
     return re.sub(r'[^A-Za-z0-9_]', '_', key)
-# @method_decorator(csrf_exempt, name='dispatch')
+
 class ScanInfoView(APIView):
     permission_classes = (IsAuthenticated, IsUser, IsOwner)
     serializer_class = ScanInfoSerializer
@@ -98,8 +96,6 @@ class ScanInfoView(APIView):
         except LogProduct.DoesNotExist:
             return Response({'message': 'Last part of the code not found'}, status=status.HTTP_404_NOT_FOUND)
 
-
-@method_decorator(csrf_exempt, name='dispatch')
 class CheckoutInfoView(APIView):
     permission_classes = (IsAuthenticated, IsUser, IsOwner)
     serializer_class = CheckoutInfoSerializer  
@@ -158,8 +154,7 @@ class CheckoutInfoView(APIView):
             return Response({'message': 'Invalid QR code format'}, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-@method_decorator(csrf_exempt, name='dispatch')    
+   
 class PatchInfoView(APIView):
     permission_classes = (IsAuthenticated, IsOwner)
     serializer_class = LogProductSerializer
@@ -227,7 +222,8 @@ class PatchInfoView(APIView):
 
 class ScanMetricsView(APIView):
     permission_classes = [IsAuthenticated, IsOwner]
-
+    
+    @method_decorator(cache_page(60 * 5))
     def get(self, request, *args, **kwargs):
         company_name = request.query_params.get('company_name')
         if company_name:
@@ -286,7 +282,7 @@ class ScanMetricsView(APIView):
                     "scan_growth_rate_previous_day": growth_rate_previous_day,
                     "scan_annual_growth_rate": annual_growth_rate
                 }
-                cache.set(cache_key, data, timeout=3600)
+                cache.set(cache_key, data, timeout=60 * 5)
 
             return Response(data)
         return Response({'message': "Company doesn't exist"}, status=status.HTTP_404_NOT_FOUND)
@@ -294,7 +290,7 @@ class ScanMetricsView(APIView):
 
 class CheckoutMetricsView(APIView):
     permission_classes = [IsAuthenticated, IsOwner]
-
+    @method_decorator(cache_page(60 * 5))
     def get(self, request, *args, **kwargs):
         company_name = request.query_params.get('company_name')
         if company_name:
@@ -350,14 +346,15 @@ class CheckoutMetricsView(APIView):
                 }
                 
 
-                cache.set(cache_key, data, timeout=3600)
+                cache.set(cache_key, data, timeout=60 * 5)
 
             return Response(data)
         return Response({'message': "Company doesn't exist"}, status=status.HTTP_404_NOT_FOUND)
     
 class TopLocationMetrics(APIView):
     permission_classes = [IsAuthenticated]
-
+    
+    @method_decorator(cache_page(60 * 5))
     def get(self, request, *args, **kwargs):
         company_name = request.query_params.get('company_name')
         if company_name:
@@ -435,14 +432,15 @@ class TopLocationMetrics(APIView):
                     "conversion_rate":conversion
                 }
 
-                cache.set(cache_key, data, timeout=3600)  # Cache for 1 hour
+                cache.set(cache_key, data, timeout=60 * 5)  # Cache for 1 hour
 
             return Response(data)
         return Response({'message': "Company doesn't exist"}, status=status.HTTP_404_NOT_FOUND)
 
 class PerformanceMetricsView(APIView):
     permission_classes = [IsAuthenticated]
-
+        
+    @method_decorator(cache_page(60 * 5))    
     def get(self, request, *args, **kwargs):
         company_name = request.query_params.get('company_name')  # Assuming the user model has a company_name field
         cache_key = sanitize_cache_key(f"performance_metrics_{company_name}")
@@ -503,13 +501,14 @@ class PerformanceMetricsView(APIView):
             }
 
             # Cache the results
-            cache.set(cache_key, data, timeout=3600)  # Cache for 1 hour
+            cache.set(cache_key, data, timeout=60 * 5)  # Cache for 1 hour
 
         return Response(data)
     
 class ProductAndUserMetricsView(APIView):
     permission_classes = [IsAuthenticated, IsOwner]
 
+    @method_decorator(cache_page(60 * 5))
     def get(self, request, *args, **kwargs):
         company_name = request.query_params.get('company_name')
         cache_key = sanitize_cache_key(f"product_user_metrics_{company_name}")
@@ -573,7 +572,7 @@ class ProductAndUserMetricsView(APIView):
             }
 
             # Cache the results
-            cache.set(cache_key, data, timeout=3600)  # Cache for 1 hour
+            cache.set(cache_key, data, timeout=60 * 5)  # Cache for 1 hour
 
         return Response(data)
 
@@ -728,9 +727,9 @@ class ProductName(APIView):
 class ProductMetricsView(APIView):
 
     def get_cache_key(self, company_name, product_name):
-        return f"product_metrics_{company_name}_{product_name}"
+        return sanitize_cache_key(f"product_metrics_{company_name}_{product_name}")
 
-    @method_decorator(cache_page(60 * 15))  # Optional: cache the entire view for 15 minutes
+    @method_decorator(cache_page(60 * 5))  # Optional: cache the entire view for 5 minutes
     def get(self, request,*args, **kwargs):
         company_name = request.query_params.get('company_name')
         product_name = request.query_params.get('product_name')
@@ -759,8 +758,6 @@ class ProductMetricsView(APIView):
                     Q(town='') | Q(town__isnull=True)
                 )
 
-                
-                # 4. Metrics calculations
                 checkout_today = checkout_queryset.annotate(day=TruncDay('date_time')).filter(day=F('day')).aggregate(total=Count('id'))['total'] or 0
                 checkout_month = checkout_queryset.annotate(month=TruncMonth('date_time')).filter(month=F('month')).aggregate(total=Count('id'))['total'] or 0
                 checkout_year = checkout_queryset.annotate(year=TruncYear('date_time')).filter(year=F('year')).aggregate(total=Count('id'))['total'] or 0
@@ -773,7 +770,6 @@ class ProductMetricsView(APIView):
                 median_location = total_locations[len(total_locations) // 2] if total_locations else None
                 lowest_checkout_per_location = checkout_queryset.values('region', 'city', 'town', 'street').annotate(total=Count('id')).order_by('total').first()
 
-                # Prepare the response data
                 data = {
                     'metrics': {
                         'checkout_today': checkout_today,
@@ -789,9 +785,7 @@ class ProductMetricsView(APIView):
                     }
                 }
 
-                # Cache the result
-                cache.set(cache_key, data, timeout=60 * 15)  # Cache for 15 minutes
-                print('final', data)
+                cache.set(cache_key, data, timeout=60 * 5)  # Cache for 5 minutes
             except Exception as e:
                 return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
