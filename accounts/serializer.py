@@ -170,13 +170,14 @@ class CompanyRegisterSerializer(serializers.ModelSerializer):
         return company
     
 def get_presigned_url(s3_key):
+    file_key = f"static/{s3_key}"
     s3 = boto3.client('s3', 
                       aws_access_key_id=settings.AWS_ACCESS_KEY_ID, 
                       aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY, 
                       region_name=settings.AWS_S3_REGION_NAME)
     presigned_url = s3.generate_presigned_url('get_object',
                                               Params={'Bucket': settings.AWS_STORAGE_BUCKET_NAME,
-                                                      'Key': s3_key},
+                                                      'Key': file_key},
                                               ExpiresIn=3600)  # URL valid for 1 hour
     return presigned_url
 
