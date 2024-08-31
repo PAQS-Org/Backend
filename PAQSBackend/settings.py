@@ -151,48 +151,48 @@ USE_TZ = True
 import logging
 
 # Configure logging
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s %(levelname)s %(message)s',
-)
+# logging.basicConfig(
+#     level=logging.DEBUG,
+#     format='%(asctime)s %(levelname)s %(message)s',
+# )
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {  
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-        },
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': True,
-        },
-        'botocore': {
-            'handlers': ['console'],
-            'level': 'WARNING',
-            'propagate': False,
-        },
-        'boto3': {
-            'handlers': ['console'],
-            'level': 'WARNING',
-            'propagate': False,
-        },
-        's3transfer': {
-            'handlers': ['console'],
-            'level': 'WARNING',
-            'propagate': False,
-        },
-        'urllib3': {
-            'handlers': ['console'],
-            'level': 'WARNING',
-            'propagate': False,
-        },
-    },
-}
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'handlers': {
+#         'console': {  
+#             'level': 'DEBUG',
+#             'class': 'logging.StreamHandler',
+#         },
+#     },
+#     'loggers': {
+#         'django': {
+#             'handlers': ['console'],
+#             'level': 'DEBUG',
+#             'propagate': True,
+#         },
+#         'botocore': {
+#             'handlers': ['console'],
+#             'level': 'WARNING',
+#             'propagate': False,
+#         },
+#         'boto3': {
+#             'handlers': ['console'],
+#             'level': 'WARNING',
+#             'propagate': False,
+#         },
+#         's3transfer': {
+#             'handlers': ['console'],
+#             'level': 'WARNING',
+#             'propagate': False,
+#         },
+#         'urllib3': {
+#             'handlers': ['console'],
+#             'level': 'WARNING',
+#             'propagate': False,
+#         },
+#     },
+# }
 
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

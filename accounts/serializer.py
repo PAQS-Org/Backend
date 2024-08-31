@@ -200,8 +200,11 @@ class CompanyLoginSerializer(serializers.ModelSerializer):
         }
         
     def get_company_logo(self, obj):
-        if obj.company_logo:
-            return get_presigned_url(obj.company_logo.name)
+        company_logo_field = obj.get('company_logo', None)
+        print('logo', company_logo_field)
+        if company_logo_field:
+            return get_presigned_url(company_logo_field.name)
+        return None
         
     class Meta:
         model = Company
