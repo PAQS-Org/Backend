@@ -2,6 +2,14 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from PAQSBackend.encry import (
+    generate_rsa_key_pair, serialize_public_key, deserialize_public_key,
+    decrypt_session_key, encrypt_data, serialize_private_key
+)
+from base64 import urlsafe_b64encode, urlsafe_b64decode
+
 from .models import LogProduct, ScanInfo, CheckoutInfo
 from django.db.models import Count, F,Q
 from django.core.cache import cache
@@ -261,7 +269,7 @@ class ScanMetricsView(APIView):
                 ).count()
                 growth_rate_previous_day = (
                     (rows_yesterday - rows_day_before_yesterday) / rows_day_before_yesterday
-                ) * 100 if rows_day_before_yesterday > 0 else None
+                ) * 100 if rows_day_before_yesterday > 0 else 0
 
                 # Annual growth rate
                 current_year = timezone.now().year
@@ -273,7 +281,7 @@ class ScanMetricsView(APIView):
                 ).count()
                 annual_growth_rate = (
                     (rows_current_year - rows_last_year) / rows_last_year
-                ) * 100 if rows_last_year > 0 else None
+                ) * 100 if rows_last_year > 0 else 0
 
                 data = {
                     "scan_total_rows": total_rows,
@@ -282,7 +290,7 @@ class ScanMetricsView(APIView):
                     "scan_growth_rate_previous_day": growth_rate_previous_day,
                     "scan_annual_growth_rate": annual_growth_rate
                 }
-                cache.set(cache_key, data, timeout=60 * 5)
+                # cache.set(cache_key, data, timeout=60 * 5)
 
             return Response(data)
         return Response({'message': "Company doesn't exist"}, status=status.HTTP_404_NOT_FOUND)
@@ -324,7 +332,7 @@ class CheckoutMetricsView(APIView):
                 ).count()
                 growth_rate_previous_day = (
                     (rows_yesterday - rows_day_before_yesterday) / rows_day_before_yesterday
-                ) * 100 if rows_day_before_yesterday > 0 else None
+                ) * 100 if rows_day_before_yesterday > 0 else 0
                 # Annual growth rate
                 current_year = timezone.now().year
                 rows_current_year = filtered_data.filter(
@@ -335,7 +343,7 @@ class CheckoutMetricsView(APIView):
                 ).count()
                 annual_growth_rate = (
                     (rows_current_year - rows_last_year) / rows_last_year
-                ) * 100 if rows_last_year > 0 else None
+                ) * 100 if rows_last_year > 0 else 0
 
                 data = {
                     "total_rows": total_rows,
@@ -346,7 +354,7 @@ class CheckoutMetricsView(APIView):
                 }
                 
 
-                cache.set(cache_key, data, timeout=60 * 5)
+                # cache.set(cache_key, data, timeout=60 * 5)
 
             return Response(data)
         return Response({'message': "Company doesn't exist"}, status=status.HTTP_404_NOT_FOUND)
@@ -501,7 +509,7 @@ class PerformanceMetricsView(APIView):
             }
 
             # Cache the results
-            cache.set(cache_key, data, timeout=60 * 5)  # Cache for 1 hour
+            # cache.set(cache_key, data, timeout=60 * 5)  # Cache for 1 hour
 
         return Response(data)
     
@@ -572,7 +580,7 @@ class ProductAndUserMetricsView(APIView):
             }
 
             # Cache the results
-            cache.set(cache_key, data, timeout=60 * 5)  # Cache for 1 hour
+            # cache.set(cache_key, data, timeout=60 * 5)  # Cache for 1 hour
 
         return Response(data)
 
@@ -785,8 +793,37 @@ class ProductMetricsView(APIView):
                     }
                 }
 
-                cache.set(cache_key, data, timeout=60 * 5)  # Cache for 5 minutes
+                # cache.set(cache_key, data, timeout=60 * 5)  # Cache for 5 minutes
             except Exception as e:
                 return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(data, status=status.HTTP_200_OK)
+
+
+# Store the private key securely
+private_key = None
+
+@csrf_exempt
+def get_public_key(request):
+    global private_key
+    private_key, public_key = generate_rsa_key_pair()
+    serialized_public_key = serialize_public_key(public_key)
+    return JsonResponse({'public_key': serialized_public_key.decode()})
+
+@csrf_exempt
+def encrypt_sensitive_data(request):
+    global private_key
+    if request.method == 'POST':
+        encrypted_session_key = urlsafe_b64decode(request.POST.get('session_key', ''))
+        
+        # Decrypt the session key with the private key
+        session_key = decrypt_session_key(private_key, encrypted_session_key)
+
+        # Encrypt sensitive data
+        sensitive_data = "This is very sensitive information"
+        encrypted_data = encrypt_data(session_key, sensitive_data)
+
+        # Return encrypted data in base64
+        encrypted_data_b64 = urlsafe_b64encode(encrypted_data).decode()
+        return JsonResponse({'encrypted_data': encrypted_data_b64})
+    return JsonResponse({'error': 'Invalid request'}, status=400)

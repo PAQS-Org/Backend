@@ -4,7 +4,8 @@ from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.auth import authenticate, password_validation
 from rest_framework.exceptions import AuthenticationFailed
-
+import boto3
+from django.conf import settings
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
 from .models import User, Company
@@ -167,7 +168,17 @@ class CompanyRegisterSerializer(serializers.ModelSerializer):
         company = Company.objects.create_user(**validated_data)
         # Send verification email here (if applicable)
         return company
-
+    
+def get_presigned_url(s3_key):
+    s3 = boto3.client('s3', 
+                      aws_access_key_id=settings.AWS_ACCESS_KEY_ID, 
+                      aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY, 
+                      region_name=settings.AWS_S3_REGION_NAME)
+    presigned_url = s3.generate_presigned_url('get_object',
+                                              Params={'Bucket': settings.AWS_STORAGE_BUCKET_NAME,
+                                                      'Key': s3_key},
+                                              ExpiresIn=3600)  # URL valid for 1 hour
+    return presigned_url
 
 class CompanyLoginSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
@@ -175,7 +186,7 @@ class CompanyLoginSerializer(serializers.ModelSerializer):
     )
     password = serializers.CharField(write_only=True)
     company_name = serializers.CharField(read_only=True)  # Access company name from related field
-    company_logo = serializers.CharField(read_only=True)
+    company_logo = serializers.SerializerMethodField()
     first_name = serializers.CharField(read_only=True)
     last_name = serializers.CharField(read_only=True)
     tokens = serializers.SerializerMethodField()
@@ -187,6 +198,11 @@ class CompanyLoginSerializer(serializers.ModelSerializer):
             'refresh': user.tokens()['refresh'],
             'access': user.tokens()['access']
         }
+        
+    def get_company_logo(self, obj):
+        if obj.company_logo:
+            return get_presigned_url(obj.company_logo.name)
+        
     class Meta:
         model = Company
         fields = ['email', 'password', 'tokens', 'first_name', 'last_name', 'company_name', 'company_logo' ]

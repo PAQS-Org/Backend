@@ -47,7 +47,7 @@ INSTALLED_APPS = [
     'product',
     'social_auth',
     'entry',
-    # 'csp',
+    'csp',
     'storages'
 ]
 
@@ -277,44 +277,44 @@ AUTHENTICATION_BACKENDS = [
 
 AUTH_USER_MODEL = "accounts.AbstractUserProfile"
 
-CSP_DEFAULT_SRC = ("'self'", "*")
-CSP_SCRIPT_SRC = ("'self'", "*", "'unsafe-inline'", "'unsafe-eval'")
-CSP_STYLE_SRC = ("'self'", "*", "'unsafe-inline'")
-CSP_IMG_SRC = ("'self'", "*")
-CSP_FONT_SRC = ("'self'", "*")
+# CSP_DEFAULT_SRC = ("'self'", "*")
+# CSP_SCRIPT_SRC = ("'self'", "*", "'unsafe-inline'", "'unsafe-eval'")
+# CSP_STYLE_SRC = ("'self'", "*", "'unsafe-inline'")
+# CSP_IMG_SRC = ("'self'", "*")
+# CSP_FONT_SRC = ("'self'", "*")
 
-# CONTENT_SECURITY_POLICY = {
-#     "EXCLUDE_URL_PREFIXES": ["/excluded-path/"],
-#     "DIRECTIVES": {
-#          "default-src": ["'self'", "https://backend-production-7888.up.railway.app"],
-#         "script-src": ["'self'", "'unsafe-eval'", "https://backend-production-7888.up.railway.app", "'blob:'"],
-#         "style-src": ["'self'"],
-#         "connect-src": ["'self'", "https://backend-production-7888.up.railway.app"],
-#         "img-src": ["'self'", "blob:", "data:", "https://backend-production-7888.up.railway.app"],
-#         "font-src": ["'self'"],
-#         "object-src": ["'none'"],
-#         "frame-ancestors": ["'self'"],
-#         "form-action": ["'self'"],
-#         "base-uri": ["'self'"],
-#         "report-uri": "https://company-six-liard.vercel.app/account/csp-report/",
-#         "upgrade-insecure-requests": True,
-#     },
-# }
+CONTENT_SECURITY_POLICY = {
+    # "EXCLUDE_URL_PREFIXES": ["/excluded-path/"],
+    "DIRECTIVES": {
+         "default-src": ["'self'", "https://backend-production-7888.up.railway.app"],
+        "script-src": ["'self'", "'unsafe-eval'", "https://backend-production-7888.up.railway.app", "'blob:'"],
+        "style-src": ["'self'"],
+        "connect-src": ["'self'", "https://backend-production-7888.up.railway.app"],
+        "img-src": ["'self'", "blob:", "data:", "https://backend-production-7888.up.railway.app"],
+        "font-src": ["'self'"],
+        "object-src": ["'none'"],
+        "frame-ancestors": ["'self'"],
+        "form-action": ["'self'"],
+        "base-uri": ["'self'"],
+        "report-uri": "https://company-six-liard.vercel.app/account/csp-report/",
+        "upgrade-insecure-requests": True,
+    },
+}
 
-# CONTENT_SECURITY_POLICY_REPORT_ONLY = {
-#     "EXCLUDE_URL_PREFIXES": ["/excluded-path/"],
-#     "DIRECTIVES": {
-#         "default-src": ["'none'"],
-#         "connect-src": ["'self'"],
-#         "img-src": ["'self'"],
-#         "form-action": ["'self'"],
-#         "frame-ancestors": ["'self'"],
-#         "script-src": ["'self'"],
-#         "style-src": ["'self'"],
-#         "upgrade-insecure-requests": True,
-#         "report-uri": "/csp-report/",
-#     },
-# }
+CONTENT_SECURITY_POLICY_REPORT_ONLY = {
+    "EXCLUDE_URL_PREFIXES": ["/excluded-path/"],
+    "DIRECTIVES": {
+        "default-src": ["'none'"],
+        "connect-src": ["'self'"],
+        "img-src": ["'self'"],
+        "form-action": ["'self'"],
+        "frame-ancestors": ["'self'"],
+        "script-src": ["'self'"],
+        "style-src": ["'self'"],
+        "upgrade-insecure-requests": True,
+        "report-uri": "/csp-report/",
+    },
+}
 
 
 IGNORABLE_404_URLS = [

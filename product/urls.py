@@ -7,7 +7,9 @@ from .views import (
     LineChartDataView, 
     BarChartDataView,
     ProductName,
-    ProductMetricsView
+    ProductMetricsView, 
+    get_public_key, 
+    encrypt_sensitive_data
     )
 
 urlpatterns = [
@@ -22,5 +24,6 @@ urlpatterns = [
     path('lineChart/', LineChartDataView.as_view(), name='line_data'),
     path('barChart/', BarChartDataView.as_view(), name='bar_data'),
     path('prodName/', ProductName.as_view(), name='prod_name'),
+    path('prodInfo/', ProductMetricsView.as_view(), name='prod_info'),
     path('prodInfo/', ProductMetricsView.as_view(), name='prod_info'),
 ]
