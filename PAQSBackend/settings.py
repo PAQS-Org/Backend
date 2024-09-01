@@ -115,13 +115,12 @@ WSGI_APPLICATION = 'PAQSBackend.wsgi.application'
 DATABASES = {
     'default': {
        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+       'DB_URL': os.getenv("DATABASE_URL"),
        'NAME': os.getenv("POSTGRES_DB"),
        'USER': os.getenv("POSTGRES_USER"),
        'PASSWORD': os.getenv("PGPASSWORD"),
        'HOST': os.getenv("PGHOST"),
        'PORT': os.getenv("PGPORT"),
-       'DATABASE_PUBLIC_URL': os.getenv("DATABASE_PUBLIC_URL"),
-       'DATABASE_URL': os.getenv("DATABASE_URL"),
        'PGDATA': os.getenv("PGDATA"),
        'PGDATABASE': os.getenv("PGDATABASE"),
        'POSTGRES_USER': os.getenv("POSTGRES_USER"),
