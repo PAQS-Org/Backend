@@ -18,6 +18,7 @@ from rest_framework.views import APIView
 from rest_framework import viewsets
 from rest_framework.pagination import PageNumberPagination
 # from weasyprint import HTML
+from django_weasyprint import WeasyTemplateResponse
 from django.template.loader import render_to_string
 from django.templatetags.static import static
 from .lib.generator import generate
@@ -131,33 +132,45 @@ def verify_payment(request):
 
 
 
-# def download_receipt(request, transaction_id):
-#     try:
-#         transaction = Payment.objects.get(transaction_id=transaction_id)
-#     except Payment.DoesNotExist:
-#         return HttpResponse("Transaction not found", status=404)
+def download_receipt(request, transaction_id):
+    try:
+        transaction = Payment.objects.get(transaction_id=transaction_id)
+    except Payment.DoesNotExist:
+        return HttpResponse("Transaction not found", status=404)
 
-#     logo_url = request.build_absolute_uri(static('images/logo.png'))
-#     receipt_html = render_to_string('receipt.html',{
-#         'trans_ref':transaction.transaction_id,
-#         'date':transaction.date_created,
-#         'prod_name':transaction.product_name,
-#         'comp_name':transaction.company.company_name,
-#         'batch_num':transaction.batch_number,
-#         'unit_price':transaction.unit_price,
-#         'qty':transaction.quantity,
-#         'total':transaction.amount,
-#         'logo_url': logo_url,
-#     }) 
-   
+    logo_url = request.build_absolute_uri(static('images/logo.png'))
 
-#     html = HTML(string=receipt_html)
-#     pdf_file = html.write_pdf()
+    receipt_html = render_to_string('receipt.html', {
+        'trans_ref': transaction.transaction_id,
+        'date': transaction.date_created,
+        'prod_name': transaction.product_name,
+        'comp_name': transaction.company.company_name,
+        'batch_num': transaction.batch_number,
+        'unit_price': transaction.unit_price,
+        'qty': transaction.quantity,
+        'total': transaction.amount,
+        'logo_url': logo_url,
+    })
 
-#     response = HttpResponse(pdf_file, content_type='application/pdf')
-#     response['Content-Disposition'] = f'attachment; filename=receipt_{transaction_id}.pdf'
-    
-#     return response
+    response = WeasyTemplateResponse(
+        request=request,
+        template_name='receipt.html',
+        content_type='application/pdf',
+        context={
+            'trans_ref': transaction.transaction_id,
+            'date': transaction.date_created,
+            'prod_name': transaction.product_name,
+            'comp_name': transaction.company.company_name,
+            'batch_num': transaction.batch_number,
+            'unit_price': transaction.unit_price,
+            'qty': transaction.quantity,
+            'total': transaction.amount,
+            'logo_url': logo_url,
+        }
+    )
+
+    response['Content-Disposition'] = f'attachment; filename=receipt_{transaction_id}.pdf'
+    return response
 
 
 def delete_old_transactions():
