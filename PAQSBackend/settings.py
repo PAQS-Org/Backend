@@ -129,7 +129,6 @@ DATABASES = {
     'default': dj_database_url.parse(os.getenv('PGCONNECT')),
     "CONN_MAX_AGE": 60,
 }
-DATABASES['default']['CONN_MAX_AGE'] = 60
 print('db', DATABASES)
 
 
