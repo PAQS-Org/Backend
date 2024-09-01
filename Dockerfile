@@ -1,5 +1,5 @@
 # Use an official Python runtime as a parent image
-FROM python:3.11-slim
+FROM python:3.12.2-slim-bullseye
 
 # Install required system dependencies for WeasyPrint
 RUN apt-get update && apt-get install -y \
@@ -22,4 +22,4 @@ RUN pip install -r requirements.txt
 COPY . .
 
 # Run Django
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "PAQSBackend.wsgi"]
