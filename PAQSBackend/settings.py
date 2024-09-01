@@ -19,7 +19,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [ '127.0.0.1', 'localhost','users-rouge.vercel.app' , 'company-six-liard.vercel.app', 'web-production-61e6.up.railway.app']
+ALLOWED_HOSTS = [ '127.0.0.1', 'localhost','users-rouge.vercel.app' , 'company-six-liard.vercel.app', 'paqsbackend.up.railway.app']
 
 SITE_ID = 1
 
@@ -250,7 +250,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOWED_ORIGINS = [
     'https://company-six-liard.vercel.app', #company temporal
     'https://users-rouge.vercel.app', #user temporal
-    "https://web-production-61e6.up.railway.app", # backend url
+    "https://paqsbackend.up.railway.app", # backend url
     "https://paqs-l46fiysct-osahenes-projects.vercel.app",
     "https://vercel.com",
     'http://127.0.0.1:8000',
@@ -265,7 +265,7 @@ SESSION_COOKIE_SECURE = True
 SECURE_SSL_REDIRECT = False
 CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = [
-    'https://web-production-61e6.up.railway.app', 
+    'https://paqsbackend.up.railway.app', 
     'https://company-six-liard.vercel.app',
     'https://users-rouge.vercel.app'
 ]
@@ -294,11 +294,11 @@ AUTH_USER_MODEL = "accounts.AbstractUserProfile"
 CONTENT_SECURITY_POLICY = {
     # "EXCLUDE_URL_PREFIXES": ["/excluded-path/"],
     "DIRECTIVES": {
-         "default-src": ["'self'", "https://web-production-61e6.up.railway.app"],
-        "script-src": ["'self'", "'unsafe-eval'", "https://web-production-61e6.up.railway.app", "'blob:'"],
+         "default-src": ["'self'", "https://paqsbackend.up.railway.app"],
+        "script-src": ["'self'", "'unsafe-eval'", "https://paqsbackend.up.railway.app", "'blob:'"],
         "style-src": ["'self'"],
-        "connect-src": ["'self'", "https://web-production-61e6.up.railway.app"],
-        "img-src": ["'self'", "blob:", "data:", "https://web-production-61e6.up.railway.app"],
+        "connect-src": ["'self'", "https://paqsbackend.up.railway.app"],
+        "img-src": ["'self'", "blob:", "data:", "https://paqsbackend.up.railway.app"],
         "font-src": ["'self'"],
         "object-src": ["'none'"],
         "frame-ancestors": ["'self'"],
