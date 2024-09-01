@@ -19,7 +19,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [ '127.0.0.1', 'localhost','users-rouge.vercel.app' , 'company-six-liard.vercel.app', 'backend-production-7888.up.railway.app']
+ALLOWED_HOSTS = [ '127.0.0.1', 'localhost','users-rouge.vercel.app' , 'company-six-liard.vercel.app', 'web-production-61e6.up.railway.app']
 
 SITE_ID = 1
 
@@ -113,18 +113,6 @@ WSGI_APPLICATION = 'PAQSBackend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-#        'DB_URL': os.environ.get("PGCONNECT"),
-#        'NAME': os.environ.get("POSTGRES_DB"),
-#        'USER': os.environ.get("POSTGRES_USER"),
-#        'PASSWORD': os.environ.get("PGPASSWORD"),
-#        'HOST': os.environ.get("PGHOST"),
-#        'PORT': os.environ.get("PGPORT"),
-#        "CONN_MAX_AGE": 60,
-#     }
-# }
 DATABASES = {
     'default': dj_database_url.parse(os.getenv('PGCONNECT')),
 }
@@ -261,7 +249,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOWED_ORIGINS = [
     'https://company-six-liard.vercel.app', #company temporal
     'https://users-rouge.vercel.app', #user temporal
-    "https://backend-production-7888.up.railway.app", # backend url
+    "https://web-production-61e6.up.railway.app", # backend url
     "https://paqs-l46fiysct-osahenes-projects.vercel.app",
     "https://vercel.com",
     'http://127.0.0.1:8000',
@@ -276,7 +264,7 @@ SESSION_COOKIE_SECURE = True
 SECURE_SSL_REDIRECT = False
 CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = [
-    'https://backend-production-7888.up.railway.app', 
+    'https://web-production-61e6.up.railway.app', 
     'https://company-six-liard.vercel.app',
     'https://users-rouge.vercel.app'
 ]
@@ -305,11 +293,11 @@ AUTH_USER_MODEL = "accounts.AbstractUserProfile"
 CONTENT_SECURITY_POLICY = {
     # "EXCLUDE_URL_PREFIXES": ["/excluded-path/"],
     "DIRECTIVES": {
-         "default-src": ["'self'", "https://backend-production-7888.up.railway.app"],
-        "script-src": ["'self'", "'unsafe-eval'", "https://backend-production-7888.up.railway.app", "'blob:'"],
+         "default-src": ["'self'", "https://web-production-61e6.up.railway.app"],
+        "script-src": ["'self'", "'unsafe-eval'", "https://web-production-61e6.up.railway.app", "'blob:'"],
         "style-src": ["'self'"],
-        "connect-src": ["'self'", "https://backend-production-7888.up.railway.app"],
-        "img-src": ["'self'", "blob:", "data:", "https://backend-production-7888.up.railway.app"],
+        "connect-src": ["'self'", "https://web-production-61e6.up.railway.app"],
+        "img-src": ["'self'", "blob:", "data:", "https://web-production-61e6.up.railway.app"],
         "font-src": ["'self'"],
         "object-src": ["'none'"],
         "frame-ancestors": ["'self'"],
