@@ -18,7 +18,7 @@ from rest_framework import viewsets
 from rest_framework.pagination import PageNumberPagination
 # from weasyprint import HTML
 from django.http import FileResponse
-from django_weasyprint import WeasyTemplateResponse
+from django_weasyprint.views import WeasyTemplateResponse
 from django.template.loader import render_to_string
 from django.templatetags.static import static
 from .lib.generator import generate
