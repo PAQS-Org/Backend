@@ -117,7 +117,7 @@ WSGI_APPLICATION = 'PAQSBackend.wsgi.application'
 DATABASES = {
     'default': dj_database_url.parse(os.getenv('PGCONNECT')),
 }
-print('db', DATABASES)
+
 
 
 # Password validation
