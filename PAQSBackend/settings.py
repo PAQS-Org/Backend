@@ -4,6 +4,7 @@ import os
 import datetime
 import re
 from dotenv import load_dotenv
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -112,18 +113,23 @@ WSGI_APPLICATION = 'PAQSBackend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#        'DB_URL': os.environ.get("PGCONNECT"),
+#        'NAME': os.environ.get("POSTGRES_DB"),
+#        'USER': os.environ.get("POSTGRES_USER"),
+#        'PASSWORD': os.environ.get("PGPASSWORD"),
+#        'HOST': os.environ.get("PGHOST"),
+#        'PORT': os.environ.get("PGPORT"),
+#        "CONN_MAX_AGE": 60,
+#     }
+# }
 DATABASES = {
-    'default': {
-       'ENGINE': 'django.db.backends.postgresql_psycopg2',
-       'DB_URL': os.environ.get("PGCONNECT"),
-    #    'NAME': os.environ.get("POSTGRES_DB"),
-    #    'USER': os.environ.get("POSTGRES_USER"),
-    #    'PASSWORD': os.environ.get("PGPASSWORD"),
-    #    'HOST': os.environ.get("PGHOST"),
-    #    'PORT': os.environ.get("PGPORT"),
-       "CONN_MAX_AGE": 60,
-    }
+    'default': dj_database_url.parse(os.getenv('PGCONNECT')),
+    "CONN_MAX_AGE": 60,
 }
+DATABASES['default']['CONN_MAX_AGE'] = 60
 print('db', DATABASES)
 
 
