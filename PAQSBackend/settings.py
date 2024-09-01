@@ -127,7 +127,6 @@ WSGI_APPLICATION = 'PAQSBackend.wsgi.application'
 # }
 DATABASES = {
     'default': dj_database_url.parse(os.getenv('PGCONNECT')),
-    "CONN_MAX_AGE": 60,
 }
 print('db', DATABASES)
 
