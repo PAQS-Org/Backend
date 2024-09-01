@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y \
     libcairo2 \
     libgdk-pixbuf2.0-0 \
     libffi-dev \
-    libgobject-2.0-0 \
+    libgobject-2.0-dev \
     libpango-1.0-0 \
     && apt-get clean
 
