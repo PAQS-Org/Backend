@@ -33,7 +33,7 @@ def makeImage(n: int, format: str, path: str, comp: str, prod: str, batch: str, 
 
     draw = ImageDraw.Draw(qr)
     font = ImageFont.load_default()  # You can use a custom font here
-    text = f"This is managed by PAQS for {comp}. \nTo scan, go to \nhttps://www.paqs.com"
+    text = f"This is managed by PAQS for {comp}. \nTo scan, go to \n\033[1myhttps://www.paqs.com\033[0m"
 
     text_bbox = draw.textbbox((0, 0), text, font=font)
     text_width = text_bbox[2] - text_bbox[0]
