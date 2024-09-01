@@ -115,14 +115,16 @@ WSGI_APPLICATION = 'PAQSBackend.wsgi.application'
 DATABASES = {
     'default': {
        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-       'NAME': os.environ.get("POSTGRES_DB"),
-       'USER': os.environ.get("POSTGRES_USER"),
-       'PASSWORD': os.environ.get("PGPASSWORD"),
-       'HOST': os.environ.get("PGHOST"),
-       'PORT': os.environ.get("PGPORT"),
+       'DB_URL': os.environ.get("PGCONNECT"),
+    #    'NAME': os.environ.get("POSTGRES_DB"),
+    #    'USER': os.environ.get("POSTGRES_USER"),
+    #    'PASSWORD': os.environ.get("PGPASSWORD"),
+    #    'HOST': os.environ.get("PGHOST"),
+    #    'PORT': os.environ.get("PGPORT"),
        "CONN_MAX_AGE": 60,
     }
 }
+print('db', DATABASES)
 
 
 # Password validation
