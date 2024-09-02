@@ -1,6 +1,7 @@
 import re
 from celery import shared_task
 from .models import ScanInfo, LogProduct
+from accounts.models import Company
 from payments.models import Payment
 from .serializer import CheckoutInfoSerializer, ScanInfoSerializer
 import requests
@@ -75,8 +76,10 @@ def hierarchical_search(company_name, product_name, batch_number, code_key):
         return {'error': 'Product not found', 'status': status.HTTP_404_NOT_FOUND}
 
     try:
+        company = Company.objects.get(company=company_name)
+        
         payment = Payment.objects.filter(
-            company=company_name,
+            company=company,
             product_name=product_name,
             batch_number=batch_number
         ).first()
