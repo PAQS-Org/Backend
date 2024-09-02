@@ -11,7 +11,7 @@ from rest_framework import status
 from rest_framework.renderers import JSONRenderer
 from django.conf import settings
 import boto3
-
+from urllib.parse import urlparse
 
 
 def sanitize_cache_key(key):
@@ -85,7 +85,7 @@ def hierarchical_search(company_name, product_name, batch_number, code_key):
             product_name=product_name,
             batch_number=batch_number
         ).first()
-        product_logo_url = payment.get_image() if payment else None
+        product_logo_url = get_presigned_url(payment.get_image()) if payment else None
         # product_logo = get_presigned_url(product_logo_url)
         print('prod logo', product_logo_url)
     
@@ -118,8 +118,9 @@ def hierarchical_search(company_name, product_name, batch_number, code_key):
 
     return result
 
-def get_presigned_url(s3_key):
-    # file_key = f"static/{s3_key}"
+def get_presigned_url(s3_url):
+    parsed_url = urlparse(s3_url)
+    s3_key = parsed_url.path.lstrip('/')
     s3 = boto3.client('s3', 
                       aws_access_key_id=settings.AWS_ACCESS_KEY_ID, 
                       aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY, 
