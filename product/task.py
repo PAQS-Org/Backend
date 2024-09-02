@@ -1,6 +1,7 @@
 import re
 from celery import shared_task
 from .models import ScanInfo, LogProduct
+from payments.models import Payment
 from .serializer import CheckoutInfoSerializer, ScanInfoSerializer
 import requests
 from django.core.cache import cache
@@ -73,8 +74,19 @@ def hierarchical_search(company_name, product_name, batch_number, code_key):
     except LogProduct.DoesNotExist:
         return {'error': 'Product not found', 'status': status.HTTP_404_NOT_FOUND}
 
+    try:
+        payment = Payment.objects.filter(
+            company__name=company_name,
+            product_name=product_name,
+            batch_number=batch_number
+        ).first()
+        product_logo_url = payment.get_image() if payment else None
+    except Payment.DoesNotExist:
+        product_logo_url = None
+
     if log_product.patch:
         message = log_product.patch_message
+        product_logo_url = product_logo_url
         status_code = status.HTTP_404_NOT_FOUND
     elif log_product.checkout:
         message = log_product.checkout_message
@@ -88,8 +100,13 @@ def hierarchical_search(company_name, product_name, batch_number, code_key):
         'company_name': log_product.company_name,
         'product_name': log_product.product_name,
         'batch_number': log_product.batch_number,
+        'product_logo_url': product_logo_url,  # Include the product logo URL
         'status': status_code
     }
+
+    # Cache the result if needed
+    cache.set(cache_key, result, timeout=3600)
+
     return result
 
 

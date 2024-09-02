@@ -58,6 +58,7 @@ class ScanInfoView(APIView):
             company_name = search_result.get('company_name')
             product_name = search_result.get('product_name')
             batch_number = search_result.get('batch_number')
+            product_logo = search_result.get('product_logo_url')
             status_code = search_result.get('status', status.HTTP_200_OK)
 
             if ScanInfo.objects.filter(
@@ -99,6 +100,7 @@ class ScanInfoView(APIView):
                     'company_name': company_name,
                     'product_name': product_name,
                     'batch_number': batch_number,
+                    'product_logo': product_logo, 
                     }, status=status_code)
 
         except LogProduct.DoesNotExist:
