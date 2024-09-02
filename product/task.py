@@ -87,7 +87,7 @@ def hierarchical_search(company_name, product_name, batch_number, code_key):
     if log_product.patch:
         message = log_product.patch_message
         product_logo_url = product_logo_url
-        status_code = status.HTTP_100_CONTINUE
+        status_code = status.HTTP_202_ACCEPTED
     elif log_product.checkout:
         message = log_product.checkout_message
         status_code = status.HTTP_404_NOT_FOUND
