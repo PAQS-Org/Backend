@@ -100,6 +100,7 @@ def hierarchical_search(company_name, product_name, batch_number, code_key):
         'company_name': log_product.company_name,
         'product_name': log_product.product_name,
         'batch_number': log_product.batch_number,
+        'patch': log_product.patch,
         'product_logo_url': product_logo_url,  # Include the product logo URL
         'status': status_code
     }
