@@ -76,7 +76,7 @@ def hierarchical_search(company_name, product_name, batch_number, code_key):
         return {'error': 'Product not found', 'status': status.HTTP_404_NOT_FOUND}
 
     try:
-        company = Company.objects.get(company=company_name)
+        company = Company.objects.get(company_name=company_name)
         
         payment = Payment.objects.filter(
             company=company,
