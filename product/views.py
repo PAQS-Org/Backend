@@ -59,7 +59,8 @@ class ScanInfoView(APIView):
             product_name = search_result.get('product_name')
             batch_number = search_result.get('batch_number')
             product_logo = search_result.get('product_logo_url')
-            status_code = search_result.get('status', status.HTTP_200_OK)
+            patch = search_result.get('patch')
+            status_code = search_result.get('status')
 
             if ScanInfo.objects.filter(
                 code_key__iexact=code_key,
@@ -74,6 +75,7 @@ class ScanInfoView(APIView):
                     'product_name': product_name,
                     'batch_number': batch_number,
                     'product_logo': product_logo, 
+                    'patch': patch, 
                     }, status=status_code)
 
             # Store the scan information in the database
@@ -102,6 +104,7 @@ class ScanInfoView(APIView):
                     'product_name': product_name,
                     'batch_number': batch_number,
                     'product_logo': product_logo, 
+                    'patch': patch, 
                     }, status=status_code)
 
         except LogProduct.DoesNotExist:
