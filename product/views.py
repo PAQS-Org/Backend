@@ -73,6 +73,7 @@ class ScanInfoView(APIView):
                     'company_name': company_name,
                     'product_name': product_name,
                     'batch_number': batch_number,
+                    'product_logo': product_logo, 
                     }, status=status_code)
 
             # Store the scan information in the database
