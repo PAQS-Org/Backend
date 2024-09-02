@@ -86,7 +86,7 @@ def hierarchical_search(company_name, product_name, batch_number, code_key):
             batch_number=batch_number
         ).first()
         product_logo_url = payment.get_image() if payment else None
-        product_logo = get_presigned_url(product_logo_url.name)
+        product_logo = get_presigned_url(product_logo_url)
     
     except Payment.DoesNotExist:
         product_logo_url = None
