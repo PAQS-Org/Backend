@@ -9,6 +9,8 @@ from django.core.cache import cache
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.renderers import JSONRenderer
+from django.conf import settings
+import boto3
 
 
 
@@ -84,12 +86,14 @@ def hierarchical_search(company_name, product_name, batch_number, code_key):
             batch_number=batch_number
         ).first()
         product_logo_url = payment.get_image() if payment else None
+        product_logo = get_presigned_url(product_logo_url.name)
+    
     except Payment.DoesNotExist:
         product_logo_url = None
 
     if log_product.patch:
         message = log_product.patch_message
-        product_logo_url = product_logo_url
+        product_logo_url = product_logo
         status_code = status.HTTP_202_ACCEPTED
     elif log_product.checkout:
         message = log_product.checkout_message
@@ -104,7 +108,7 @@ def hierarchical_search(company_name, product_name, batch_number, code_key):
         'product_name': log_product.product_name,
         'batch_number': log_product.batch_number,
         'patch': log_product.patch,
-        'product_logo_url': product_logo_url,  # Include the product logo URL
+        'product_logo_url': product_logo,  # Include the product logo URL
         'status': status_code
     }
 
@@ -113,7 +117,17 @@ def hierarchical_search(company_name, product_name, batch_number, code_key):
 
     return result
 
-
+def get_presigned_url(s3_key):
+    # file_key = f"static/{s3_key}"
+    s3 = boto3.client('s3', 
+                      aws_access_key_id=settings.AWS_ACCESS_KEY_ID, 
+                      aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY, 
+                      region_name=settings.AWS_S3_REGION_NAME)
+    presigned_url = s3.generate_presigned_url('get_object',
+                                              Params={'Bucket': settings.AWS_STORAGE_BUCKET_NAME,
+                                                      'Key': s3_key},
+                                              ExpiresIn=3600)  # URL valid for 1 hour
+    return presigned_url
 
 @shared_task
 def checkout_process_location(location, serializer):
