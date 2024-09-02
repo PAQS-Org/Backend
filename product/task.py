@@ -76,7 +76,7 @@ def hierarchical_search(company_name, product_name, batch_number, code_key):
 
     try:
         payment = Payment.objects.filter(
-            company__name=company_name,
+            company_name=company_name,
             product_name=product_name,
             batch_number=batch_number
         ).first()
