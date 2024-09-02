@@ -86,14 +86,15 @@ def hierarchical_search(company_name, product_name, batch_number, code_key):
             batch_number=batch_number
         ).first()
         product_logo_url = payment.get_image() if payment else None
-        product_logo = get_presigned_url(product_logo_url)
+        # product_logo = get_presigned_url(product_logo_url)
+        print('prod logo', product_logo_url)
     
     except Payment.DoesNotExist:
         product_logo_url = None
 
     if log_product.patch:
         message = log_product.patch_message
-        product_logo_url = product_logo
+        product_logo_url = product_logo_url
         status_code = status.HTTP_202_ACCEPTED
     elif log_product.checkout:
         message = log_product.checkout_message
@@ -108,7 +109,7 @@ def hierarchical_search(company_name, product_name, batch_number, code_key):
         'product_name': log_product.product_name,
         'batch_number': log_product.batch_number,
         'patch': log_product.patch,
-        'product_logo_url': product_logo,  # Include the product logo URL
+        'product_logo_url': product_logo_url,  # Include the product logo URL
         'status': status_code
     }
 
