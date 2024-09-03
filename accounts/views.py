@@ -172,7 +172,7 @@ class CompanyEmailVerificationView(APIView):
             user.is_verified = True
             user.is_company = True
             user.save()
-        return redirect('http://localhost:9000/#/auth/login/')
+        return redirect('https://paqscompany.vercel.app/#/auth/login/')
 
 
 
@@ -256,7 +256,7 @@ class UserEmailVerificationView(APIView):
         if not user.is_verified:
             user.is_verified = True
             user.save()
-        return redirect('http://localhost:9000/#/auth/login/')
+        return redirect('https://paqs.vercel.app/#/auth/login/')
         
 
 class UserRequestPasswordResetEmail(generics.GenericAPIView):
