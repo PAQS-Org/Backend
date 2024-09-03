@@ -19,7 +19,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [ '127.0.0.1', 'localhost','users-rouge.vercel.app' , 'company-six-liard.vercel.app', 'paqsbackend.up.railway.app']
+ALLOWED_HOSTS = [ '127.0.0.1', 'localhost','paqs.vercel.app' , 'paqscompany.vercel.app', 'paqsbackend.up.railway.app']
 
 SITE_ID = 1
 
@@ -248,10 +248,9 @@ STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOWED_ORIGINS = [
-    'https://company-six-liard.vercel.app', #company temporal
-    'https://users-rouge.vercel.app', #user temporal
+    'https://paqscompany.vercel.app', #company temporal
+    'https://paqs.vercel.app', #user temporal
     "https://paqsbackend.up.railway.app", # backend url
-    "https://paqs-l46fiysct-osahenes-projects.vercel.app",
     "https://vercel.com",
     'http://127.0.0.1:8000',
     'http://localhost:9000'
@@ -266,8 +265,8 @@ SECURE_SSL_REDIRECT = False
 CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = [
     'https://paqsbackend.up.railway.app', 
-    'https://company-six-liard.vercel.app',
-    'https://users-rouge.vercel.app'
+    'https://paqscompany.vercel.app',
+    'https://paqs.vercel.app'
 ]
 
 CORS_ALLOW_HEADERS = [
@@ -297,14 +296,14 @@ CONTENT_SECURITY_POLICY = {
          "default-src": ["'self'", "https://paqsbackend.up.railway.app"],
         "script-src": ["'self'", "'unsafe-eval'", "https://paqsbackend.up.railway.app", "'blob:'"],
         "style-src": ["'self'"],
-        "connect-src": ["'self'", "https://paqsbackend.up.railway.app"],
+        "connect-src": ["'self'", "https://paqsbackend.up.railway.app", "https://paqs.vercel.app", "https://paqscompany.vercel.app"],
         "img-src": ["'self'", "blob:", "data:", "https://paqsbackend.up.railway.app"],
         "font-src": ["'self'"],
         "object-src": ["'none'"],
         "frame-ancestors": ["'self'"],
         "form-action": ["'self'"],
         "base-uri": ["'self'"],
-        "report-uri": "https://company-six-liard.vercel.app/account/csp-report/",
+        "report-uri": "https://paqscompany.vercel.app/account/csp-report/",
         "upgrade-insecure-requests": True,
     },
 }
