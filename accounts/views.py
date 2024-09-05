@@ -37,11 +37,13 @@ from rest_framework.response import Response
 
 from django.http import JsonResponse
 import json
-
+from django_ratelimit.decorators import ratelimit
+from django.utils.decorators import method_decorator
 
 class CompanyRegistrationView(APIView):
     permission_classes = [AllowAny]
 
+    @method_decorator(ratelimit(key='ip', rate='3/d', method='POST'))
     def post(self, request):
         serializer = CompanyRegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -82,7 +84,8 @@ class CompanyLoginView(APIView):
 
 class CompanyRequestPasswordResetEmail(generics.GenericAPIView):
     serializer_class = ResetPasswordEmailRequestSerializer
-
+    
+    @method_decorator(ratelimit(key='ip', rate='3/h', method='POST'))
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
 
@@ -203,7 +206,8 @@ class LogoutAPIView(APIView):
     # User work
 class UserLoginView(APIView):
     serializer_class = LoginSerializer
-
+    
+    @method_decorator(ratelimit(key='ip', rate='3/d', method='POST'))
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -213,6 +217,7 @@ class UserLoginView(APIView):
 class UserRegistrationView(APIView):
     permission_classes = [AllowAny]
 
+    @method_decorator(ratelimit(key='ip', rate='3/d', method='POST'))
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -243,6 +248,8 @@ class UserEmailVerificationView(APIView):
     permission_classes = [AllowAny]
 
     serializer_class = EmailVerificationSerializer
+    
+    @method_decorator(ratelimit(key='ip', rate='3/d', method='GET'))
     def get(self, request):
         token = str(request.GET.get('token'))
         set_key = str(SECRET_KEY)
@@ -262,6 +269,7 @@ class UserEmailVerificationView(APIView):
 class UserRequestPasswordResetEmail(generics.GenericAPIView):
     serializer_class = ResetPasswordEmailRequestSerializer
 
+    @method_decorator(ratelimit(key='ip', rate='3/d', method='POST'))
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
 

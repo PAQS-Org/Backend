@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django_celery_beat',
     'django_celery_results',
     # 'django_weasyprint',
+    'django_ratelimit',
     'rest_auth',
     'corsheaders',
     'drf_yasg',

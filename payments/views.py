@@ -27,6 +27,8 @@ import boto3
 from django.conf import settings
 from django.core.cache import cache
 import logging
+from django_ratelimit.decorators import ratelimit
+from django.utils.decorators import method_decorator
 
 # Set up the logger
 logger = logging.getLogger('django')
@@ -34,6 +36,8 @@ logger = logging.getLogger('django')
 
 def sanitize_cache_key(key):
     return re.sub(r'[^A-Za-z0-9_]', '_', key)
+
+@method_decorator(ratelimit(key='user_or_ip', rate='5/m', method='POST'))
 class InitiatePayment(APIView):
     serializer_class = PaymentSerializer
     permission_classes = (IsAuthenticated, IsOwner)
@@ -242,7 +246,7 @@ def get_cached_presigned_url(company_name, product_name, batch_number, uuid):
         cache.set(cache_key, url, timeout=3600)  # Cache for 1 hour
     return url
 
-
+@ratelimit(key='user_or_ip', rate='3/m')
 def get_user_file(request, company_name, product_name, batch_number, uuid):
     user = request.user    
     presigned_url = get_cached_presigned_url(company_name, product_name, batch_number, uuid)
