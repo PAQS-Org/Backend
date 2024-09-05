@@ -37,11 +37,11 @@ logger = logging.getLogger('django')
 def sanitize_cache_key(key):
     return re.sub(r'[^A-Za-z0-9_]', '_', key)
 
-@method_decorator(ratelimit(key='user_or_ip', rate='5/m', method='POST'))
 class InitiatePayment(APIView):
     serializer_class = PaymentSerializer
     permission_classes = (IsAuthenticated, IsOwner)
 
+    @method_decorator(ratelimit(key='user_or_ip', rate='5/m', method='POST'))
     def post(self, request):
         serializer = self.serializer_class(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
