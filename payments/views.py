@@ -1,7 +1,7 @@
 import requests
 import re
 # Create your views here.
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, StreamingHttpResponse
 from django.views.decorators.csrf import csrf_exempt  
 import json
 import hmac
@@ -242,12 +242,25 @@ def get_cached_presigned_url(company_name, product_name, batch_number, uuid):
         cache.set(cache_key, url, timeout=3600)  # Cache for 1 hour
     return url
 
+
 def get_user_file(request, company_name, product_name, batch_number, uuid):
     user = request.user    
     presigned_url = get_cached_presigned_url(company_name, product_name, batch_number, uuid)
     if presigned_url:
         log_file_access(user, company_name, product_name, batch_number, uuid)
-        return JsonResponse({'url': presigned_url})
+        
+        # Stream the file from S3
+        response = requests.get(presigned_url, stream=True)
+        if response.status_code == 200:
+            filename = f"{company_name}_{product_name}_{batch_number}_{uuid}.zip"
+            response = StreamingHttpResponse(
+                response.iter_content(chunk_size=8192),
+                content_type='application/zip'
+            )
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+            return response
+        return JsonResponse({'error': 'Could not download file from S3'}, status=500)
+    
     return JsonResponse({'error': 'Could not generate URL'}, status=400)
 
 
