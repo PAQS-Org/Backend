@@ -297,7 +297,7 @@ AUTH_USER_MODEL = "accounts.AbstractUserProfile"
 
 CONTENT_SECURITY_POLICY = {
     "DIRECTIVES": {
-        "default-src": ["'self'", "https://paqsbackend.up.railway.app", "https://paqsstoragebucket.s3.amazonaws.com"],
+        "default-src": [ "https://paqsbackend.up.railway.app", "https://paqsstoragebucket.s3.amazonaws.com"],
         "script-src": ["'self'", "'unsafe-eval'", "https://paqsbackend.up.railway.app", "https://paqsstoragebucket.s3.amazonaws.com", "https://paqscompany.vercel.app", "'blob:'"],
         "script-src-elem": ["'self'", "'unsafe-eval'", "https://paqsbackend.up.railway.app", 
                             "https://paqsstoragebucket.s3.amazonaws.com", 
