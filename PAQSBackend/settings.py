@@ -297,14 +297,56 @@ AUTH_USER_MODEL = "accounts.AbstractUserProfile"
 
 CONTENT_SECURITY_POLICY = {
     "DIRECTIVES": {
-        "default-src": ["'self'", "https://paqsbackend.up.railway.app", "https://paqsstoragebucket.s3.amazonaws.com"],
-        "script-src": ["'self'", "'unsafe-eval'", "https://paqsbackend.up.railway.app", "https://paqsstoragebucket.s3.amazonaws.com", "https://paqscompany.vercel.app", "'blob:'"],
-        "script-src-elem": ["'self'", "'unsafe-eval'", "https://paqsbackend.up.railway.app", "https://paqsstoragebucket.s3.amazonaws.com", "https://paqscompany.vercel.app", "'blob:'"],
-        "style-src": ["'self'", "https://paqscompany.vercel.app", "https://paqsstoragebucket.s3.amazonaws.com"],
-        "style-src-elem": ["'self'", "https://paqscompany.vercel.app", "https://paqsstoragebucket.s3.amazonaws.com"],
-        "connect-src": ["'self'", "https://paqsbackend.up.railway.app", "https://paqs.vercel.app", "https://paqscompany.vercel.app", "https://paqsstoragebucket.s3.amazonaws.com"],
-        "img-src": ["'self'", "blob:", "data:", "https://paqsbackend.up.railway.app", "https://paqsstoragebucket.s3.amazonaws.com"],
-        "font-src": ["'self'", "https://paqsstoragebucket.s3.amazonaws.com"],
+        "default-src": [
+            "'self'", 
+            "https://paqsbackend.up.railway.app", 
+            "https://paqsstoragebucket.s3.amazonaws.com"
+        ],
+        "script-src": [
+            "'self'", 
+            "'unsafe-eval'",  
+            "https://paqsbackend.up.railway.app", 
+            "https://paqsstoragebucket.s3.amazonaws.com", 
+            "https://paqscompany.vercel.app", 
+            "'blob:'"
+        ],
+        "script-src-elem": [
+            "'self'", 
+            "'unsafe-eval'", 
+            "https://paqsbackend.up.railway.app", 
+            "https://paqsstoragebucket.s3.amazonaws.com", 
+            "https://paqscompany.vercel.app"
+        ],
+        "style-src": [
+            "'self'", 
+            "https://paqscompany.vercel.app", 
+            "https://paqsstoragebucket.s3.amazonaws.com", 
+            "'unsafe-inline'"  # allows inline CSS, useful if you have inline styles
+        ],
+        "style-src-elem": [
+            "'self'", 
+            "https://paqscompany.vercel.app", 
+            "https://paqsstoragebucket.s3.amazonaws.com", 
+            "'unsafe-inline'"
+        ],
+        "connect-src": [
+            "'self'", 
+            "https://paqsbackend.up.railway.app", 
+            "https://paqs.vercel.app", 
+            "https://paqscompany.vercel.app", 
+            "https://paqsstoragebucket.s3.amazonaws.com"
+        ],
+        "img-src": [
+            "'self'", 
+            "blob:", 
+            "data:", 
+            "https://paqsbackend.up.railway.app", 
+            "https://paqsstoragebucket.s3.amazonaws.com"
+        ],
+        "font-src": [
+            "'self'", 
+            "https://paqsstoragebucket.s3.amazonaws.com"
+        ],
         "object-src": ["'none'"],
         "frame-ancestors": ["'self'"],
         "form-action": ["'self'"],
