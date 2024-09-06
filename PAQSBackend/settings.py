@@ -82,9 +82,13 @@ CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
         "LOCATION": REDIS_URL,
-    }
+    },
+    "ratelimit": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": REDIS_URL,
+    },
 }
-
+RATELIMIT_USE_CACHE = 'ratelimit'
 
 ROOT_URLCONF = 'PAQSBackend.urls'
 
@@ -177,7 +181,7 @@ LOGGING = {
     'loggers': {
         'django': {
             'handlers': ['console'],
-            'level': 'DEBUG',
+            'level': 'ERROR',
             'propagate': True,
         },
         'botocore': {
@@ -295,7 +299,7 @@ CONTENT_SECURITY_POLICY = {
     # "EXCLUDE_URL_PREFIXES": ["/excluded-path/"],
     "DIRECTIVES": {
          "default-src": ["'self'", "https://paqsbackend.up.railway.app"],
-        "script-src": ["'self'", "'unsafe-eval'", "https://paqsbackend.up.railway.app", "'blob:'"],
+        "script-src": ["'self'", "'unsafe-eval'", "https://paqsbackend.up.railway.app", "https://paqsstoragebucket.s3.amazonaws.com", "'blob:'"],
         "style-src": ["'self'"],
         "connect-src": ["'self'", "https://paqsbackend.up.railway.app", "https://paqs.vercel.app", "https://paqscompany.vercel.app"],
         "img-src": ["'self'", "blob:", "data:", "https://paqsbackend.up.railway.app"],

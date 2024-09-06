@@ -80,6 +80,12 @@ def hierarchical_search(company_name, product_name, batch_number, code_key):
     try:
         company = Company.objects.get(company_name=company_name)
         
+        # if companies.count() == 1:
+        #     company = companies.first()
+            
+        # else:
+        #     company = companies.first()
+        
         payment = Payment.objects.filter(
             company=company,
             product_name=product_name,

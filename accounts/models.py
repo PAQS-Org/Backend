@@ -73,7 +73,7 @@ class AbstractUserProfile(AbstractBaseUser, PermissionsMixin):
 class Company(AbstractUserProfile):
     first_name = models.CharField(max_length=100, db_index=True)
     last_name = models.CharField(max_length=100, db_index=True)
-    company_name = models.CharField(max_length=255, db_index=True)
+    company_name = models.CharField(max_length=255, db_index=True, unique=True)
     company_logo = models.ImageField(upload_to='paqs/comp_logo/', blank=True)  # Optional logo
     is_company = models.BooleanField(default=False)
     company_code = models.PositiveIntegerField(null=True, blank=True, unique=True)

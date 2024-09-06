@@ -41,7 +41,7 @@ class InitiatePayment(APIView):
     serializer_class = PaymentSerializer
     permission_classes = (IsAuthenticated, IsOwner)
 
-    @method_decorator(ratelimit(key='user_or_ip', rate='5/m', method='POST'))
+    # @method_decorator(ratelimit(key='user_or_ip', rate='5/m', method='POST'))
     def post(self, request):
         serializer = self.serializer_class(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
