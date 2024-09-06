@@ -301,7 +301,7 @@ CONTENT_SECURITY_POLICY = {
          "default-src": ["'self'", "https://paqsbackend.up.railway.app"],
         "script-src": ["'self'", "'unsafe-eval'", "https://paqsbackend.up.railway.app", "https://paqsstoragebucket.s3.amazonaws.com", "'blob:'"],
         "script-src-elem": ["'self'", "'unsafe-eval'", "https://paqsbackend.up.railway.app", "https://paqsstoragebucket.s3.amazonaws.com", "'blob:'"],
-        "style-src": ["'self'", "https://paqscompany.vercel.app"],
+        "style-src": ["'self'", "https://paqscompany.vercel.app", " https://paqsstoragebucket.s3.amazonaws.com"],
         "connect-src": ["'self'", "https://paqsbackend.up.railway.app", "https://paqs.vercel.app", "https://paqscompany.vercel.app", " https://paqsstoragebucket.s3.amazonaws.com"],
         "img-src": ["'self'", "blob:", "data:", "https://paqsbackend.up.railway.app", " https://paqsstoragebucket.s3.amazonaws.com"],
         "font-src": ["'self'"],
