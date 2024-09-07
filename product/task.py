@@ -80,12 +80,6 @@ def hierarchical_search(company_name, product_name, batch_number, code_key):
     try:
         company = Company.objects.get(company_name=company_name)
         
-        # if companies.count() == 1:
-        #     company = companies.first()
-            
-        # else:
-        #     company = companies.first()
-        
         payment = Payment.objects.filter(
             company=company,
             product_name=product_name,
@@ -113,7 +107,7 @@ def hierarchical_search(company_name, product_name, batch_number, code_key):
         'product_name': log_product.product_name,
         'batch_number': log_product.batch_number,
         'patch': log_product.patch,
-        'product_logo_url': product_logo_url,  # Include the product logo URL
+        'product_logo_url': product_logo_url, 
         'status': status_code
     }
 
