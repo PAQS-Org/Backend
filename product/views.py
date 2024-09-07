@@ -12,6 +12,7 @@ from base64 import urlsafe_b64encode, urlsafe_b64decode
 
 from .models import LogProduct, ScanInfo, CheckoutInfo
 from django.db.models import Count, F,Q
+from django.db.models.functions import TruncYear, TruncMonth, TruncDay, TruncHour
 from django.core.cache import cache
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
@@ -210,7 +211,7 @@ class PatchInfoView(APIView):
     
     
     def send_checkout_email(self, user_email, log_product):
-        subject = f"Product Update: {log_product.product_name} of {log_product.batch_number}"
+        subject = f"Product Information Update: {log_product.product_name} of {log_product.batch_number}"
         message = (
             f"Hello,\n\n"
             f"{log_product.company_name} has updated the information for {log_product.product_name} "
@@ -218,7 +219,7 @@ class PatchInfoView(APIView):
             f"\"{log_product.patch_message}\"\n\n"
             f"Please take note of the message and its necessary instructions.\n\n"
             f"Best regards,\n"
-            f"Your Company"
+            f"PAQS Team"
         )
         from_email = settings.DEFAULT_FROM_EMAIL  # Ensure you have this set in your settings.py
 
@@ -237,7 +238,7 @@ class PatchInfoView(APIView):
 class ScanMetricsView(APIView):
     permission_classes = [IsAuthenticated, IsOwner]
     
-    @method_decorator(cache_page(60 * 5))
+    @method_decorator(cache_page(60 * 1))
     def get(self, request, *args, **kwargs):
         company_name = request.query_params.get('company_name')
         if company_name:
@@ -304,7 +305,7 @@ class ScanMetricsView(APIView):
 
 class CheckoutMetricsView(APIView):
     permission_classes = [IsAuthenticated, IsOwner]
-    @method_decorator(cache_page(60 * 5))
+    @method_decorator(cache_page(60 * 1))
     def get(self, request, *args, **kwargs):
         company_name = request.query_params.get('company_name')
         if company_name:
@@ -454,7 +455,7 @@ class TopLocationMetrics(APIView):
 class PerformanceMetricsView(APIView):
     permission_classes = [IsAuthenticated]
         
-    @method_decorator(cache_page(60 * 5))    
+    @method_decorator(cache_page(60 * 1))    
     def get(self, request, *args, **kwargs):
         company_name = request.query_params.get('company_name')  # Assuming the user model has a company_name field
         cache_key = sanitize_cache_key(f"performance_metrics_{company_name}")
@@ -616,33 +617,38 @@ class LineChartDataView(APIView):
         filters &= Q(country__isnull=False) & Q(region__isnull=False) & Q(city__isnull=False) \
                 & Q(town__isnull=False) & Q(street__isnull=False)
         
+        # Apply year, month, day filters
         if selected_year:
             filters &= Q(date_time__year=selected_year)
         if selected_month:
             filters &= Q(date_time__month=selected_month)
         if selected_day:
             filters &= Q(date_time__day=selected_day)
-        
+
         # Determine the aggregation level based on selected parameters
-        if not selected_year:  # No filters applied, aggregate by year and month
-            date_trunc = 'month'
-        elif selected_year and not selected_month:  # Year selected, but no month
-            date_trunc = 'month'
-        elif selected_year and selected_month and not selected_day:  # Year and month selected, but no day
-            date_trunc = 'day'
-        else:  # All filters applied, use day
-            date_trunc = 'day'
+        if not selected_year and not selected_month and not selected_day:  # All null, aggregate by year and month
+            truncation = TruncMonth('date_time')
+        elif selected_year and not selected_month and not selected_day:  # Year selected, aggregate by month
+            truncation = TruncMonth('date_time')
+        elif selected_year and selected_month and not selected_day:  # Year and month selected, aggregate by day
+            truncation = TruncDay('date_time')
+        elif selected_year and selected_month and selected_day:  # Year, month, and day selected, aggregate by hour
+            truncation = TruncHour('date_time')
+        elif selected_day and not selected_year and not selected_month:  # Only day selected, aggregate by matching days across years/months
+            truncation = TruncDay('date_time')
+        elif selected_month and not selected_year and not selected_day:  # Only month selected, aggregate by month across years
+            truncation = TruncMonth('date_time')
 
         # Fetch and process ScanInfo data
         scan_data = ScanInfo.objects.filter(filters) \
-            .extra(select={'date': f"DATE_TRUNC('{date_trunc}', date_time)"}) \
+            .annotate(date=truncation) \
             .values('date') \
             .annotate(count=Count('id')) \
             .order_by('date')
 
         # Fetch and process CheckoutInfo data
         checkout_data = CheckoutInfo.objects.filter(filters) \
-            .extra(select={'date': f"DATE_TRUNC('{date_trunc}', date_time)"}) \
+            .annotate(date=truncation) \
             .values('date') \
             .annotate(count=Count('id')) \
             .order_by('date')
@@ -655,6 +661,7 @@ class LineChartDataView(APIView):
         # cache.set(cache_key, data, timeout=3600)  # Cache for 1 hour
         
         return Response(data)
+
 
 
 class BarChartDataView(APIView):

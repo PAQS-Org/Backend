@@ -1,14 +1,5 @@
 from rest_framework import serializers
-from .models import ProductsInfo, ScanInfo, CheckoutInfo, LogProduct
-
-
-
-class ProductInfoSerializer(serializers.ModelSerializer):
-  class Meta:
-    model = ProductsInfo
-    fields = '__all__'
-
-
+from .models import ScanInfo, CheckoutInfo, LogProduct
 
 class ScanInfoSerializer(serializers.ModelSerializer):
     class Meta:

@@ -5,41 +5,9 @@ import random
 import re
 from django.core.cache import cache
 
-class ProductsInfo(models.Model):
-    date_created = models.DateTimeField(auto_now_add=True)
-    company_name = models.ForeignKey(to=Company, on_delete=models.CASCADE, related_name="companyInfo")
-    batch_number = models.CharField(max_length=120)
-    product_name = models.CharField(max_length=50)
-    perishable = models.BooleanField(default=False)
-    manufacture_date = models.DateField(blank=True, null=True)
-    expiry_date = models.DateField(blank=True, null=True)
-    render_type = models.CharField(max_length=120)
-    checkout = models.BooleanField(default=False)
-    reference_id = models.PositiveIntegerField(unique=True, null=False, blank=False)
-    patch = models.BooleanField(default=False)
-    patch_message = models.CharField(max_length=255, blank=True, null=True)
-
-    class Meta:
-        verbose_name = 'Product'
-        verbose_name_plural = 'Products'
-        indexes = [
-            models.Index(fields=['reference_id'])
-        ]
-    
-    def generate_unique_product_code(self):
-        while True:
-            code = random.randint(00, 99)
-            if not ProductsInfo.objects.filter(reference_id=code).exists():
-                return code
-    
-    def save(self, *args, **kwargs):
-        if not self.reference_id:
-            self.reference_id = self.generate_unique_product_code()
-        super().save(*args, **kwargs)
-
 # Concentrate on the generating of the codes. When you are done, then you come to this. do not over think.
 class ScanInfo(models.Model):
-   date_time = models.DateField(auto_now_add=True)
+   date_time = models.DateTimeField(auto_now_add=True)
    code_key = models.CharField(max_length=255, blank=False, null=False)
    company_name = models.CharField(max_length=255, blank=False, null=False)
    product_name = models.CharField(max_length=255, blank=False, null=False)
@@ -54,11 +22,11 @@ class ScanInfo(models.Model):
    
    class Meta:
         indexes = [
-            models.Index(fields=['company_name', 'product_name', 'batch_number', 'code_key' ])
+            models.Index(fields=['date_time','company_name', 'product_name', 'batch_number', 'code_key' ])
         ]
 
 class CheckoutInfo(models.Model):
-   date_time = models.DateField(auto_now_add=True)
+   date_time = models.DateTimeField(auto_now_add=True)
    code_key = models.CharField(max_length=255, blank=False, null=False)
    company_name = models.CharField(max_length=255, blank=False, null=False)
    product_name = models.CharField(max_length=255, blank=False, null=False)
@@ -73,7 +41,7 @@ class CheckoutInfo(models.Model):
    
    class Meta:
         indexes = [
-            models.Index(fields=['company_name', 'product_name', 'batch_number', 'code_key' ])
+            models.Index(fields=['date_time','company_name', 'product_name', 'batch_number', 'code_key' ])
         ]
 
 
