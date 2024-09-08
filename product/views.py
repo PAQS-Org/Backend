@@ -626,6 +626,8 @@ class LineChartDataView(APIView):
             filters &= Q(date_time__day=selected_day)
 
         # Determine the aggregation level based on selected parameters
+        truncation = None
+        
         if not selected_year and not selected_month and not selected_day:  # All null, aggregate by year and month
             truncation = TruncMonth('date_time')
         elif selected_year and not selected_month and not selected_day:  # Year selected, aggregate by month
@@ -639,6 +641,14 @@ class LineChartDataView(APIView):
         elif selected_month and not selected_year and not selected_day:  # Only month selected, aggregate by month across years
             truncation = TruncMonth('date_time')
 
+        if truncation is not None:
+            queryset = CheckoutInfo.objects \
+                .annotate(date=truncation) \
+                .values('date') \
+                .annotate(total=Count('id'))
+        else:
+    # Handle the case where none of the conditions are met
+            return Response({"error": "Invalid time selection"}, status=400)
         # Fetch and process ScanInfo data
         scan_data = ScanInfo.objects.filter(filters) \
             .annotate(date=truncation) \

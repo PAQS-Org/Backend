@@ -39,7 +39,7 @@ from django.http import JsonResponse
 import json
 from django_ratelimit.decorators import ratelimit
 from django.utils.decorators import method_decorator
-
+from task import delete_unverified_user
 class CompanyRegistrationView(APIView):
     permission_classes = [AllowAny]
 
@@ -68,6 +68,8 @@ class CompanyRegistrationView(APIView):
                 'email_subject': 'Verify your email'}
 
         Util.send_email(data)
+        delete_unverified_user.apply_async((user.id,), countdown=900)
+        
         return Response(user_data, status=status.HTTP_201_CREATED)
 
 
