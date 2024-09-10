@@ -68,8 +68,9 @@ class CompanyRegistrationView(APIView):
                 'email_subject': 'Verify your email'}
 
         Util.send_email(data)
+        print("del")
         delete_unverified_user.apply_async((user.id,), countdown=900)
-        
+        print("del comp")
         return Response(user_data, status=status.HTTP_201_CREATED)
 
 
