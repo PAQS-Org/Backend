@@ -39,7 +39,7 @@ from django.http import JsonResponse
 import json
 from django_ratelimit.decorators import ratelimit
 from django.utils.decorators import method_decorator
-from task import delete_unverified_user
+from .task import delete_unverified_user
 class CompanyRegistrationView(APIView):
     permission_classes = [AllowAny]
 
