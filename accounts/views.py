@@ -43,7 +43,7 @@ from .task import delete_unverified_user
 class CompanyRegistrationView(APIView):
     permission_classes = [AllowAny]
 
-    @method_decorator(ratelimit(key='ip', rate='3/d', method='POST'))
+    @method_decorator(ratelimit(key='ip', rate='2/d', method='POST'))
     def post(self, request):
         serializer = CompanyRegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -69,8 +69,8 @@ class CompanyRegistrationView(APIView):
 
         Util.send_email(data)
         print("del")
-        delete_unverified_user.apply_async((user.id,), countdown=900)
-        print("del comp")
+        task = delete_unverified_user.apply_async((user.id,), countdown=301)
+        print(f"Task ID: {task.id}")
         return Response(user_data, status=status.HTTP_201_CREATED)
 
 

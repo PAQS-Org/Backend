@@ -1,1 +1,1 @@
- web: gunicorn PAQSBackend.wsgi
+ web: sh starters.sh

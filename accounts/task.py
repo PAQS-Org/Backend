@@ -7,10 +7,22 @@ logger = get_task_logger(__name__)
 
 @shared_task
 def delete_unverified_user(user_id):
-    logger.info("I have started")
-    user = Company.objects.get(id=user_id)
-    logger.info(f"Unverified user: {user}")
-    if not user.is_verified and (timezone.now() - user.created_at).total_seconds() > 420:  # 15 minutes = 900 seconds
-        user.delete()
-        logger.info(f"Deleted user: {user}")
+    logger.info("Started deleting unverified user")
+    try:
+        user = Company.objects.get(id=user_id)
+        logger.info(f"Unverified user: {user}")
+        logger.info(f"User is_verified: {user.is_verified}")
         
+        time_diff = (timezone.now() - user.created_at).total_seconds()
+        logger.info(f"Time difference since user creation (in seconds): {time_diff}")
+        
+        if not user.is_verified and time_diff > 300:
+            user.delete()
+            logger.info(f"Deleted user: {user}")
+        else:
+            logger.info(f"User not deleted: Condition not met (is_verified={user.is_verified}, time_diff={time_diff})")
+            
+    except Company.DoesNotExist:
+        logger.error(f"User with ID {user_id} not found")
+    except Exception as e:
+        logger.error(f"Error deleting user: {e}")
