@@ -19,7 +19,7 @@ def sanitize_cache_key(key):
 
 def scan_process_location(location, serializer):
     # Geocoding location
-    cache_key = sanitize_cache_key(f"geocode_{location['latitude']},{location['longitude']}")
+    cache_key = sanitize_cache_key(f"geocode_scan_{location['latitude']},{location['longitude']}")
     geocode_data = cache.get(cache_key)
 
     print('geo cache key', cache_key)
@@ -132,7 +132,7 @@ def get_presigned_url(s3_url):
 @shared_task
 def checkout_process_location(location, serializer):
  # Geocoding location
-    cache_key = sanitize_cache_key(f"geocode_{location['latitude']},{location['longitude']}")
+    cache_key = sanitize_cache_key(f"geocode_checkout_{location['latitude']},{location['longitude']}")
     geocode_data = cache.get(cache_key)
 
     print('geo cache key', cache_key)

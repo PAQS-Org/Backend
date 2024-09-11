@@ -168,8 +168,6 @@ class CheckoutInfoView(APIView):
         except ValueError:
             return Response({'message': 'Invalid QR code format'}, status=status.HTTP_400_BAD_REQUEST)
 
-
-   
 class PatchInfoView(APIView):
     permission_classes = (IsAuthenticated, IsOwner)
     serializer_class = LogProductSerializer
@@ -234,7 +232,6 @@ class PatchInfoView(APIView):
         except Exception as e:
             logging.error(f"Unexpected error occurred when sending email to {user_email}: {str(e)}")
 
-
 class ScanMetricsView(APIView):
     permission_classes = [IsAuthenticated, IsOwner]
     
@@ -297,12 +294,11 @@ class ScanMetricsView(APIView):
                     "scan_growth_rate_previous_day": growth_rate_previous_day,
                     "scan_annual_growth_rate": annual_growth_rate
                 }
-                # cache.set(cache_key, data, timeout=60 * 5)
+                cache.set(cache_key, data, timeout=60 * 60)
 
             return Response(data)
         return Response({'message': "Company doesn't exist"}, status=status.HTTP_404_NOT_FOUND)
     
-
 class CheckoutMetricsView(APIView):
     permission_classes = [IsAuthenticated, IsOwner]
     @method_decorator(cache_page(60 * 1))
@@ -361,7 +357,7 @@ class CheckoutMetricsView(APIView):
                 }
                 
 
-                # cache.set(cache_key, data, timeout=60 * 5)
+                cache.set(cache_key, data, timeout=60 * 60)
 
             return Response(data)
         return Response({'message': "Company doesn't exist"}, status=status.HTTP_404_NOT_FOUND)
@@ -447,13 +443,13 @@ class TopLocationMetrics(APIView):
                     "conversion_rate":conversion
                 }
 
-                cache.set(cache_key, data, timeout=60 * 5)  # Cache for 1 hour
+                cache.set(cache_key, data, timeout=60 * 60)  # Cache for 1 hour
 
             return Response(data)
         return Response({'message': "Company doesn't exist"}, status=status.HTTP_404_NOT_FOUND)
 
 class PerformanceMetricsView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOwner]
         
     @method_decorator(cache_page(60 * 1))    
     def get(self, request, *args, **kwargs):
@@ -516,14 +512,13 @@ class PerformanceMetricsView(APIView):
             }
 
             # Cache the results
-            # cache.set(cache_key, data, timeout=60 * 5)  # Cache for 1 hour
+            cache.set(cache_key, data, timeout=60 * 60)  # Cache for 1 hour
 
         return Response(data)
     
 class ProductAndUserMetricsView(APIView):
     permission_classes = [IsAuthenticated, IsOwner]
 
-    @method_decorator(cache_page(60 * 5))
     def get(self, request, *args, **kwargs):
         company_name = request.query_params.get('company_name')
         cache_key = sanitize_cache_key(f"product_user_metrics_{company_name}")
@@ -587,10 +582,9 @@ class ProductAndUserMetricsView(APIView):
             }
 
             # Cache the results
-            # cache.set(cache_key, data, timeout=60 * 5)  # Cache for 1 hour
+            cache.set(cache_key, data, timeout=60 * 60)  # Cache for 1 hour
 
         return Response(data)
-
 
 class LineChartDataView(APIView):
     permission_classes = [IsAuthenticated, IsOwner]
@@ -602,77 +596,81 @@ class LineChartDataView(APIView):
         selected_day = request.query_params.get('day')
         
         # Ensure company name is provided
-        if not company_name:
-            return Response({'error': 'Company name is required'}, status=400)
-                   
-        # Convert parameters to integers if they are provided
-        selected_year = int(selected_year) if selected_year else None
-        selected_month = int(selected_month) + 1 if selected_month else None  # JS month is 0-indexed
-        selected_day = int(selected_day) if selected_day else None
+        if company_name:   
+       
+            cache_key = sanitize_cache_key(f"line_chart_data_{company_name}_{selected_year}_{selected_month}_{selected_day}")
+            data = cache.get(cache_key)
+            
+            if not data:
+                
+                       
+            # Convert parameters to integers if they are provided
+                selected_year = int(selected_year) if selected_year else None
+                selected_month = int(selected_month) + 1 if selected_month else None  # JS month is 0-indexed
+                selected_day = int(selected_day) if selected_day else None
 
-        # Build the query filters
-        filters = Q(company_name=company_name)
-        
-        # Exclude rows with null values in any of the relevant location columns
-        filters &= Q(country__isnull=False) & Q(region__isnull=False) & Q(city__isnull=False) \
-                & Q(town__isnull=False) & Q(street__isnull=False)
-        
-        # Apply year, month, day filters
-        if selected_year:
-            filters &= Q(date_time__year=selected_year)
-        if selected_month:
-            filters &= Q(date_time__month=selected_month)
-        if selected_day:
-            filters &= Q(date_time__day=selected_day)
+                # Build the query filters
+                filters = Q(company_name=company_name)
+                
+                # Exclude rows with null values in any of the relevant location columns
+                filters &= Q(country__isnull=False) & Q(region__isnull=False) & Q(city__isnull=False) \
+                        & Q(town__isnull=False) & Q(street__isnull=False)
+                
+                # Apply year, month, day filters
+                if selected_year:
+                    filters &= Q(date_time__year=selected_year)
+                if selected_month:
+                    filters &= Q(date_time__month=selected_month)
+                if selected_day:
+                    filters &= Q(date_time__day=selected_day)
 
-        # Determine the aggregation level based on selected parameters
-        truncation = None
-        
-        if not selected_year and not selected_month and not selected_day:  # All null, aggregate by year and month
-            truncation = TruncMonth('date_time')
-        elif selected_year and not selected_month and not selected_day:  # Year selected, aggregate by month
-            truncation = TruncMonth('date_time')
-        elif selected_year and selected_month and not selected_day:  # Year and month selected, aggregate by day
-            truncation = TruncDay('date_time')
-        elif selected_year and selected_month and selected_day:  # Year, month, and day selected, aggregate by hour
-            truncation = TruncHour('date_time')
-        elif selected_day and not selected_year and not selected_month:  # Only day selected, aggregate by matching days across years/months
-            truncation = TruncDay('date_time')
-        elif selected_month and not selected_year and not selected_day:  # Only month selected, aggregate by month across years
-            truncation = TruncMonth('date_time')
+                # Determine the aggregation level based on selected parameters
+                truncation = None
+                
+                if not selected_year and not selected_month and not selected_day:  # All null, aggregate by year and month
+                    truncation = TruncMonth('date_time')
+                elif selected_year and not selected_month and not selected_day:  # Year selected, aggregate by month
+                    truncation = TruncMonth('date_time')
+                elif selected_year and selected_month and not selected_day:  # Year and month selected, aggregate by day
+                    truncation = TruncDay('date_time')
+                elif selected_year and selected_month and selected_day:  # Year, month, and day selected, aggregate by hour
+                    truncation = TruncHour('date_time')
+                elif selected_day and not selected_year and not selected_month:  # Only day selected, aggregate by matching days across years/months
+                    truncation = TruncDay('date_time')
+                elif selected_month and not selected_year and not selected_day:  # Only month selected, aggregate by month across years
+                    truncation = TruncMonth('date_time')
 
-        if truncation is not None:
-            queryset = CheckoutInfo.objects \
-                .annotate(date=truncation) \
-                .values('date') \
-                .annotate(total=Count('id'))
-        else:
-    # Handle the case where none of the conditions are met
-            return Response({"error": "Invalid time selection"}, status=400)
-        # Fetch and process ScanInfo data
-        scan_data = ScanInfo.objects.filter(filters) \
-            .annotate(date=truncation) \
-            .values('date') \
-            .annotate(count=Count('id')) \
-            .order_by('date')
+                if truncation is not None:
+                    queryset = CheckoutInfo.objects \
+                        .annotate(date=truncation) \
+                        .values('date') \
+                        .annotate(total=Count('id'))
+                else:
+            # Handle the case where none of the conditions are met
+                    return Response({"error": "Invalid time selection"}, status=400)
+                # Fetch and process ScanInfo data
+                scan_data = ScanInfo.objects.filter(filters) \
+                    .annotate(date=truncation) \
+                    .values('date') \
+                    .annotate(count=Count('id')) \
+                    .order_by('date')
 
-        # Fetch and process CheckoutInfo data
-        checkout_data = CheckoutInfo.objects.filter(filters) \
-            .annotate(date=truncation) \
-            .values('date') \
-            .annotate(count=Count('id')) \
-            .order_by('date')
+                # Fetch and process CheckoutInfo data
+                checkout_data = CheckoutInfo.objects.filter(filters) \
+                    .annotate(date=truncation) \
+                    .values('date') \
+                    .annotate(count=Count('id')) \
+                    .order_by('date')
 
-        # Prepare the response data
-        data = {
-            'scan_data': list(scan_data),
-            'checkout_data': list(checkout_data),
-        }
-        # cache.set(cache_key, data, timeout=3600)  # Cache for 1 hour
-        
-        return Response(data)
-
-
+                # Prepare the response data
+                data = {
+                    'scan_data': list(scan_data),
+                    'checkout_data': list(checkout_data),
+                }
+                cache.set(cache_key, data, timeout=3600)  # Cache for 1 hour
+                
+                return Response(data)
+            return Response({'Error' : 'Company does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
 class BarChartDataView(APIView):
     permission_classes = [IsAuthenticated]
@@ -683,78 +681,85 @@ class BarChartDataView(APIView):
         selected_range = request.query_params.get('High')
         
         # Ensure company name is provided
-        if not company_name:
-            return Response({'error': 'Company name is required'}, status=400)
-        
-        # Build the query filters to exclude rows with null values in the location fields
-        filters = Q(company_name=company_name)
-        filters &= Q(country__isnull=False) & Q(region__isnull=False) & Q(city__isnull=False) & Q(town__isnull=False) & Q(street__isnull=False)
+        if company_name:
+            cache_key = sanitize_cache_key(f"bar_chart_info{company_name}_{selected_criteria}_{selected_range}")
+            final_data = cache.get(cache_key)
+            
+            if not final_data:       
+                # Build the query filters to exclude rows with null values in the location fields
+                filters = Q(company_name=company_name)
+                filters &= Q(country__isnull=False) & Q(region__isnull=False) & Q(city__isnull=False) & Q(town__isnull=False) & Q(street__isnull=False)
 
-        # Aggregate the data based on the selected criteria
-        location_field = {
-            'Region': 'region',
-            'City': 'city',
-            'Town': 'town',
-            'Locality': 'street'
-        }.get(selected_criteria, 'region')
+                # Aggregate the data based on the selected criteria
+                location_field = {
+                    'Region': 'region',
+                    'City': 'city',
+                    'Town': 'town',
+                    'Locality': 'street'
+                }.get(selected_criteria, 'region')
 
-        # Fetch and aggregate ScanInfo data
-        scan_data = ScanInfo.objects.filter(filters) \
-            .values(location_field) \
-            .annotate(scanned_count=Count('id')) \
-            .order_by(location_field)
+                # Fetch and aggregate ScanInfo data
+                scan_data = ScanInfo.objects.filter(filters) \
+                    .values(location_field) \
+                    .annotate(scanned_count=Count('id')) \
+                    .order_by(location_field)
 
-        # Fetch and aggregate CheckoutInfo data
-        checkout_data = CheckoutInfo.objects.filter(filters) \
-            .values(location_field) \
-            .annotate(checkout_count=Count('id')) \
-            .order_by(location_field)
+                # Fetch and aggregate CheckoutInfo data
+                checkout_data = CheckoutInfo.objects.filter(filters) \
+                    .values(location_field) \
+                    .annotate(checkout_count=Count('id')) \
+                    .order_by(location_field)
 
-        # Merge the scan_data and checkout_data based on location_field
-        aggregated_data = {}
-        for entry in scan_data:
-            key = entry[location_field]
-            aggregated_data[key] = {
-                'location': key,
-                'scanned': entry['scanned_count'],
-                'checkout': 0  # Initialize with 0, will update later if present in checkout_data
-            }
-        
-        for entry in checkout_data:
-            key = entry[location_field]
-            if key in aggregated_data:
-                aggregated_data[key]['checkout'] = entry['checkout_count']
-            else:
-                aggregated_data[key] = {
-                    'location': key,
-                    'scanned': 0,  # Initialize with 0, will update later if present in scan_data
-                    'checkout': entry['checkout_count']
-                }
+                # Merge the scan_data and checkout_data based on location_field
+                aggregated_data = {}
+                for entry in scan_data:
+                    key = entry[location_field]
+                    aggregated_data[key] = {
+                        'location': key,
+                        'scanned': entry['scanned_count'],
+                        'checkout': 0  # Initialize with 0, will update later if present in checkout_data
+                    }
+                
+                for entry in checkout_data:
+                    key = entry[location_field]
+                    if key in aggregated_data:
+                        aggregated_data[key]['checkout'] = entry['checkout_count']
+                    else:
+                        aggregated_data[key] = {
+                            'location': key,
+                            'scanned': 0,  # Initialize with 0, will update later if present in scan_data
+                            'checkout': entry['checkout_count']
+                        }
 
-        # Convert the aggregated data to a list of dictionaries for easy JSON serialization
-        aggregated_data_list = list(aggregated_data.values())
+                # Convert the aggregated data to a list of dictionaries for easy JSON serialization
+                aggregated_data_list = list(aggregated_data.values())
 
-        # Sort and slice the data based on the selected range
-        sorted_data = sorted(aggregated_data_list, key=lambda x: x['checkout'], reverse=True)
-        if selected_range == 'High':
-            final_data = sorted_data[:5]
-        else:
-            final_data = sorted_data[-5:][::-1]
-
-        return Response(final_data)
-    
+                # Sort and slice the data based on the selected range
+                sorted_data = sorted(aggregated_data_list, key=lambda x: x['checkout'], reverse=True)
+                if selected_range == 'High':
+                    final_data = sorted_data[:5]
+                else:
+                    final_data = sorted_data[-5:][::-1]
+                    
+                cache.set(cache_key, final_data, timeout=60 * 60)
+            return Response(final_data)    
+        return Response({'error': 'Company name is required'}, status=status.HTTP_404_NOT_FOUND)
 class ProductName(APIView):
     permission_classes = [IsAuthenticated, IsOwner]
 
     def get(self, request, *args, **kwargs):
         company_name = request.query_params.get('company_name')
         try:
-             products = LogProduct.objects.filter(company_name=company_name).values_list('product_name', flat=True).distinct()
-             return Response(products, status=status.HTTP_200_OK)
+            if company_name:
+                cache_key = sanitize_cache_key(f"product_names_{company_name}")
+                data = cache.get(cache_key)
+                if not data:
+                    products = LogProduct.objects.filter(company_name=company_name).values_list('product_name', flat=True).distinct()
+                    cache.set(cache_key, products, timeout=60 * 60)
+                return Response(products, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
-
 class ProductMetricsView(APIView):
 
     def get_cache_key(self, company_name, product_name):
@@ -815,8 +820,6 @@ class ProductMetricsView(APIView):
                         'lowest_checkout_per_location': lowest_checkout_per_location,
                     }
                 }
-
-                # cache.set(cache_key, data, timeout=60 * 5)  # Cache for 5 minutes
             except Exception as e:
                 return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -850,3 +853,54 @@ def encrypt_sensitive_data(request):
         encrypted_data_b64 = urlsafe_b64encode(encrypted_data).decode()
         return JsonResponse({'encrypted_data': encrypted_data_b64})
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
+class UserScanView(APIView):
+    permission_classes = [IsAuthenticated, IsUser]
+    
+    def get(self, request):
+        user_name = request.query_params_get('email')
+        if user_name:
+            cache_key = sanitize_cache_key(f"user_scan_info_{user_name}")
+            data = cache.get(cache_key)
+            
+            if not data:
+                filtered_data = ScanInfo.objects.filter(user_name__iexact=user_name
+                                                        ).exclude(
+                                                            Q(country__isnull=True) | Q(country='') |
+                                                            Q(region__isnull=True) | Q(region='') |
+                                                            Q(city__isnull=True) | Q(city='')                                                                   
+                                                            ).values(
+                                                                'company_name', 'product_name', 'batch_number'
+                                                            ).annotate(
+                                                                frequency=Count('batch_number')
+                                                            ).order_by('company_name', 'product_name')
+                data = list(filtered_data)
+                cache.set(cache_key, data, timeout=60 * 60)
+            
+            return Response(data, status=status.HTTP_200_OK)
+        return Response({'error': 'User email not provided'}, status=status.HTTP_404_NOT_FOUND)
+                
+class UserCheckoutView(APIView):
+    permission_classes = [IsAuthenticated, IsUser]
+    
+    def get(self, request):
+        user_name = request.query_params_get('email')
+        if user_name:
+            cache_key = sanitize_cache_key(f"user_checkout_info_{user_name}")
+            data = cache.get(cache_key)
+            
+            if not data:
+                filtered_data = CheckoutInfo.objects.filter(user_name__iexact=user_name
+                                                        ).exclude(
+                                                            Q(country__isnull=True) | Q(country='') |
+                                                            Q(region__isnull=True) | Q(region='') |
+                                                            Q(city__isnull=True) | Q(city='')                                                                   
+                                                            ).values(
+                                                                'company_name', 'product_name', 'batch_number'
+                                                            ).order_by('company_name')
+                data = list(filtered_data)
+                cache.set(cache_key, data, timeout=60 * 60)
+            
+            return Response(data, status=status.HTTP_200_OK)
+        return Response({'error': 'User email not provided'}, status=status.HTTP_404_NOT_FOUND)
+                

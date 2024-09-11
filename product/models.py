@@ -1,10 +1,8 @@
 from django.db import models
-from accounts.models import Company, User
-import string
-import random
 import re
 from django.core.cache import cache
-
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 # Concentrate on the generating of the codes. When you are done, then you come to this. do not over think.
 class ScanInfo(models.Model):
    date_time = models.DateTimeField(auto_now_add=True)
@@ -25,6 +23,17 @@ class ScanInfo(models.Model):
             models.Index(fields=['date_time','company_name', 'product_name', 'batch_number', 'code_key' ])
         ]
 
+@receiver(post_save, sender=ScanInfo)
+def invalidate_multiple_cache_keys(sender, instance, **kwargs):
+    cache_keys = [
+        f"scan_metrics_{instance.company_name}",
+        f"user_scan_info_{instance.user_name}",
+    ]
+    for key in cache_keys:
+        cache_key = sanitize_cache_key(key)
+        cache.delete(cache_key) 
+
+
 class CheckoutInfo(models.Model):
    date_time = models.DateTimeField(auto_now_add=True)
    code_key = models.CharField(max_length=255, blank=False, null=False)
@@ -43,6 +52,35 @@ class CheckoutInfo(models.Model):
         indexes = [
             models.Index(fields=['date_time','company_name', 'product_name', 'batch_number', 'code_key' ])
         ]
+
+@receiver(post_save, sender=CheckoutInfo)
+def invalidate_multiple_cache_keys(sender, instance, **kwargs):
+    cache_keys = [
+        f"checkout_metrics_{instance.company_name}",
+        f"user_checkout_info_{instance.user_name}"
+    ]
+    
+    # Invalidate all related cache keys
+    for key in cache_keys:
+        cache_key = sanitize_cache_key(key)
+        cache.delete(cache_key) 
+
+
+@receiver(post_save, sender=ScanInfo)
+@receiver(post_save, sender=CheckoutInfo)
+def invalidate_shared_cache(sender, instance, **kwargs):
+    cache_keys = [
+        f"location_metrics_comparison_{instance.company_name}",
+        f"performance_metrics_{instance.company_name}",
+        f"product_user_metrics_{instance.company_name}",
+        f"line_chart_data_{instance.company_name}_{instance.selected_year}_{instance.selected_month}_{instance.selected_day}",
+        f"product_metrics_{instance.company_name}_{instance.product_name}",
+    ]
+    
+    # Invalidate all related cache keys
+    for key in cache_keys:
+        cache_key = sanitize_cache_key(key)
+        cache.delete(cache_key) 
 
 
 class LogProduct(models.Model):

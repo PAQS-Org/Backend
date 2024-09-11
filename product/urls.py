@@ -7,7 +7,9 @@ from .views import (
     LineChartDataView, 
     BarChartDataView,
     ProductName,
-    ProductMetricsView, 
+    ProductMetricsView,
+    UserCheckoutView,
+    UserScanView, 
     get_public_key, 
     encrypt_sensitive_data
     )
@@ -25,5 +27,6 @@ urlpatterns = [
     path('barChart/', BarChartDataView.as_view(), name='bar_data'),
     path('prodName/', ProductName.as_view(), name='prod_name'),
     path('prodInfo/', ProductMetricsView.as_view(), name='prod_info'),
-    path('prodInfo/', ProductMetricsView.as_view(), name='prod_info'),
+    path('userCheckout/', UserCheckoutView.as_view(), name='user_checkout'),
+    path('userScan/', UserScanView.as_view(), name='user_scan'),
 ]
