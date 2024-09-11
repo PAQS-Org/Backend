@@ -46,33 +46,42 @@ class CompanyRegistrationView(APIView):
     @method_decorator(ratelimit(key='ip', rate='2/d', method='POST'))
     def post(self, request):
         serializer = CompanyRegisterSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        # Generate verification token (replace with your preferred library)
-        user_data = serializer.data
-        user = Company.objects.get(email=user_data['email'])
-        token = RefreshToken.for_user(user).access_token
-        current_site = get_current_site(request).domain
-        relativeLink = reverse('company-email-verify')
-        absurl = 'http://'+current_site+relativeLink+"?token="+str(token)
-        template_path = 'company-verification-email.html'
-        email_body = render_to_string(template_path, {
-            'first_name': user.first_name,
-            'last_name': user.last_name,
-            'email':user.email,
-            'company_name': user.company_name,
-            'verification_link': absurl,
-            'current_year': datetime.datetime.now().year,
-        })
-        data = {'email_body': email_body, 'to_email': user.email,
-                'email_subject': 'Verify your email'}
+        
+        try:
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            user_data = serializer.data
+            user = Company.objects.get(email=user_data['email'])
 
-        Util.send_email(data)
-        print("del")
-        task = delete_unverified_user.apply_async((user.id,), countdown=301)
-        print(f"Task ID: {task.id}")
-        return Response(user_data, status=status.HTTP_201_CREATED)
+            # Generate verification token (replace with your preferred library)
+            token = RefreshToken.for_user(user).access_token
+            current_site = get_current_site(request).domain
+            relativeLink = reverse('company-email-verify')
+            absurl = 'http://' + current_site + relativeLink + "?token=" + str(token)
 
+            template_path = 'company-verification-email.html'
+            email_body = render_to_string(template_path, {
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'email': user.email,
+                'company_name': user.company_name,
+                'verification_link': absurl,
+                'current_year': datetime.datetime.now().year,
+            })
+            data = {'email_body': email_body, 'to_email': user.email,
+                    'email_subject': 'Verify your email'}
+
+            Util.send_email(data)
+            print("del")
+            task = delete_unverified_user.apply_async((user.id,), countdown=301)
+            print(f"Task ID: {task.id}")
+            return Response(user_data, status=status.HTTP_201_CREATED)
+
+        except ValidationError as e:
+            return Response({"error": e.detail}, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class CompanyLoginView(APIView):

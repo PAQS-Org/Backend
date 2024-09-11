@@ -3,7 +3,9 @@ from django.core.validators import EmailValidator
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.auth import authenticate, password_validation
-from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.exceptions import AuthenticationFailed, ValidationError
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db import IntegrityError
 import boto3
 from django.conf import settings
 from django.utils.encoding import force_str
@@ -28,6 +30,12 @@ class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['first_name','last_name' ,'email', 'password']
+        
+    def validate_email(self, value):
+        """Check if email is already registered"""
+        if User.objects.filter(email=value).exists():
+            raise ValidationError("A user with this email already exists.")
+        return value
 
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
@@ -156,6 +164,18 @@ class CompanyRegisterSerializer(serializers.ModelSerializer):
         model = Company
         fields = ['email', 'first_name', 'last_name', 'company_name', 'company_logo', 'password']
 
+    def validate_email(self, value):
+        """Check if email is already registered"""
+        if Company.objects.filter(email=value).exists():
+            raise ValidationError("A user with this email already exists.")
+        return value
+
+    def validate_company_name(self, value):
+        """Check if company name is already registered"""
+        if Company.objects.filter(company_name=value).exists():
+            raise ValidationError("A company with this name already exists.")
+        return value
+    
     def generate_unique_company_code(self):
         while True:
             code = random.randint(000000, 999999)
