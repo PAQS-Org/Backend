@@ -857,8 +857,8 @@ def encrypt_sensitive_data(request):
 class UserScanView(APIView):
     permission_classes = [IsAuthenticated, IsUser]
     
-    def get(self, request):
-        user_name = request.query_params_get('email')
+    def get(self, request, *args, **kwargs):
+        user_name = request.query_params.get('email')
         if user_name:
             cache_key = sanitize_cache_key(f"user_scan_info_{user_name}")
             data = cache.get(cache_key)
@@ -883,8 +883,8 @@ class UserScanView(APIView):
 class UserCheckoutView(APIView):
     permission_classes = [IsAuthenticated, IsUser]
     
-    def get(self, request):
-        user_name = request.query_params_get('email')
+    def get(self, request, *args, **kwargs):
+        user_name = request.query_params.get('email')
         if user_name:
             cache_key = sanitize_cache_key(f"user_checkout_info_{user_name}")
             data = cache.get(cache_key)
