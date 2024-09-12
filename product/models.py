@@ -73,7 +73,7 @@ def invalidate_shared_cache(sender, instance, **kwargs):
         f"location_metrics_comparison_{instance.company_name}",
         f"performance_metrics_{instance.company_name}",
         f"product_user_metrics_{instance.company_name}",
-        f"line_chart_data_{instance.company_name}_{instance.selected_year}_{instance.selected_month}_{instance.selected_day}",
+        f"line_chart_data_{instance.company_name}",
         f"product_metrics_{instance.company_name}_{instance.product_name}",
     ]
     
