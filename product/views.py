@@ -4,11 +4,11 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from PAQSBackend.encry import (
-    generate_rsa_key_pair, serialize_public_key, deserialize_public_key,
-    decrypt_session_key, encrypt_data, serialize_private_key
-)
-from base64 import urlsafe_b64encode, urlsafe_b64decode
+# from PAQSBackend.encry import (
+#     generate_rsa_key_pair, serialize_public_key, deserialize_public_key,
+#     decrypt_session_key, encrypt_data, serialize_private_key
+# )
+# from base64 import urlsafe_b64encode, urlsafe_b64decode
 
 from .models import LogProduct, ScanInfo, CheckoutInfo
 from django.db.models import Count, F,Q
@@ -827,32 +827,32 @@ class ProductMetricsView(APIView):
 
 
 # Store the private key securely
-private_key = None
+# private_key = None
 
-@csrf_exempt
-def get_public_key(request):
-    global private_key
-    private_key, public_key = generate_rsa_key_pair()
-    serialized_public_key = serialize_public_key(public_key)
-    return JsonResponse({'public_key': serialized_public_key.decode()})
+# @csrf_exempt
+# def get_public_key(request):
+#     global private_key
+#     private_key, public_key = generate_rsa_key_pair()
+#     serialized_public_key = serialize_public_key(public_key)
+#     return JsonResponse({'public_key': serialized_public_key.decode()})
 
-@csrf_exempt
-def encrypt_sensitive_data(request):
-    global private_key
-    if request.method == 'POST':
-        encrypted_session_key = urlsafe_b64decode(request.POST.get('session_key', ''))
+# @csrf_exempt
+# def encrypt_sensitive_data(request):
+#     global private_key
+#     if request.method == 'POST':
+#         encrypted_session_key = urlsafe_b64decode(request.POST.get('session_key', ''))
         
-        # Decrypt the session key with the private key
-        session_key = decrypt_session_key(private_key, encrypted_session_key)
+#         # Decrypt the session key with the private key
+#         session_key = decrypt_session_key(private_key, encrypted_session_key)
 
-        # Encrypt sensitive data
-        sensitive_data = "This is very sensitive information"
-        encrypted_data = encrypt_data(session_key, sensitive_data)
+#         # Encrypt sensitive data
+#         sensitive_data = "This is very sensitive information"
+#         encrypted_data = encrypt_data(session_key, sensitive_data)
 
-        # Return encrypted data in base64
-        encrypted_data_b64 = urlsafe_b64encode(encrypted_data).decode()
-        return JsonResponse({'encrypted_data': encrypted_data_b64})
-    return JsonResponse({'error': 'Invalid request'}, status=400)
+#         # Return encrypted data in base64
+#         encrypted_data_b64 = urlsafe_b64encode(encrypted_data).decode()
+#         return JsonResponse({'encrypted_data': encrypted_data_b64})
+#     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 class UserScanView(APIView):
     permission_classes = [IsAuthenticated, IsUser]

@@ -10,8 +10,8 @@ from .views import (
     ProductMetricsView,
     UserCheckoutView,
     UserScanView, 
-    get_public_key, 
-    encrypt_sensitive_data
+    # get_public_key, 
+    # encrypt_sensitive_data
     )
 
 urlpatterns = [
