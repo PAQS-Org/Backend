@@ -598,79 +598,79 @@ class LineChartDataView(APIView):
         # Ensure company name is provided
         if company_name:   
        
-            cache_key = sanitize_cache_key(f"line_chart_data_{company_name}_{selected_year}_{selected_month}_{selected_day}")
-            data = cache.get(cache_key)
+            # cache_key = sanitize_cache_key(f"line_chart_data_{company_name}_{selected_year}_{selected_month}_{selected_day}")
+            # data = cache.get(cache_key)
             
-            if not data:
+            # if not data:
                 
                        
             # Convert parameters to integers if they are provided
-                selected_year = int(selected_year) if selected_year else None
-                selected_month = int(selected_month) + 1 if selected_month else None  # JS month is 0-indexed
-                selected_day = int(selected_day) if selected_day else None
+            selected_year = int(selected_year) if selected_year else None
+            selected_month = int(selected_month) + 1 if selected_month else None  # JS month is 0-indexed
+            selected_day = int(selected_day) if selected_day else None
 
-                # Build the query filters
-                filters = Q(company_name=company_name)
-                
-                # Exclude rows with null values in any of the relevant location columns
-                filters &= Q(country__isnull=False) & Q(region__isnull=False) & Q(city__isnull=False) \
-                        & Q(town__isnull=False) & Q(street__isnull=False)
-                
-                # Apply year, month, day filters
-                if selected_year:
-                    filters &= Q(date_time__year=selected_year)
-                if selected_month:
-                    filters &= Q(date_time__month=selected_month)
-                if selected_day:
-                    filters &= Q(date_time__day=selected_day)
+            # Build the query filters
+            filters = Q(company_name=company_name)
+            
+            # Exclude rows with null values in any of the relevant location columns
+            filters &= Q(country__isnull=False) & Q(region__isnull=False) & Q(city__isnull=False) \
+                    & Q(town__isnull=False) & Q(street__isnull=False)
+            
+            # Apply year, month, day filters
+            if selected_year:
+                filters &= Q(date_time__year=selected_year)
+            if selected_month:
+                filters &= Q(date_time__month=selected_month)
+            if selected_day:
+                filters &= Q(date_time__day=selected_day)
 
-                # Determine the aggregation level based on selected parameters
-                truncation = None
-                
-                if not selected_year and not selected_month and not selected_day:  # All null, aggregate by year and month
-                    truncation = TruncMonth('date_time')
-                elif selected_year and not selected_month and not selected_day:  # Year selected, aggregate by month
-                    truncation = TruncMonth('date_time')
-                elif selected_year and selected_month and not selected_day:  # Year and month selected, aggregate by day
-                    truncation = TruncDay('date_time')
-                elif selected_year and selected_month and selected_day:  # Year, month, and day selected, aggregate by hour
-                    truncation = TruncHour('date_time')
-                elif selected_day and not selected_year and not selected_month:  # Only day selected, aggregate by matching days across years/months
-                    truncation = TruncDay('date_time')
-                elif selected_month and not selected_year and not selected_day:  # Only month selected, aggregate by month across years
-                    truncation = TruncMonth('date_time')
+            # Determine the aggregation level based on selected parameters
+            truncation = None
+            
+            if not selected_year and not selected_month and not selected_day:  # All null, aggregate by year and month
+                truncation = TruncMonth('date_time')
+            elif selected_year and not selected_month and not selected_day:  # Year selected, aggregate by month
+                truncation = TruncMonth('date_time')
+            elif selected_year and selected_month and not selected_day:  # Year and month selected, aggregate by day
+                truncation = TruncDay('date_time')
+            elif selected_year and selected_month and selected_day:  # Year, month, and day selected, aggregate by hour
+                truncation = TruncHour('date_time')
+            elif selected_day and not selected_year and not selected_month:  # Only day selected, aggregate by matching days across years/months
+                truncation = TruncDay('date_time')
+            elif selected_month and not selected_year and not selected_day:  # Only month selected, aggregate by month across years
+                truncation = TruncMonth('date_time')
 
-                if truncation is not None:
-                    queryset = CheckoutInfo.objects \
-                        .annotate(date=truncation) \
-                        .values('date') \
-                        .annotate(total=Count('id'))
-                else:
-            # Handle the case where none of the conditions are met
-                    return Response({"error": "Invalid time selection"}, status=400)
-                # Fetch and process ScanInfo data
-                scan_data = ScanInfo.objects.filter(filters) \
+            if truncation is not None:
+                queryset = CheckoutInfo.objects \
                     .annotate(date=truncation) \
                     .values('date') \
-                    .annotate(count=Count('id')) \
-                    .order_by('date')
+                    .annotate(total=Count('id'))
+            else:
+        # Handle the case where none of the conditions are met
+                return Response({"error": "Invalid time selection"}, status=400)
+            # Fetch and process ScanInfo data
+            scan_data = ScanInfo.objects.filter(filters) \
+                .annotate(date=truncation) \
+                .values('date') \
+                .annotate(count=Count('id')) \
+                .order_by('date')
 
-                # Fetch and process CheckoutInfo data
-                checkout_data = CheckoutInfo.objects.filter(filters) \
-                    .annotate(date=truncation) \
-                    .values('date') \
-                    .annotate(count=Count('id')) \
-                    .order_by('date')
+            # Fetch and process CheckoutInfo data
+            checkout_data = CheckoutInfo.objects.filter(filters) \
+                .annotate(date=truncation) \
+                .values('date') \
+                .annotate(count=Count('id')) \
+                .order_by('date')
 
-                # Prepare the response data
-                data = {
-                    'scan_data': list(scan_data),
-                    'checkout_data': list(checkout_data),
-                }
-                cache.set(cache_key, data, timeout=3600)  # Cache for 1 hour
-                
-                return Response(data)
-            return Response({'Error' : 'Company does not exist'}, status=status.HTTP_404_NOT_FOUND)
+            # Prepare the response data
+            data = {
+                'scan_data': list(scan_data),
+                'checkout_data': list(checkout_data),
+            }
+            # cache.set(cache_key, data, timeout=3600)  # Cache for 1 hour
+            
+            return Response(data)
+        return Response({'Error' : 'Company does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
 class BarChartDataView(APIView):
     permission_classes = [IsAuthenticated]
@@ -751,12 +751,12 @@ class ProductName(APIView):
         company_name = request.query_params.get('company_name')
         try:
             if company_name:
-                cache_key = sanitize_cache_key(f"product_names_{company_name}")
-                data = cache.get(cache_key)
-                if not data:
-                    products = LogProduct.objects.filter(company_name=company_name).values_list('product_name', flat=True).distinct()
-                    cache.set(cache_key, products, timeout=60 * 60)
-                return Response(products, status=status.HTTP_200_OK)
+                # cache_key = sanitize_cache_key(f"product_names_{company_name}")
+                # data = cache.get(cache_key)
+                # if not data:
+                products = LogProduct.objects.filter(company_name=company_name).values_list('product_name', flat=True).distinct()
+                    # cache.set(cache_key, products, timeout=60 * 60)
+            return Response(products, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         

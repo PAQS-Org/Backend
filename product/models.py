@@ -22,17 +22,20 @@ class ScanInfo(models.Model):
         indexes = [
             models.Index(fields=['date_time','company_name', 'product_name', 'batch_number', 'code_key' ])
         ]
+        
+   def save(self, *args, **kwargs):
+        # List of cache keys you want to invalidate
+        cache_keys = [
+            f"scan_metrics_{self.company_name}",
+            f"user_scan_info_{self.user_name}",
+        ]
+        
+        # Invalidate all related cache keys
+        for key in cache_keys:
+            cache_key = sanitize_cache_key(key)
+            cache.delete(cache_key)
 
-@receiver(post_save, sender=ScanInfo)
-def invalidate_multiple_cache_keys(sender, instance, **kwargs):
-    cache_keys = [
-        f"scan_metrics_{instance.company_name}",
-        f"user_scan_info_{instance.user_name}",
-    ]
-    for key in cache_keys:
-        cache_key = sanitize_cache_key(key)
-        cache.delete(cache_key) 
-
+        super().save(*args, **kwargs)
 
 class CheckoutInfo(models.Model):
    date_time = models.DateTimeField(auto_now_add=True)
@@ -52,18 +55,20 @@ class CheckoutInfo(models.Model):
         indexes = [
             models.Index(fields=['date_time','company_name', 'product_name', 'batch_number', 'code_key' ])
         ]
+   
+   def save(self, *args, **kwargs):
+        # List of cache keys you want to invalidate
+        cache_keys = [
+            f"user_checkout_info_{self.user_name}",
+            f"checkout_metrics_{self.company_name}"
+        ]
+        
+        # Invalidate all related cache keys
+        for key in cache_keys:
+            cache_key = sanitize_cache_key(key)
+            cache.delete(cache_key)
 
-@receiver(post_save, sender=CheckoutInfo)
-def invalidate_multiple_cache_keys(sender, instance, **kwargs):
-    cache_keys = [
-        f"checkout_metrics_{instance.company_name}",
-        f"user_checkout_info_{instance.user_name}"
-    ]
-    
-    # Invalidate all related cache keys
-    for key in cache_keys:
-        cache_key = sanitize_cache_key(key)
-        cache.delete(cache_key) 
+        super().save(*args, **kwargs)
 
 
 @receiver(post_save, sender=ScanInfo)
@@ -73,7 +78,7 @@ def invalidate_shared_cache(sender, instance, **kwargs):
         f"location_metrics_comparison_{instance.company_name}",
         f"performance_metrics_{instance.company_name}",
         f"product_user_metrics_{instance.company_name}",
-        f"line_chart_data_{instance.company_name}",
+        # f"line_chart_data_{instance.company_name}",
         f"product_metrics_{instance.company_name}_{instance.product_name}",
     ]
     
