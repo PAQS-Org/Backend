@@ -119,13 +119,17 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'PAQSBackend.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
 DATABASES = {
     'default': dj_database_url.parse(os.getenv('PGCONNECT')),
+    'scylla':{
+        'HOST': os.environ.get('SCYLLA_HOST'),
+        'PORT': os.environ.get('SCYLLA_PORT')
+    } 
 }
+
 
 
 
