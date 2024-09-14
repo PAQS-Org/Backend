@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'django_celery_beat',
     'django_celery_results',
+    'django_cassandra_engine',
     # 'django_weasyprint',
     'django_ratelimit',
     'rest_auth',

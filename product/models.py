@@ -8,11 +8,12 @@ from entry.models import KeyManagement
 from PAQSBackend.encry import EncryptionUtil
 # Concentrate on the generating of the codes. When you are done, then you come to this. do not over think.
 class ScanInfo(DjangoCassandraModel):
+   id = columns.UUID(primary_key=True)
    date_time = columns.DateTime().truncate_microseconds=True
    code_key = columns.Text(required=True)
-   company_name = columns.Text(required=True)
-   product_name = columns.Text(required=True)
-   batch_number = columns.Text(required=True)
+   company_name = columns.Text(required=True, index=True, partition_key=True)
+   product_name = columns.Text(required=True, index=True, partition_key=True)
+   batch_number = columns.Text(required=True, index=True, partition_key=True)
    user_name = columns.Text(max_length=255)
    location = columns.Map(columns.Text, columns.Text)
    country = columns.Text()
