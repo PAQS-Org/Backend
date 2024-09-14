@@ -1,7 +1,7 @@
+import base64
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import padding
-import base64
 import os
 
 class EncryptionUtil:
@@ -42,3 +42,9 @@ class EncryptionUtil:
         decrypted = unpadder.update(decrypted_padded) + unpadder.finalize()
 
         return decrypted.decode('utf-8')
+
+    @staticmethod
+    def rotate_key(data, old_key, new_key):
+        """Re-encrypt the data with the new key."""
+        decrypted_data = EncryptionUtil.decrypt(data, old_key)
+        return EncryptionUtil.encrypt(decrypted_data, new_key)

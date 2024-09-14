@@ -126,10 +126,23 @@ DATABASES = {
     'default': dj_database_url.parse(os.getenv('PGCONNECT')),
     'scylla':{
         'HOST': os.environ.get('SCYLLA_HOST'),
-        'PORT': os.environ.get('SCYLLA_PORT')
+        'PORT': os.environ.get('SCYLLA_PORT'),
+        'USER': os.environ.get('SCYLLA_USER'),
+        'PASSWORD': os.environ.get('SCYLLA_PASSWORD'),
+        'OPTIONS': {
+            'connection': {
+                'consistency': 'LOCAL_ONE',
+                'retry_connect': True
+            },
+            'replication': {
+                'strategy_class': 'SimpleStrategy',  # Use NetworkTopologyStrategy for multi-DC
+                'replication_factor': 1,             # Adjust based on your cluster setup
+            }
+        }
     } 
 }
 
+DATABASE_ROUTERS = ['.db_router.DatabaseRouter']
 
 
 
