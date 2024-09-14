@@ -10,7 +10,7 @@ from PAQSBackend.encry import EncryptionUtil
 class ScanInfo(DjangoCassandraModel):
    id = columns.UUID(primary_key=True)
    date_time = columns.DateTime().truncate_microseconds=True
-   code_key = columns.Text(required=True)
+   code_key = columns.Text(required=True, clustering_order="ASC")
    company_name = columns.Text(required=True, index=True, partition_key=True)
    product_name = columns.Text(required=True, index=True, partition_key=True)
    batch_number = columns.Text(required=True, index=True, partition_key=True)
@@ -23,10 +23,8 @@ class ScanInfo(DjangoCassandraModel):
    street = columns.Text()
    key_version = columns.Integer()
    
-#    class Meta:
-#         indexes = [
-#             columns.Index(fields=['date_time','company_name', 'product_name', 'batch_number', 'code_key' ])
-#         ]
+   class Meta:
+        get_pk_field = 'id'
         
    def save(self, *args, **kwargs):
        current_key_obj = KeyManagement.get_current_key()
