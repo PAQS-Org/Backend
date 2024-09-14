@@ -4,7 +4,7 @@ import re
 from django.core.cache import cache
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from PAQSBackend.models import KeyManagement
+from entry.models import KeyManagement
 from PAQSBackend.encry import EncryptionUtil
 # Concentrate on the generating of the codes. When you are done, then you come to this. do not over think.
 class ScanInfo(DjangoCassandraModel):
