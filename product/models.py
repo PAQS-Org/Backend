@@ -13,7 +13,7 @@ class ScanInfo(DjangoCassandraModel):
    company_name = columns.Text(required=True, index=True, partition_key=True)
    product_name = columns.Text(required=True, index=True, partition_key=True)
    batch_number = columns.Text(required=True, index=True, partition_key=True)
-   code_key = columns.Text(required=True, primary_key=True, clustering_order="ASC")
+   code_key = columns.Text(required=True, index=True, primary_key=True, clustering_order="ASC")
    user_name = columns.Text(max_length=255)
    location = columns.Map(columns.Text, columns.Text)
    country = columns.Text()
@@ -115,7 +115,7 @@ class CheckoutInfo(DjangoCassandraModel):
    company_name = columns.Text(required=True, index=True, partition_key=True)
    product_name = columns.Text(required=True, index=True, partition_key=True)
    batch_number = columns.Text(required=True, index=True, partition_key=True)
-   code_key = columns.Text(required=True, primary_key=True, clustering_order="ASC")
+   code_key = columns.Text(required=True, index=True, primary_key=True, clustering_order="ASC")
    user_name = columns.Text(max_length=255)
    location = columns.Map(columns.Text, columns.Text)
    country = columns.Text()
@@ -249,7 +249,7 @@ class LogProduct(DjangoCassandraModel):
     company_name = columns.Text(required=True, index=True, partition_key=True)
     product_name = columns.Text(required=True, index=True, partition_key=True)
     batch_number = columns.Text(required=True, index=True, partition_key=True)
-    code_key = columns.Text(required=True, index=True, partition_key=True, clustering_order="ASC")
+    code_key = columns.Text(required=True, index=True, primary_key=True, clustering_order="ASC")
     perishable = columns.Boolean(default=False)
     manufacture_date = columns.Date()
     expiry_date = columns.Date()
@@ -263,6 +263,8 @@ class LogProduct(DjangoCassandraModel):
     patch = columns.Boolean(default=False)
     patch_reason = columns.Text(max_length=100)
     patch_message = columns.Text(max_length=255)
+    key_version = columns.Integer()
+    
     
     class Meta:
         get_pk_field = 'id'
