@@ -125,7 +125,15 @@ WSGI_APPLICATION = 'PAQSBackend.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.parse(os.getenv('PGCONNECT')),
-    'mongoDB': dj_database_url.parse(os.getenv('MONGO_CONNECT')),
+    'mongoDB': {
+        'ENGINE': 'django.db.backends.mongodb',
+        'DATABASE_URL': os.environ.get('MONGO_URL'),
+        'NAME': os.environ.get('MONGO_INITDB_ROOT_USERNAME'),
+        'HOST': os.environ.get('MONGOHOST'),
+        'PORT': os.environ.get('MONGOPORT'),  # Default MongoDB port
+        'USER': os.environ.get('MONGOUSER'),
+        'PASSWORD': os.environ.get('MONGOPASSWORD'),
+    }
 }
 
 
