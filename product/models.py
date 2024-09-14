@@ -1,5 +1,4 @@
-from django_cassandra_engine.models import DjangoCassandraModel
-from cassandra.cqlengine import columns
+import mongoengine as me
 import re
 from django.core.cache import cache
 from django.db.models.signals import post_save
@@ -7,24 +6,26 @@ from django.dispatch import receiver
 from entry.models import KeyManagement
 from PAQSBackend.encry import EncryptionUtil
 # Concentrate on the generating of the codes. When you are done, then you come to this. do not over think.
-class ScanInfo(DjangoCassandraModel):
-   id = columns.UUID(primary_key=True)
-   date_time = columns.DateTime().truncate_microseconds=True
-   company_name = columns.Text(required=True, index=True, partition_key=True)
-   product_name = columns.Text(required=True, index=True, partition_key=True)
-   batch_number = columns.Text(required=True, index=True, partition_key=True)
-   code_key = columns.Text(required=True, index=True, primary_key=True, clustering_order="ASC")
-   user_name = columns.Text(max_length=255)
-   location = columns.Map(columns.Text, columns.Text)
-   country = columns.Text()
-   region = columns.Text()
-   city = columns.Text()
-   town = columns.Text()
-   street = columns.Text()
-   key_version = columns.Integer()
+class ScanInfo(me.Document):
+   id = me.UUIDField(primary_key=True)
+   date_time = me.DateTimeField()
+   company_name = me.StringField(required=True, max_length=255)
+   product_name = me.StringField(required=True, max_length=255)
+   batch_number = me.StringField(required=True, max_length=255)
+   code_key = me.StringField(required=True, max_length=255)
+   user_name = me.StringField(max_length=255)
+   location = me.MapField(field=me.StringField())
+   country = me.StringField()
+   region = me.StringField()
+   city = me.StringField()
+   town = me.StringField()
+   street = me.StringField()
+   key_version = me.IntField()
    
-   class Meta:
-        get_pk_field = 'id'
+   meta = {
+        'collection': 'scan_info',  # This specifies the MongoDB collection name
+        'indexes': ['company_name', 'product_name', 'batch_number']  # Add MongoDB indexes
+    }
         
    def save(self, *args, **kwargs):
        current_key_obj = KeyManagement.get_current_key()
@@ -109,24 +110,26 @@ class ScanInfo(DjangoCassandraModel):
         key = KeyManagement.get_key_by_version(self.key_version).aes_key
         return EncryptionUtil.decrypt(self.street, key)
 
-class CheckoutInfo(DjangoCassandraModel):
-   id = columns.UUID(primary_key=True)
-   date_time = columns.DateTime().truncate_microseconds=True
-   company_name = columns.Text(required=True, index=True, partition_key=True)
-   product_name = columns.Text(required=True, index=True, partition_key=True)
-   batch_number = columns.Text(required=True, index=True, partition_key=True)
-   code_key = columns.Text(required=True, index=True, primary_key=True, clustering_order="ASC")
-   user_name = columns.Text(max_length=255)
-   location = columns.Map(columns.Text, columns.Text)
-   country = columns.Text()
-   region = columns.Text()
-   city = columns.Text()
-   town = columns.Text()
-   street = columns.Text()
-   key_version = columns.Integer()
+class CheckoutInfo(me.Document):
+   id = me.UUIDField(primary_key=True)
+   date_time = me.DateTimeField()
+   company_name = me.StringField(required=True, max_length=255)
+   product_name = me.StringField(required=True, max_length=255)
+   batch_number = me.StringField(required=True, max_length=255)
+   code_key = me.StringField(required=True, max_length=255)
+   user_name = me.StringField(max_length=255)
+   location = me.MapField(field=me.StringField())
+   country = me.StringField()
+   region = me.StringField()
+   city = me.StringField()
+   town = me.StringField()
+   street = me.StringField()
+   key_version = me.IntField()
    
-   class Meta:
-        get_pk_field = 'id'
+   meta = {
+        'collection': 'checkout_info',  # This specifies the MongoDB collection name
+        'indexes': ['company_name', 'product_name', 'batch_number']  # Add MongoDB indexes
+    }
         
    def save(self, *args, **kwargs):
        current_key_obj = KeyManagement.get_current_key()
@@ -227,47 +230,49 @@ class CheckoutInfo(DjangoCassandraModel):
 #         super().save(*args, **kwargs)
 
 
-@receiver(post_save, sender=ScanInfo)
-@receiver(post_save, sender=CheckoutInfo)
-def invalidate_shared_cache(sender, instance, **kwargs):
-    cache_keys = [
-        f"location_metrics_comparison_{instance.company_name}",
-        f"performance_metrics_{instance.company_name}",
-        f"product_user_metrics_{instance.company_name}",
-        # f"line_chart_data_{instance.company_name}",
-        f"product_metrics_{instance.company_name}_{instance.product_name}",
-    ]
+# @receiver(post_save, sender=ScanInfo)
+# @receiver(post_save, sender=CheckoutInfo)
+# def invalidate_shared_cache(sender, instance, **kwargs):
+#     cache_keys = [
+#         f"location_metrics_comparison_{instance.company_name}",
+#         f"performance_metrics_{instance.company_name}",
+#         f"product_user_metrics_{instance.company_name}",
+#         # f"line_chart_data_{instance.company_name}",
+#         f"product_metrics_{instance.company_name}_{instance.product_name}",
+#     ]
     
-    # Invalidate all related cache keys
-    for key in cache_keys:
-        cache_key = sanitize_cache_key(key)
-        cache.delete(cache_key) 
+#     # Invalidate all related cache keys
+#     for key in cache_keys:
+#         cache_key = sanitize_cache_key(key)
+#         cache.delete(cache_key) 
 
 
-class LogProduct(DjangoCassandraModel):
-    id = columns.UUID(primary_key=True)
-    company_name = columns.Text(required=True, index=True, partition_key=True)
-    product_name = columns.Text(required=True, index=True, partition_key=True)
-    batch_number = columns.Text(required=True, index=True, partition_key=True)
-    code_key = columns.Text(required=True, index=True, primary_key=True, clustering_order="ASC")
-    perishable = columns.Boolean(default=False)
-    manufacture_date = columns.Date()
-    expiry_date = columns.Date()
-    message = columns.Text(max_length=255)
-    FDA_number = columns.Text(max_length=255)
-    standards_authority_number = columns.Text(max_length=255)
-    checkout_user_email = columns.Text(max_length=200)
-    checkout_user_phone = columns.VarInt()
-    checkout = columns.Boolean(default=False)
-    checkout_message = columns.Text(max_length=255)
-    patch = columns.Boolean(default=False)
-    patch_reason = columns.Text(max_length=100)
-    patch_message = columns.Text(max_length=255)
-    key_version = columns.Integer()
+class LogProduct(me.Document):
+    id = me.UUIDField(primary_key=True)
+    company_name = me.StringField(required=True)
+    product_name = me.StringField(required=True)
+    batch_number = me.StringField(required=True)
+    code_key = me.StringField(required=True,  primary_key=True, clustering_order="ASC")
+    perishable = me.BooleanField(default=False)
+    manufacture_date = me.DateField()
+    expiry_date = me.DateField()
+    message = me.StringField(max_length=255)
+    FDA_number = me.StringField(max_length=255)
+    standards_authority_number = me.StringField(max_length=255)
+    checkout_user_email = me.StringField(max_length=200)
+    checkout_user_phone = me.IntField()
+    checkout = me.BooleanField(default=False)
+    checkout_message = me.StringField(max_length=255)
+    patch = me.BooleanField(default=False)
+    patch_reason = me.StringField(max_length=100)
+    patch_message = me.StringField(max_length=255)
+    key_version = me.IntField()
     
     
-    class Meta:
-        get_pk_field = 'id'
+    meta = {
+        'collection': 'log_product',  # This specifies the MongoDB collection name
+        'indexes': ['company_name', 'product_name', 'batch_number', 'code_key']  # Add MongoDB indexes
+    }
         
     def save(self, *args, **kwargs):
        current_key_obj = KeyManagement.get_current_key()
@@ -416,7 +421,7 @@ class LogProduct(DjangoCassandraModel):
     #     verbose_name = 'Logproduct'
     #     verbose_name_plural = 'Logproducts'
     #     indexes = [
-    #         columns.Index(fields=['code_key', 'company_name', 'product_name', 'batch_number'])
+    #         me.Index(fields=['code_key', 'company_name', 'product_name', 'batch_number'])
     #     ]
 
     # def __str__(self):

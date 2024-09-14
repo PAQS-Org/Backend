@@ -5,6 +5,7 @@ import datetime
 import re
 from dotenv import load_dotenv
 import dj_database_url
+import mongoengine
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -40,7 +41,8 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'django_celery_beat',
     'django_celery_results',
-    'django_cassandra_engine',
+    'django_mongoengine',
+    'django_mongoengine.admin',
     # 'django_weasyprint',
     'django_ratelimit',
     'rest_auth',
@@ -125,17 +127,29 @@ WSGI_APPLICATION = 'PAQSBackend.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.parse(os.getenv('PGCONNECT')),
-    'mongoDB': {
-        'ENGINE': 'django.db.backends.mongodb',
-        'DATABASE_URL': os.environ.get('MONGO_URL'),
-        'NAME': os.environ.get('MONGO_INITDB_ROOT_USERNAME'),
-        'HOST': os.environ.get('MONGOHOST'),
-        'PORT': os.environ.get('MONGOPORT'),  # Default MongoDB port
-        'USER': os.environ.get('MONGOUSER'),
-        'PASSWORD': os.environ.get('MONGOPASSWORD'),
-    }
+    # 'mongoDB': {
+    #     'ENGINE': 'django.db.backends.mongodb',
+    #     'DATABASE_URL': os.environ.get('MONGO_URL'),
+    #     'NAME': os.environ.get('MONGO_INITDB_ROOT_USERNAME'),
+    #     'HOST': os.environ.get('MONGOHOST'),
+    #     'PORT': os.environ.get('MONGOPORT'),  # Default MongoDB port
+    #     'USER': os.environ.get('MONGOUSER'),
+    #     'PASSWORD': os.environ.get('MONGOPASSWORD'),
+    # }
 }
+MONGO_DB_NAME = os.environ.get('MONGO_INITDB_DATABASE')
+MONGO_HOST = os.environ.get('MONGOHOST')
+MONGO_PORT = int(os.environ.get('MONGOPORT'))
+MONGO_USER = os.environ.get('MONGOUSER')
+MONGO_PASSWORD = os.environ.get('MONGOPASSWORD')
 
+mongoengine.connect(
+    db=MONGO_DB_NAME,
+    host=MONGO_HOST,
+    port=MONGO_PORT,
+    username=MONGO_USER,
+    password=MONGO_PASSWORD
+)
 
 DATABASE_ROUTERS = ['PAQSBackend.db_router.DatabaseRouter']
 
