@@ -125,23 +125,9 @@ WSGI_APPLICATION = 'PAQSBackend.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.parse(os.getenv('PGCONNECT')),
-    'scylla':{
-        'HOST': os.environ.get('SCYLLA_HOST'),
-        'PORT': os.environ.get('SCYLLA_PORT'),
-        'USER': os.environ.get('SCYLLA_USER'),
-        'PASSWORD': os.environ.get('SCYLLA_PASSWORD'),
-        'OPTIONS': {
-            'connection': {
-                'consistency': 'LOCAL_QUORUM',
-                'retry_connect': True
-            },
-            'replication': {
-                'strategy_class': 'SimpleStrategy',  # Use NetworkTopologyStrategy for multi-DC
-                'replication_factor': 1,             # Adjust based on your cluster setup
-            }
-        }
-    } 
+    'mongoDB': dj_database_url.parse(os.getenv('MONGO_CONNECT')),
 }
+
 
 DATABASE_ROUTERS = ['PAQSBackend.db_router.DatabaseRouter']
 
