@@ -10,10 +10,10 @@ from PAQSBackend.encry import EncryptionUtil
 class ScanInfo(DjangoCassandraModel):
    id = columns.UUID(primary_key=True)
    date_time = columns.DateTime().truncate_microseconds=True
-   code_key = columns.Text(required=True, clustering_order="ASC")
    company_name = columns.Text(required=True, index=True, partition_key=True)
    product_name = columns.Text(required=True, index=True, partition_key=True)
    batch_number = columns.Text(required=True, index=True, partition_key=True)
+   code_key = columns.Text(required=True, primary_key=True, clustering_order="ASC")
    user_name = columns.Text(max_length=255)
    location = columns.Map(columns.Text, columns.Text)
    country = columns.Text()
