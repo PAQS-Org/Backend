@@ -132,7 +132,7 @@ DATABASES = {
         'PASSWORD': os.environ.get('SCYLLA_PASSWORD'),
         'OPTIONS': {
             'connection': {
-                'consistency': 'LOCAL_ONE',
+                'consistency': 'LOCAL_QUORUM',
                 'retry_connect': True
             },
             'replication': {
@@ -143,8 +143,10 @@ DATABASES = {
     } 
 }
 
-DATABASE_ROUTERS = ['db_router.DatabaseRouter']
+DATABASE_ROUTERS = ['PAQSBackend.db_router.DatabaseRouter']
 
+
+CASSANDRA_FALLBACK_ORDER_BY_PYTHON = True
 
 
 # Password validation
