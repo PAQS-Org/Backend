@@ -143,7 +143,7 @@ DATABASES = {
     } 
 }
 
-DATABASE_ROUTERS = ['.db_router.DatabaseRouter']
+DATABASE_ROUTERS = ['db_router.DatabaseRouter']
 
 
 
