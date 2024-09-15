@@ -126,7 +126,7 @@ WSGI_APPLICATION = 'PAQSBackend.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.parse(os.getenv('PGCONNECT')),
-    'postgresql': dj_database_url.parse(os.getenv('PGCONNECT2')),
+    'heavy': dj_database_url.parse(os.getenv('PGCONNECT2')),
 }
 
 DATABASE_ROUTERS = ['PAQSBackend.db_router.PartitionRouter']
