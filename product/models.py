@@ -1,4 +1,4 @@
-import mongoengine as me
+from django.db import models
 import re
 from django.core.cache import cache
 from django.db.models.signals import post_save
@@ -6,26 +6,24 @@ from django.dispatch import receiver
 from entry.models import KeyManagement
 from PAQSBackend.encry import EncryptionUtil
 # Concentrate on the generating of the codes. When you are done, then you come to this. do not over think.
-class ScanInfo(me.Document):
-   id = me.UUIDField(primary_key=True)
-   date_time = me.DateTimeField()
-   company_name = me.StringField(required=True, max_length=255)
-   product_name = me.StringField(required=True, max_length=255)
-   batch_number = me.StringField(required=True, max_length=255)
-   code_key = me.StringField(required=True, max_length=255)
-   user_name = me.StringField(max_length=255)
-   location = me.MapField(field=me.StringField())
-   country = me.StringField()
-   region = me.StringField()
-   city = me.StringField()
-   town = me.StringField()
-   street = me.StringField()
-   key_version = me.IntField()
+class ScanInfo(models.Model):
+   date_time = models.DateTimeField(auto_now_add=True)
+   code_key = models.CharField(max_length=255, blank=False, null=False)
+   company_name = models.CharField(max_length=255, blank=False, null=False)
+   product_name = models.CharField(max_length=255, blank=False, null=False)
+   batch_number = models.CharField(max_length=255, blank=False, null=False)
+   user_name = models.CharField(max_length=255)
+   location = models.JSONField()
+   country = models.CharField(max_length=255, blank=True, null=True)
+   region = models.CharField(max_length=255, blank=True, null=True)
+   city = models.CharField(max_length=255, blank=True, null=True)
+   town = models.CharField(max_length=255, blank=True, null=True)
+   street = models.CharField(max_length=255, blank=True, null=True)
    
-   meta = {
-        'collection': 'scan_info',  # This specifies the MongoDB collection name
-        'indexes': ['company_name', 'product_name', 'batch_number']  # Add MongoDB indexes
-    }
+   class Meta:
+        indexes = [
+            models.Index(fields=['date_time','company_name', 'product_name', 'batch_number', 'code_key' ])
+        ]
         
    def save(self, *args, **kwargs):
        current_key_obj = KeyManagement.get_current_key()
@@ -109,28 +107,39 @@ class ScanInfo(me.Document):
    def street_encrypted(self):
         key = KeyManagement.get_key_by_version(self.key_version).aes_key
         return EncryptionUtil.decrypt(self.street, key)
-
-class CheckoutInfo(me.Document):
-   id = me.UUIDField(primary_key=True)
-   date_time = me.DateTimeField()
-   company_name = me.StringField(required=True, max_length=255)
-   product_name = me.StringField(required=True, max_length=255)
-   batch_number = me.StringField(required=True, max_length=255)
-   code_key = me.StringField(required=True, max_length=255)
-   user_name = me.StringField(max_length=255)
-   location = me.MapField(field=me.StringField())
-   country = me.StringField()
-   region = me.StringField()
-   city = me.StringField()
-   town = me.StringField()
-   street = me.StringField()
-   key_version = me.IntField()
-   
-   meta = {
-        'collection': 'checkout_info',  # This specifies the MongoDB collection name
-        'indexes': ['company_name', 'product_name', 'batch_number']  # Add MongoDB indexes
-    }
         
+#    def save(self, *args, **kwargs):
+#         # List of cache keys you want to invalidate
+#         cache_keys = [
+#             f"scan_metrics_{self.company_name}",
+#             f"user_scan_info_{self.user_name}",
+#         ]
+        
+#         # Invalidate all related cache keys
+#         for key in cache_keys:
+#             cache_key = sanitize_cache_key(key)
+#             cache.delete(cache_key)
+
+#         super().save(*args, **kwargs)
+
+class CheckoutInfo(models.Model):
+   date_time = models.DateTimeField(auto_now_add=True)
+   code_key = models.CharField(max_length=255, blank=False, null=False)
+   company_name = models.CharField(max_length=255, blank=False, null=False)
+   product_name = models.CharField(max_length=255, blank=False, null=False)
+   batch_number = models.CharField(max_length=255, blank=False, null=False)
+   user_name = models.CharField(max_length=255)
+   location = models.JSONField()
+   country = models.CharField(max_length=255, blank=True, null=True)
+   region = models.CharField(max_length=255, blank=True, null=True)
+   city = models.CharField(max_length=255, blank=True, null=True)
+   town = models.CharField(max_length=255, blank=True, null=True)
+   street = models.CharField(max_length=255, blank=True, null=True)
+   
+   class Meta:
+        indexes = [
+            models.Index(fields=['date_time','company_name', 'product_name', 'batch_number', 'code_key' ])
+        ]
    def save(self, *args, **kwargs):
        current_key_obj = KeyManagement.get_current_key()
        current_key = current_key_obj.aes_key
@@ -213,8 +222,7 @@ class CheckoutInfo(me.Document):
    def street_encrypted(self):
         key = KeyManagement.get_key_by_version(self.key_version).aes_key
         return EncryptionUtil.decrypt(self.street, key)
-    
-    
+   
 #    def save(self, *args, **kwargs):
 #         # List of cache keys you want to invalidate
 #         cache_keys = [
@@ -230,50 +238,57 @@ class CheckoutInfo(me.Document):
 #         super().save(*args, **kwargs)
 
 
-# @receiver(post_save, sender=ScanInfo)
-# @receiver(post_save, sender=CheckoutInfo)
-# def invalidate_shared_cache(sender, instance, **kwargs):
-#     cache_keys = [
-#         f"location_metrics_comparison_{instance.company_name}",
-#         f"performance_metrics_{instance.company_name}",
-#         f"product_user_metrics_{instance.company_name}",
-#         # f"line_chart_data_{instance.company_name}",
-#         f"product_metrics_{instance.company_name}_{instance.product_name}",
-#     ]
+@receiver(post_save, sender=ScanInfo)
+@receiver(post_save, sender=CheckoutInfo)
+def invalidate_shared_cache(sender, instance, **kwargs):
+    cache_keys = [
+        f"location_metrics_comparison_{instance.company_name}",
+        f"performance_metrics_{instance.company_name}",
+        f"product_user_metrics_{instance.company_name}",
+        # f"line_chart_data_{instance.company_name}",
+        f"product_metrics_{instance.company_name}_{instance.product_name}",
+    ]
     
-#     # Invalidate all related cache keys
-#     for key in cache_keys:
-#         cache_key = sanitize_cache_key(key)
-#         cache.delete(cache_key) 
+    # Invalidate all related cache keys
+    for key in cache_keys:
+        cache_key = sanitize_cache_key(key)
+        cache.delete(cache_key) 
 
 
-class LogProduct(me.Document):
-    id = me.UUIDField(primary_key=True)
-    company_name = me.StringField(required=True)
-    product_name = me.StringField(required=True)
-    batch_number = me.StringField(required=True)
-    code_key = me.StringField(required=True)
-    perishable = me.BooleanField(default=False)
-    manufacture_date = me.DateField()
-    expiry_date = me.DateField()
-    message = me.StringField(max_length=255)
-    FDA_number = me.StringField(max_length=255)
-    standards_authority_number = me.StringField(max_length=255)
-    checkout_user_email = me.StringField(max_length=200)
-    checkout_user_phone = me.IntField()
-    checkout = me.BooleanField(default=False)
-    checkout_message = me.StringField(max_length=255)
-    patch = me.BooleanField(default=False)
-    patch_reason = me.StringField(max_length=100)
-    patch_message = me.StringField(max_length=255)
-    key_version = me.IntField()
+class LogProduct(models.Model):
+    company_name = models.CharField(max_length=100)
+    product_name = models.CharField(max_length=100)
+    batch_number = models.CharField(max_length=50)
+    code_key = models.CharField(max_length=300)
+    perishable = models.CharField(max_length=100)
+    manufacture_date = models.DateField(blank=True, null=True)
+    expiry_date = models.DateField(blank=True, null=True)
+    message = models.CharField(max_length=255)
+    FDA_number  = models.CharField(max_length=255, blank=True, null=True)
+    standards_authority_number = models.CharField(max_length=255, blank=True, null=True)
+    checkout_user_email = models.EmailField(max_length=200, blank=True, null=True)
+    checkout_user_phone = models.PositiveBigIntegerField(blank=True, null=True)
+    checkout = models.BooleanField(default=False)
+    checkout_message = models.CharField(max_length=255)
+    patch = models.BooleanField(default=False)
+    patch_reason = models.CharField(max_length=100, blank=True, null=True)
+    patch_message = models.CharField(max_length=255)
+
+    class Meta:
+        db_table = 'LogProduct'
+        managed = True
+        verbose_name = 'Logproduct'
+        verbose_name_plural = 'Logproducts'
+        indexes = [
+            models.Index(fields=['code_key', 'company_name', 'product_name', 'batch_number'])
+        ]
+
+    def __str__(self):
+        return f"{self.company_name}-{self.product_name}-{self.batch_number}"
+
+    def __unicode__(self):
+        return self.code_key
     
-    
-    meta = {
-        'collection': 'log_product',  # This specifies the MongoDB collection name
-        'indexes': ['company_name', 'product_name', 'batch_number', 'code_key']  # Add MongoDB indexes
-    }
-        
     def save(self, *args, **kwargs):
        current_key_obj = KeyManagement.get_current_key()
        current_key = current_key_obj.aes_key
@@ -405,30 +420,6 @@ class LogProduct(me.Document):
     def patch_message_encrypted(self):
         key = KeyManagement.get_key_by_version(self.key_version).aes_key
         return EncryptionUtil.decrypt(self.patch_message, key)
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
-    # class Meta:
-    #     db_table = 'LogProduct'
-    #     managed = True
-    #     verbose_name = 'Logproduct'
-    #     verbose_name_plural = 'Logproducts'
-    #     indexes = [
-    #         me.Index(fields=['code_key', 'company_name', 'product_name', 'batch_number'])
-    #     ]
-
-    # def __str__(self):
-    #     return f"{self.company_name}-{self.product_name}-{self.batch_number}"
-
-    # def __unicode__(self):
-    #     return self.code_key
     
     # def save(self, *args, **kwargs):
     #     # Invalidate or update the cache if patch or checkout changes
