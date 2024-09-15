@@ -25,102 +25,101 @@ class ScanInfo(models.Model):
             models.Index(fields=['date_time','company_name', 'product_name', 'batch_number', 'code_key' ])
         ]
         
-#    def save(self, *args, **kwargs):
-#        current_key_obj = KeyManagement.get_current_key()
-#        current_key = current_key_obj.aes_key
-#        current_version = current_key_obj.version
-       
-#        if not self.key_version:
-#            self.code_key = EncryptionUtil.encrypt(self.code_key, current_key)
-#            self.company_name = EncryptionUtil.encrypt(self.company_name_encrypted, current_key)
-#            self.product_name = EncryptionUtil.encrypt(self.product_name_encrypted, current_key)
-#            self.batch_number = EncryptionUtil.encrypt(self.batch_number_encrypted, current_key)
-#            self.user_name = EncryptionUtil.encrypt(self.user_name_encrypted, current_key)
-#            self.location = EncryptionUtil.encrypt(self.location_encrypted, current_key)
-#            self.country = EncryptionUtil.encrypt(self.country_encrypted, current_key)
-#            self.region = EncryptionUtil.encrypt(self.region_encrypted, current_key)
-#            self.city = EncryptionUtil.encrypt(self.city_encrypted, current_key)
-#            self.town = EncryptionUtil.encrypt(self.town_encrypted, current_key)
-#            self.street = EncryptionUtil.encrypt(self.street_encrypted, current_key)
-#            self.key_version = current_version
-        
-#        else:
-#            if self.key_version < current_key:
-#                old_key = KeyManagement.get_key_by_version(self.key_version).aes_key
-#                self.code_key = EncryptionUtil.rotate_key(self.code_key, old_key, current_key)
-#                self.company_name = EncryptionUtil.rotate_key(self.company_name, old_key, current_key)
-#                self.product_name = EncryptionUtil.rotate_key(self.product_name, old_key, current_key)
-#                self.batch_number = EncryptionUtil.rotate_key(self.batch_number, old_key, current_key)
-#                self.user_name = EncryptionUtil.rotate_key(self.user_name, old_key, current_key)
-#                self.location = EncryptionUtil.rotate_key(self.location, old_key, current_key)
-#                self.country = EncryptionUtil.rotate_key(self.country, old_key, current_key)
-#                self.region = EncryptionUtil.rotate_key(self.region, old_key, current_key)
-#                self.city = EncryptionUtil.rotate_key(self.city, old_key, current_key)
-#                self.town = EncryptionUtil.rotate_key(self.town, old_key, current_key)
-#                self.street = EncryptionUtil.rotate_key(self.street, old_key, current_key)
-#                self.key_version = current_version
-#        super().save(*args, **kwargs)
-  
-#    @property
-#    def code_key_encrypted(self):
-#         key = KeyManagement.get_key_by_version(self.key_version).aes_key
-#         return EncryptionUtil.decrypt(self.code_key, key)
-
-#    @property
-#    def company_name_encrypted(self):
-#         key = KeyManagement.get_key_by_version(self.key_version).aes_key
-#         return EncryptionUtil.decrypt(self.company_name, key)
-
-#    @property
-#    def product_name_encrypted(self):
-#         key = KeyManagement.get_key_by_version(self.key_version).aes_key
-#         return EncryptionUtil.decrypt(self.product_name, key)
-#    @property
-#    def batch_number_encrypted(self):
-#         key = KeyManagement.get_key_by_version(self.key_version).aes_key
-#         return EncryptionUtil.decrypt(self.batch_number, key)
-#    @property
-#    def user_name_encrypted(self):
-#         key = KeyManagement.get_key_by_version(self.key_version).aes_key
-#         return EncryptionUtil.decrypt(self.user_name, key)
-#    @property
-#    def location_encrypted(self):
-#         key = KeyManagement.get_key_by_version(self.key_version).aes_key
-#         return EncryptionUtil.decrypt(self.location, key)
-#    @property
-#    def country_encrypted(self):
-#         key = KeyManagement.get_key_by_version(self.key_version).aes_key
-#         return EncryptionUtil.decrypt(self.country, key)
-#    @property
-#    def region_encrypted(self):
-#         key = KeyManagement.get_key_by_version(self.key_version).aes_key
-#         return EncryptionUtil.decrypt(self.region, key)
-#    @property
-#    def city_encrypted(self):
-#         key = KeyManagement.get_key_by_version(self.key_version).aes_key
-#         return EncryptionUtil.decrypt(self.city, key)
-#    @property
-#    def town_encrypted(self):
-#         key = KeyManagement.get_key_by_version(self.key_version).aes_key
-#         return EncryptionUtil.decrypt(self.town, key)
-#    @property
-#    def street_encrypted(self):
-#         key = KeyManagement.get_key_by_version(self.key_version).aes_key
-#         return EncryptionUtil.decrypt(self.street, key)
-        
    def save(self, *args, **kwargs):
-        # List of cache keys you want to invalidate
-        cache_keys = [
+       current_key_obj = KeyManagement.get_current_key()
+       current_key = current_key_obj.aes_key
+       current_version = current_key_obj.version
+       
+       if not self.key_version:
+           self.code_key = EncryptionUtil.encrypt(self.code_key, current_key)
+           self.company_name = EncryptionUtil.encrypt(self.company_name_encrypted, current_key)
+           self.product_name = EncryptionUtil.encrypt(self.product_name_encrypted, current_key)
+           self.batch_number = EncryptionUtil.encrypt(self.batch_number_encrypted, current_key)
+           self.user_name = EncryptionUtil.encrypt(self.user_name_encrypted, current_key)
+           self.location = EncryptionUtil.encrypt(self.location_encrypted, current_key)
+           self.country = EncryptionUtil.encrypt(self.country_encrypted, current_key)
+           self.region = EncryptionUtil.encrypt(self.region_encrypted, current_key)
+           self.city = EncryptionUtil.encrypt(self.city_encrypted, current_key)
+           self.town = EncryptionUtil.encrypt(self.town_encrypted, current_key)
+           self.street = EncryptionUtil.encrypt(self.street_encrypted, current_key)
+           self.key_version = current_version
+        
+       else:
+           if self.key_version < current_key:
+               old_key = KeyManagement.get_key_by_version(self.key_version).aes_key
+               self.code_key = EncryptionUtil.rotate_key(self.code_key, old_key, current_key)
+               self.company_name = EncryptionUtil.rotate_key(self.company_name, old_key, current_key)
+               self.product_name = EncryptionUtil.rotate_key(self.product_name, old_key, current_key)
+               self.batch_number = EncryptionUtil.rotate_key(self.batch_number, old_key, current_key)
+               self.user_name = EncryptionUtil.rotate_key(self.user_name, old_key, current_key)
+               self.location = EncryptionUtil.rotate_key(self.location, old_key, current_key)
+               self.country = EncryptionUtil.rotate_key(self.country, old_key, current_key)
+               self.region = EncryptionUtil.rotate_key(self.region, old_key, current_key)
+               self.city = EncryptionUtil.rotate_key(self.city, old_key, current_key)
+               self.town = EncryptionUtil.rotate_key(self.town, old_key, current_key)
+               self.street = EncryptionUtil.rotate_key(self.street, old_key, current_key)
+               self.key_version = current_version
+       
+       
+       cache_keys = [
             f"scan_metrics_{self.company_name}",
             f"user_scan_info_{self.user_name}",
         ]
         
         # Invalidate all related cache keys
-        for key in cache_keys:
+       for key in cache_keys:
             cache_key = sanitize_cache_key(key)
             cache.delete(cache_key)
+       super().save(*args, **kwargs)
+  
+   @property
+   def code_key_encrypted(self):
+        key = KeyManagement.get_key_by_version(self.key_version).aes_key
+        return EncryptionUtil.decrypt(self.code_key, key)
 
-        super().save(*args, **kwargs)
+   @property
+   def company_name_encrypted(self):
+        key = KeyManagement.get_key_by_version(self.key_version).aes_key
+        return EncryptionUtil.decrypt(self.company_name, key)
+
+   @property
+   def product_name_encrypted(self):
+        key = KeyManagement.get_key_by_version(self.key_version).aes_key
+        return EncryptionUtil.decrypt(self.product_name, key)
+   @property
+   def batch_number_encrypted(self):
+        key = KeyManagement.get_key_by_version(self.key_version).aes_key
+        return EncryptionUtil.decrypt(self.batch_number, key)
+   @property
+   def user_name_encrypted(self):
+        key = KeyManagement.get_key_by_version(self.key_version).aes_key
+        return EncryptionUtil.decrypt(self.user_name, key)
+   @property
+   def location_encrypted(self):
+        key = KeyManagement.get_key_by_version(self.key_version).aes_key
+        return EncryptionUtil.decrypt(self.location, key)
+   @property
+   def country_encrypted(self):
+        key = KeyManagement.get_key_by_version(self.key_version).aes_key
+        return EncryptionUtil.decrypt(self.country, key)
+   @property
+   def region_encrypted(self):
+        key = KeyManagement.get_key_by_version(self.key_version).aes_key
+        return EncryptionUtil.decrypt(self.region, key)
+   @property
+   def city_encrypted(self):
+        key = KeyManagement.get_key_by_version(self.key_version).aes_key
+        return EncryptionUtil.decrypt(self.city, key)
+   @property
+   def town_encrypted(self):
+        key = KeyManagement.get_key_by_version(self.key_version).aes_key
+        return EncryptionUtil.decrypt(self.town, key)
+   @property
+   def street_encrypted(self):
+        key = KeyManagement.get_key_by_version(self.key_version).aes_key
+        return EncryptionUtil.decrypt(self.street, key)
+        
+
 
 class CheckoutInfo(models.Model):
    date_time = models.DateTimeField(auto_now_add=True)
@@ -140,103 +139,100 @@ class CheckoutInfo(models.Model):
         indexes = [
             models.Index(fields=['date_time','company_name', 'product_name', 'batch_number', 'code_key' ])
         ]
-#    def save(self, *args, **kwargs):
-#        current_key_obj = KeyManagement.get_current_key()
-#        current_key = current_key_obj.aes_key
-#        current_version = current_key_obj.version
-       
-#        if not self.key_version:
-#            self.code_key = EncryptionUtil.encrypt(self.code_key, current_key)
-#            self.company_name = EncryptionUtil.encrypt(self.company_name_encrypted, current_key)
-#            self.product_name = EncryptionUtil.encrypt(self.product_name_encrypted, current_key)
-#            self.batch_number = EncryptionUtil.encrypt(self.batch_number_encrypted, current_key)
-#            self.user_name = EncryptionUtil.encrypt(self.user_name_encrypted, current_key)
-#            self.location = EncryptionUtil.encrypt(self.location_encrypted, current_key)
-#            self.country = EncryptionUtil.encrypt(self.country_encrypted, current_key)
-#            self.region = EncryptionUtil.encrypt(self.region_encrypted, current_key)
-#            self.city = EncryptionUtil.encrypt(self.city_encrypted, current_key)
-#            self.town = EncryptionUtil.encrypt(self.town_encrypted, current_key)
-#            self.street = EncryptionUtil.encrypt(self.street_encrypted, current_key)
-#            self.key_version = current_version
-        
-#        else:
-#            if self.key_version < current_key:
-#                old_key = KeyManagement.get_key_by_version(self.key_version).aes_key
-#                self.code_key = EncryptionUtil.rotate_key(self.code_key, old_key, current_key)
-#                self.company_name = EncryptionUtil.rotate_key(self.company_name, old_key, current_key)
-#                self.product_name = EncryptionUtil.rotate_key(self.product_name, old_key, current_key)
-#                self.batch_number = EncryptionUtil.rotate_key(self.batch_number, old_key, current_key)
-#                self.user_name = EncryptionUtil.rotate_key(self.user_name, old_key, current_key)
-#                self.location = EncryptionUtil.rotate_key(self.location, old_key, current_key)
-#                self.country = EncryptionUtil.rotate_key(self.country, old_key, current_key)
-#                self.region = EncryptionUtil.rotate_key(self.region, old_key, current_key)
-#                self.city = EncryptionUtil.rotate_key(self.city, old_key, current_key)
-#                self.town = EncryptionUtil.rotate_key(self.town, old_key, current_key)
-#                self.street = EncryptionUtil.rotate_key(self.street, old_key, current_key)
-#                self.key_version = current_version
-#        super().save(*args, **kwargs)
-  
-#    @property
-#    def code_key_encrypted(self):
-#         key = KeyManagement.get_key_by_version(self.key_version).aes_key
-#         return EncryptionUtil.decrypt(self.code_key, key)
-
-#    @property
-#    def company_name_encrypted(self):
-#         key = KeyManagement.get_key_by_version(self.key_version).aes_key
-#         return EncryptionUtil.decrypt(self.company_name, key)
-
-#    @property
-#    def product_name_encrypted(self):
-#         key = KeyManagement.get_key_by_version(self.key_version).aes_key
-#         return EncryptionUtil.decrypt(self.product_name, key)
-#    @property
-#    def batch_number_encrypted(self):
-#         key = KeyManagement.get_key_by_version(self.key_version).aes_key
-#         return EncryptionUtil.decrypt(self.batch_number, key)
-#    @property
-#    def user_name_encrypted(self):
-#         key = KeyManagement.get_key_by_version(self.key_version).aes_key
-#         return EncryptionUtil.decrypt(self.user_name, key)
-#    @property
-#    def location_encrypted(self):
-#         key = KeyManagement.get_key_by_version(self.key_version).aes_key
-#         return EncryptionUtil.decrypt(self.location, key)
-#    @property
-#    def country_encrypted(self):
-#         key = KeyManagement.get_key_by_version(self.key_version).aes_key
-#         return EncryptionUtil.decrypt(self.country, key)
-#    @property
-#    def region_encrypted(self):
-#         key = KeyManagement.get_key_by_version(self.key_version).aes_key
-#         return EncryptionUtil.decrypt(self.region, key)
-#    @property
-#    def city_encrypted(self):
-#         key = KeyManagement.get_key_by_version(self.key_version).aes_key
-#         return EncryptionUtil.decrypt(self.city, key)
-#    @property
-#    def town_encrypted(self):
-#         key = KeyManagement.get_key_by_version(self.key_version).aes_key
-#         return EncryptionUtil.decrypt(self.town, key)
-#    @property
-#    def street_encrypted(self):
-#         key = KeyManagement.get_key_by_version(self.key_version).aes_key
-#         return EncryptionUtil.decrypt(self.street, key)
-   
    def save(self, *args, **kwargs):
-        # List of cache keys you want to invalidate
-        cache_keys = [
+       current_key_obj = KeyManagement.get_current_key()
+       current_key = current_key_obj.aes_key
+       current_version = current_key_obj.version
+       
+       if not self.key_version:
+           self.code_key = EncryptionUtil.encrypt(self.code_key, current_key)
+           self.company_name = EncryptionUtil.encrypt(self.company_name_encrypted, current_key)
+           self.product_name = EncryptionUtil.encrypt(self.product_name_encrypted, current_key)
+           self.batch_number = EncryptionUtil.encrypt(self.batch_number_encrypted, current_key)
+           self.user_name = EncryptionUtil.encrypt(self.user_name_encrypted, current_key)
+           self.location = EncryptionUtil.encrypt(self.location_encrypted, current_key)
+           self.country = EncryptionUtil.encrypt(self.country_encrypted, current_key)
+           self.region = EncryptionUtil.encrypt(self.region_encrypted, current_key)
+           self.city = EncryptionUtil.encrypt(self.city_encrypted, current_key)
+           self.town = EncryptionUtil.encrypt(self.town_encrypted, current_key)
+           self.street = EncryptionUtil.encrypt(self.street_encrypted, current_key)
+           self.key_version = current_version
+        
+       else:
+           if self.key_version < current_key:
+               old_key = KeyManagement.get_key_by_version(self.key_version).aes_key
+               self.code_key = EncryptionUtil.rotate_key(self.code_key, old_key, current_key)
+               self.company_name = EncryptionUtil.rotate_key(self.company_name, old_key, current_key)
+               self.product_name = EncryptionUtil.rotate_key(self.product_name, old_key, current_key)
+               self.batch_number = EncryptionUtil.rotate_key(self.batch_number, old_key, current_key)
+               self.user_name = EncryptionUtil.rotate_key(self.user_name, old_key, current_key)
+               self.location = EncryptionUtil.rotate_key(self.location, old_key, current_key)
+               self.country = EncryptionUtil.rotate_key(self.country, old_key, current_key)
+               self.region = EncryptionUtil.rotate_key(self.region, old_key, current_key)
+               self.city = EncryptionUtil.rotate_key(self.city, old_key, current_key)
+               self.town = EncryptionUtil.rotate_key(self.town, old_key, current_key)
+               self.street = EncryptionUtil.rotate_key(self.street, old_key, current_key)
+               self.key_version = current_version
+       
+       cache_keys = [
             f"user_checkout_info_{self.user_name}",
             f"checkout_metrics_{self.company_name}"
         ]
         
         # Invalidate all related cache keys
-        for key in cache_keys:
-            cache_key = sanitize_cache_key(key)
-            cache.delete(cache_key)
+       for key in cache_keys:
+           cache_key = sanitize_cache_key(key)
+           cache.delete(cache_key)
 
-        super().save(*args, **kwargs)
+       super().save(*args, **kwargs)
+  
+   @property
+   def code_key_encrypted(self):
+        key = KeyManagement.get_key_by_version(self.key_version).aes_key
+        return EncryptionUtil.decrypt(self.code_key, key)
 
+   @property
+   def company_name_encrypted(self):
+        key = KeyManagement.get_key_by_version(self.key_version).aes_key
+        return EncryptionUtil.decrypt(self.company_name, key)
+
+   @property
+   def product_name_encrypted(self):
+        key = KeyManagement.get_key_by_version(self.key_version).aes_key
+        return EncryptionUtil.decrypt(self.product_name, key)
+   @property
+   def batch_number_encrypted(self):
+        key = KeyManagement.get_key_by_version(self.key_version).aes_key
+        return EncryptionUtil.decrypt(self.batch_number, key)
+   @property
+   def user_name_encrypted(self):
+        key = KeyManagement.get_key_by_version(self.key_version).aes_key
+        return EncryptionUtil.decrypt(self.user_name, key)
+   @property
+   def location_encrypted(self):
+        key = KeyManagement.get_key_by_version(self.key_version).aes_key
+        return EncryptionUtil.decrypt(self.location, key)
+   @property
+   def country_encrypted(self):
+        key = KeyManagement.get_key_by_version(self.key_version).aes_key
+        return EncryptionUtil.decrypt(self.country, key)
+   @property
+   def region_encrypted(self):
+        key = KeyManagement.get_key_by_version(self.key_version).aes_key
+        return EncryptionUtil.decrypt(self.region, key)
+   @property
+   def city_encrypted(self):
+        key = KeyManagement.get_key_by_version(self.key_version).aes_key
+        return EncryptionUtil.decrypt(self.city, key)
+   @property
+   def town_encrypted(self):
+        key = KeyManagement.get_key_by_version(self.key_version).aes_key
+        return EncryptionUtil.decrypt(self.town, key)
+   @property
+   def street_encrypted(self):
+        key = KeyManagement.get_key_by_version(self.key_version).aes_key
+        return EncryptionUtil.decrypt(self.street, key)
+   
 
 @receiver(post_save, sender=ScanInfo)
 @receiver(post_save, sender=CheckoutInfo)
@@ -335,6 +331,12 @@ class LogProduct(models.Model):
                self.patch_reason = EncryptionUtil.rotate_key(self.patch_reason, old_key, current_key)
                self.patch_message = EncryptionUtil.rotate_key(self.patch_message, old_key, current_key)
                self.key_version = current_version
+       if self.pk:
+            previous = LogProduct.objects.get(pk=self.pk)
+            if previous.patch != self.patch or previous.checkout != self.checkout:
+                cache_key = sanitize_cache_key(f"log_product_{self.company_name}_{self.product_name}_{self.batch_number}_{self.code_key}")
+                cache.delete(cache_key)
+                
        super().save(*args, **kwargs)
   
     @property
