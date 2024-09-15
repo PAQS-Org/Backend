@@ -151,7 +151,6 @@ mongoengine.connect(
     password=MONGO_PASSWORD
 )
 
-DATABASE_ROUTERS = ['PAQSBackend.db_router.DatabaseRouter']
 
 
 CASSANDRA_FALLBACK_ORDER_BY_PYTHON = True
