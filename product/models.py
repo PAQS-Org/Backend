@@ -256,8 +256,8 @@ def invalidate_shared_cache(sender, instance, **kwargs):
 
 
 class LogProduct(models.Model):
-    company_name = models.CharField(max_length=100)
-    product_name = models.CharField(max_length=100)
+    company_name = models.CharField(max_length=150)
+    product_name = models.CharField(max_length=150)
     batch_number = models.CharField(max_length=50)
     code_key = models.CharField(max_length=300)
     perishable = models.CharField(max_length=100)

@@ -3,7 +3,7 @@ class PartitionRouter:
         """
         Direct read operations for specific models to the 'postgresql' database.
         """
-        if model._meta.model_name in ['ScanInfo', 'CheckoutInfo', 'LogProduct']:
+        if model._meta.model_name in ['scaninfo', 'checkoutinfo', 'logproduct']:
             return 'postgresql'
         return 'default'
 
@@ -11,7 +11,7 @@ class PartitionRouter:
         """
         Direct write operations for specific models to the 'postgresql' database.
         """
-        if model._meta.model_name in ['ScanInfo', 'CheckoutInfo', 'LogProduct']:
+        if model._meta.model_name in ['scaninfo', 'checkoutinfo', 'logproduct']:
             return 'postgresql'
         return 'default'
 
@@ -28,6 +28,6 @@ class PartitionRouter:
         """
         Ensure the models end up in the correct database.
         """
-        if model_name in ['ScanInfo', 'CheckoutInfo', 'LogProduct']:
+        if model_name in ['scaninfo', 'checkoutinfo', 'logproduct']:
             return db == 'postgresql'
         return db == 'default'
