@@ -252,7 +252,7 @@ class LogProduct(me.Document):
     company_name = me.StringField(required=True)
     product_name = me.StringField(required=True)
     batch_number = me.StringField(required=True)
-    code_key = me.StringField(required=True,  primary_key=True, clustering_order="ASC")
+    code_key = me.StringField(required=True)
     perishable = me.BooleanField(default=False)
     manufacture_date = me.DateField()
     expiry_date = me.DateField()
