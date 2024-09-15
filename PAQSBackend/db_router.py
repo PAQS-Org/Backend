@@ -30,5 +30,6 @@ class PartitionRouter:
         """
         print('mode', model_name)
         if model_name in ['scaninfo', 'checkoutinfo', 'logproduct']:
+            print('mode_name', model_name)
             return db == 'heavy'
         return db == 'default'
