@@ -60,10 +60,10 @@ class EncryptionUtil:
     def encrypt_with_public_key(data, public_key):
         return public_key.encrypt(
             data,
-            padding.OAEP(
-                mgf=padding.MGF1(algorithm=hashes.SHA256()),
-                algorithm=hashes.SHA256(),
-                label=None
+            padding.PKCS1v15(
+                # mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                # algorithm=hashes.SHA256(),
+                # label=None
             )
         )
         
@@ -71,9 +71,9 @@ class EncryptionUtil:
     def decrypt_with_private_key(encrypted_data, private_key):
         return private_key.decrypt(
             encrypted_data,
-            padding.OAEP(
-                mgf=padding.MGF1(algorithm=hashes.SHA256()),
-                algorithm=hashes.SHA256(),
-                label=None
+            padding.PKCS1v15(
+                # mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                # algorithm=hashes.SHA256(),
+                # label=None
             )
         )
