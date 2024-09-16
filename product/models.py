@@ -331,6 +331,7 @@ class LogProduct(models.Model):
                self.patch_reason = EncryptionUtil.rotate_key(self.patch_reason, old_key, current_key)
                self.patch_message = EncryptionUtil.rotate_key(self.patch_message, old_key, current_key)
                self.key_version = current_version
+               
        if self.pk:
             previous = LogProduct.objects.get(pk=self.pk)
             if previous.patch != self.patch or previous.checkout != self.checkout:
@@ -423,17 +424,6 @@ class LogProduct(models.Model):
         key = KeyManagement.get_key_by_version(self.key_version).aes_key
         return EncryptionUtil.decrypt(self.patch_message, key)
     
-    # def save(self, *args, **kwargs):
-    #     # Invalidate or update the cache if patch or checkout changes
-    #     if self.pk:
-    #         # Fetch the previous state of the object
-    #         previous = LogProduct.objects.get(pk=self.pk)
-    #         if previous.patch != self.patch or previous.checkout != self.checkout:
-    #             cache_key = sanitize_cache_key(f"log_product_{self.company_name}_{self.product_name}_{self.batch_number}_{self.code_key}")
-    #             cache.delete(cache_key)
-        
-    #     super().save(*args, **kwargs)
-
 
 def sanitize_cache_key(key):
     return re.sub(r'[^A-Za-z0-9_]', '_', key)
