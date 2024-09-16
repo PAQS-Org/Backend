@@ -291,6 +291,7 @@ class LogProduct(models.Model):
        current_version = current_key_obj.version
        
        if not self.key_version:
+           print('key ver', self.key_version)
            self.company_name = EncryptionUtil.encrypt(self.company_name_encrypted, current_key)
            self.product_name = EncryptionUtil.encrypt(self.product_name_encrypted, current_key)
            self.batch_number = EncryptionUtil.encrypt(self.batch_number_encrypted, current_key)
@@ -312,6 +313,9 @@ class LogProduct(models.Model):
         
        else:
            if self.key_version < current_key:
+               print('else key ver', self.key_version)
+               print('else cur ver', current_key)
+               
                old_key = KeyManagement.get_key_by_version(self.key_version).aes_key
                self.code_key = EncryptionUtil.rotate_key(self.code_key, old_key, current_key)
                self.company_name = EncryptionUtil.rotate_key(self.company_name, old_key, current_key)
