@@ -28,8 +28,6 @@ class PartitionRouter:
         """
         Ensure the models end up in the correct database.
         """
-        print('mode', model_name)
         if model_name in ['scaninfo', 'checkoutinfo', 'logproduct']:
-            print('mode_name', model_name)
             return db == 'heavy'
         return db == 'default'

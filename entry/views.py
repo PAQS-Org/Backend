@@ -5,6 +5,7 @@ from cryptography.hazmat.primitives import serialization
 from PAQSBackend.encry import EncryptionUtil
 from cryptography.hazmat.backends import default_backend
 import base64
+from .models import KeyManagement
 from datetime import datetime
 
 from django.http import HttpResponse
@@ -48,6 +49,8 @@ class KeyExchangeView(APIView):
             # Encode the encrypted AES key in base64 to send to frontend
             encrypted_aes_key_b64 = base64.b64encode(encrypted_aes_key).decode('utf-8')
             print  ('enc', encrypted_aes_key_b64)
+            
+            KeyManagement.objects.create(version=1, aes_key=aes_key)
 
             return Response({'encrypted_key': encrypted_aes_key_b64}, status=status.HTTP_200_OK)
 
