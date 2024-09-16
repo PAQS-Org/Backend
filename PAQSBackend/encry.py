@@ -1,12 +1,13 @@
 import base64
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import padding, hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import rsa, padding
+from cryptography.hazmat.primitives import padding 
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import rsa, padding as asym_padding
 import os
 
 class EncryptionUtil:
-    BLOCK_SIZE = 128  # Block size for AES
+    BLOCK_SIZE = 16  # Block size for AES in bytes (128 bits)
     IV_SIZE = 16      # Initialization Vector size
     KEY_SIZE = 32     # AES key size (256 bits)
 
@@ -22,7 +23,7 @@ class EncryptionUtil:
         cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
         encryptor = cipher.encryptor()
 
-        padder = padding.PKCS7(EncryptionUtil.BLOCK_SIZE).padder()
+        padder = padding.PKCS7(EncryptionUtil.BLOCK_SIZE * 8).padder()  # Padding in bits
         padded_data = padder.update(plain_text.encode()) + padder.finalize()
 
         encrypted = encryptor.update(padded_data) + encryptor.finalize()
@@ -39,7 +40,7 @@ class EncryptionUtil:
         decryptor = cipher.decryptor()
 
         decrypted_padded = decryptor.update(encrypted_data) + decryptor.finalize()
-        unpadder = padding.PKCS7(EncryptionUtil.BLOCK_SIZE).unpadder()
+        unpadder = padding.PKCS7(EncryptionUtil.BLOCK_SIZE * 8).unpadder()  # Padding in bits
         decrypted = unpadder.update(decrypted_padded) + unpadder.finalize()
 
         return decrypted.decode('utf-8')
@@ -52,28 +53,20 @@ class EncryptionUtil:
 
     @staticmethod
     def generate_rsa_key_pair():
-        private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048, backend=default_backend)
+        private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048, backend=default_backend())
         public_key = private_key.public_key()
         return private_key, public_key
-    
+
     @staticmethod
     def encrypt_with_public_key(data, public_key):
         return public_key.encrypt(
             data,
-            padding.PKCS1v15(
-                # mgf=padding.MGF1(algorithm=hashes.SHA256()),
-                # algorithm=hashes.SHA256(),
-                # label=None
-            )
+            asym_padding.PKCS1v15()
         )
         
     @staticmethod
     def decrypt_with_private_key(encrypted_data, private_key):
         return private_key.decrypt(
             encrypted_data,
-            padding.PKCS1v15(
-                # mgf=padding.MGF1(algorithm=hashes.SHA256()),
-                # algorithm=hashes.SHA256(),
-                # label=None
-            )
+            asym_padding.PKCS1v15()
         )
