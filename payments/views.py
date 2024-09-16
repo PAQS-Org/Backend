@@ -108,13 +108,17 @@ def verify_payment(request):
                     perishable=payment.perishable,
                     manufacture_date=payment.manufacture_date,
                     expiry_date=payment.expiry_date,
+                    FDA_number=payment.FDA_number,
+                    standards_authority_number=payment.standards_authority_number,
                     message=prodmessage(
                         company=payment.company, 
                         product=payment.product_name, 
                         batch=payment.batch_number, 
                         perish=payment.perishable, 
                         man_date=payment.manufacture_date, 
-                        exp_date=payment.expiry_date
+                        exp_date=payment.expiry_date,
+                        fda=payment.FDA_number,
+                        stands=payment.standards_authority_number
                         )
                 )
                 for gen_id, _ in make_qr 

@@ -17,6 +17,8 @@ class Payment(models.Model):
     product_logo = models.ImageField(upload_to='paqs/prod_logo/', blank=True)
     manufacture_date = models.DateField(blank=True, null=True)
     expiry_date = models.DateField(blank=True, null=True)
+    FDA_number  = models.CharField(max_length=255, blank=True, null=True)
+    standards_authority_number = models.CharField(max_length=255, blank=True, null=True)
     quantity = models.PositiveIntegerField(null=True)
     unit_price = models.DecimalField(null=True, max_digits=5, decimal_places=2)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
