@@ -259,7 +259,7 @@ class LogProduct(models.Model):
     perishable = models.CharField(max_length=100)
     manufacture_date = models.DateField(blank=True, null=True)
     expiry_date = models.DateField(blank=True, null=True)
-    days_to_expiry = models.CharField(max_length=255, blank=True, null=True)
+    days_to_expiry = models.CharField(max_length=150, blank=True, null=True)
     message = models.CharField(max_length=255)
     FDA_number  = models.CharField(max_length=255, blank=True, null=True)
     standards_authority_number = models.CharField(max_length=255, blank=True, null=True)
