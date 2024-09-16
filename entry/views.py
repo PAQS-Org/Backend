@@ -45,12 +45,11 @@ class KeyExchangeView(APIView):
 
             # Encrypt AES key with client's public RSA key
             encrypted_aes_key = EncryptionUtil.encrypt_with_public_key(aes_key, public_key)
+            print('encrypted', encrypted_aes_key)
             
             # Encode the encrypted AES key in base64 to send to frontend
             encrypted_aes_key_b64 = base64.b64encode(encrypted_aes_key).decode('utf-8')
             print  ('enc', encrypted_aes_key_b64)
-            
-            KeyManagement.objects.create(version=1, aes_key=aes_key)
 
             return Response({'encrypted_key': encrypted_aes_key_b64}, status=status.HTTP_200_OK)
 
