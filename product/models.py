@@ -19,6 +19,7 @@ class ScanInfo(models.Model):
    city = models.CharField(max_length=255, blank=True, null=True)
    town = models.CharField(max_length=255, blank=True, null=True)
    street = models.CharField(max_length=255, blank=True, null=True)
+   key_version=models.CharField(max_length=255, blank=True, null=True)
    
    class Meta:
         indexes = [
@@ -134,6 +135,7 @@ class CheckoutInfo(models.Model):
    city = models.CharField(max_length=255, blank=True, null=True)
    town = models.CharField(max_length=255, blank=True, null=True)
    street = models.CharField(max_length=255, blank=True, null=True)
+   key_version=models.CharField(max_length=255, blank=True, null=True)
    
    class Meta:
         indexes = [
@@ -269,7 +271,9 @@ class LogProduct(models.Model):
     checkout_message = models.CharField(max_length=255)
     patch = models.BooleanField(default=False)
     patch_reason = models.CharField(max_length=100, blank=True, null=True)
-    patch_message = models.CharField(max_length=255)
+    patch_message = models.CharField(max_length=255, blank=True, null=True)
+    key_version=models.CharField(max_length=255, blank=True, null=True)
+    
 
     class Meta:
         db_table = 'LogProduct'
