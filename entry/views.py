@@ -35,16 +35,19 @@ class KeyExchangeView(APIView):
         
         try:
             public_key_bytes = base64.b64decode(public_key_b64)
+            print('p-key', public_key_bytes)
             public_key = serialization.load_pem_public_key(public_key_bytes, backend=default_backend())
 
             # Generate AES key
             aes_key = EncryptionUtil.generate_key()
+            print('aes', aes_key)
 
             # Encrypt AES key with client's public RSA key
             encrypted_aes_key = EncryptionUtil.encrypt_with_public_key(aes_key, public_key)
             
             # Encode the encrypted AES key in base64 to send to frontend
             encrypted_aes_key_b64 = base64.b64encode(encrypted_aes_key).decode('utf-8')
+            print  ('enc', encrypted_aes_key_b64)
 
             return Response({'encrypted_key': encrypted_aes_key_b64}, status=status.HTTP_200_OK)
 
