@@ -27,7 +27,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
         write_only=True, required=True, validators=[password_validation.validate_password]
     )
-    phone_number = serializers.CharField(validators=[RegexValidator(regex=r'^\d{9,16}$')])
+    phone_number = serializers.CharField(validators=[RegexValidator(regex=r'^\+\d{9,16}$')])
 
     class Meta:
         model = User
