@@ -5,21 +5,24 @@ from django.urls import reverse
 from django.contrib.auth.models import (
     AbstractBaseUser, BaseUserManager, PermissionsMixin)
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.core.validators import RegexValidator
 
 AUTH_PROVIDERS = {'facebook': 'facebook', 'google': 'google',
-                  'twitter': 'twitter', 'email': 'email'}
+                  'twitter': 'twitter', 'email': 'email', 'otp':'otp'}
 
 
 class UserManager(BaseUserManager):
 
-    def create_user(self, email, password=None, **extra_fields):
+    def create_user(self, email, phone_number=None, password=None, **extra_fields):
         """
         Creates and saves a User with the given email and password.
         """
         if not email:
             raise ValueError('Users must have an email address')
+        if not phone_number:
+            raise ValueError('Users must have a phone number')
         email = self.normalize_email(email)
-        user = self.model(email=email, **extra_fields)
+        user = self.model(email=email, phone_number=phone_number, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
@@ -46,6 +49,10 @@ class AbstractUserProfile(AbstractBaseUser, PermissionsMixin):
         unique=True,
         validators=[EmailValidator()],  # Ensure valid email format
     )
+    phone_regex = RegexValidator(regex=r'^\+?1?\d{9,15}$', message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.")
+    phone_number = models.CharField(validators=[phone_regex], max_length=17, blank=True)
+    is_phone_verified = models.BooleanField(default=False)
+    
     is_verified = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
@@ -56,9 +63,14 @@ class AbstractUserProfile(AbstractBaseUser, PermissionsMixin):
     )
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = []  # No additional fields required for base user
+    REQUIRED_FIELDS = ['phone_number']  # No additional fields required for base user
 
     objects = UserManager()
+    
+    class Meta:
+        indexes = [
+            models.Index(fields=['email', 'phone_number'])
+        ]
 
     def __str__(self):
         return self.email
@@ -116,7 +128,7 @@ class User(AbstractUserProfile):
     class Meta:
         verbose_name = 'User'
         verbose_name_plural = 'Users'
-
+        
     @property
     def get_full_name(self):
         return f"{self.first_name.title()} {self.last_name.title()}"

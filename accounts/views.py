@@ -1,3 +1,4 @@
+import requests
 from django.shortcuts import render
 import os
 import jwt
@@ -40,6 +41,10 @@ import json
 from django_ratelimit.decorators import ratelimit
 from django.utils.decorators import method_decorator
 from .task import delete_unverified_user
+from .otp_service import send_otp, verify_otp, send_sms
+from django.shortcuts import get_object_or_404
+from django.core.mail import send_mail
+from django.conf import settings
 class CompanyRegistrationView(APIView):
     permission_classes = [AllowAny]
 
@@ -229,31 +234,62 @@ class UserLoginView(APIView):
 class UserRegistrationView(APIView):
     permission_classes = [AllowAny]
 
-    @method_decorator(ratelimit(key='ip', rate='3/d', method='POST'))
+    @method_decorator(ratelimit(key='ip', rate='10/d', method='POST'))
     def post(self, request):
+            
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        # Generate verification token (replace with your preferred library)
-        user_data = serializer.data
-        user = User.objects.get(email=user_data['email'])
-        token = RefreshToken.for_user(user).access_token
-        current_site = get_current_site(request).domain
-        relativeLink = reverse('user-email-verify')
-        absurl = f'http://{current_site}{relativeLink}?token={str(token)}'
-        template_path = 'verification-email.html'
-        email_body = render_to_string(template_path, {
-            'first_name': user.first_name,
-            'last_name': user.last_name,
-            'email':user.email,
-            'verification_link': absurl,
-            'current_year': datetime.datetime.now().year,
-        })
-        data = {'email_body': email_body, 'to_email': user.email,
-                'email_subject': 'Verify your email'}
+        user = serializer.save()
 
-        Util.send_email(data)
-        return Response(user_data, status=status.HTTP_201_CREATED)
+        # Detect country code based on IP address
+        ip_address = request.META.get('REMOTE_ADDR')
+        response = requests.get(f'http://ipinfo.io/{ip_address}/json')
+        country_code = response.json().get('country')
+        
+        # Append country code to the phone number
+        full_phone_number = f"+{get_country_code(country_code)}{user.phone_number}"
+        
+        # Generate OTP and send to user's phone number
+        otp = send_otp(full_phone_number)
+
+        # Save the phone number with country code
+        user.phone_number = full_phone_number
+        user.save()
+
+        return Response({'message': 'OTP sent successfully'}, status=status.HTTP_201_CREATED)
+
+class OTPVerificationView(APIView):
+    def post(self, request):
+        email = request.data.get('email')
+        otp = request.data.get('otp')
+        user = get_object_or_404(User, email=email)
+
+        # Verify OTP
+        success, message = verify_otp(user.phone_number, otp)
+        if success:
+            user.is_phone_verified = True
+            user.is_verified = True
+            user.save()
+
+            # Send thank you message via SMS and email
+            send_mail(
+                "Welcome",
+                "Thank you for joining us",
+                settings.DEFAULT_FROM_EMAIL,
+                [user.email],
+                fail_silently=False,
+            )
+            send_sms(user.phone_number, "Thank you for joining us!")
+            return Response({'message': 'User verified and registration complete'}, status=status.HTTP_200_OK)
+
+        # Handle OTP failure cases
+        return Response({'error': message}, status=status.HTTP_400_BAD_REQUEST)
+
+
+def get_country_code(country_code):
+    # You can add more countries here
+    country_codes = {'GH': '+233', 'NG': '+234', 'BF': '+226'}
+    return country_codes.get(country_code, '1')
 
 
 class UserEmailVerificationView(APIView):
