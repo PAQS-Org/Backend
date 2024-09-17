@@ -31,7 +31,7 @@ class ScanInfo(models.Model):
        if not current_key_obj:
             raise ValueError("No encryption key found in KeyManagement")
         
-       current_key = current_key_obj.aes_key
+       current_key = current_key_obj.public_key
        current_version = current_key_obj.version           
        
        if not self.key_version:
@@ -50,7 +50,7 @@ class ScanInfo(models.Model):
         
        else:
            if self.key_version < current_key:
-                old_key = KeyManagement.get_key_by_version(self.key_version).aes_key
+                old_key = KeyManagement.get_key_by_version(self.key_version).private_key
                 self.code_key = EncryptionUtil.rotate_key(self.code_key, old_key, current_key)
                 self.company_name = EncryptionUtil.rotate_key(self.company_name, old_key, current_key)
                 self.product_name = EncryptionUtil.rotate_key(self.product_name, old_key, current_key)
@@ -100,7 +100,7 @@ class CheckoutInfo(models.Model):
        if not current_key_obj:
             raise ValueError("No encryption key found in KeyManagement")
         
-       current_key = current_key_obj.aes_key
+       current_key = current_key_obj.public_key
        current_version = current_key_obj.version
        
        if not self.key_version:
@@ -119,7 +119,7 @@ class CheckoutInfo(models.Model):
         
        else:
            if self.key_version < current_key:
-               old_key = KeyManagement.get_key_by_version(self.key_version).aes_key
+               old_key = KeyManagement.get_key_by_version(self.key_version).private_key
                self.code_key = EncryptionUtil.rotate_key(self.code_key, old_key, current_key)
                self.company_name = EncryptionUtil.rotate_key(self.company_name, old_key, current_key)
                self.product_name = EncryptionUtil.rotate_key(self.product_name, old_key, current_key)
@@ -206,7 +206,7 @@ class LogProduct(models.Model):
        if not current_key_obj:
             raise ValueError("No encryption key found in KeyManagement")
         
-       current_key = current_key_obj.aes_key
+       current_key = current_key_obj.public_key
        current_version = current_key_obj.version
        
        if not self.key_version:
@@ -235,7 +235,7 @@ class LogProduct(models.Model):
                print('else key ver', self.key_version)
                print('else cur ver', current_key)
                
-               old_key = KeyManagement.get_key_by_version(self.key_version).aes_key
+               old_key = KeyManagement.get_key_by_version(self.key_version).private_key
                self.code_key = EncryptionUtil.rotate_key(self.code_key, old_key, current_key)
                self.company_name = EncryptionUtil.rotate_key(self.company_name, old_key, current_key)
                self.product_name = EncryptionUtil.rotate_key(self.product_name, old_key, current_key)
