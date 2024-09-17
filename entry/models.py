@@ -1,7 +1,8 @@
 from django.db import models
 class KeyManagement(models.Model):
     version = models.IntegerField(unique=True)
-    aes_key = models.BinaryField()
+    public_key = models.TextField(null=True, blank=True)
+    private_key = models.TextField(null=True, blank=True)
 
     @staticmethod
     def get_current_key():

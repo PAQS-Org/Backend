@@ -1,5 +1,4 @@
 import base64
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import padding 
 from cryptography.hazmat.primitives import hashes, serialization
@@ -7,49 +6,60 @@ from cryptography.hazmat.primitives.asymmetric import rsa, padding as asym_paddi
 import os
 
 class EncryptionUtil:
-    BLOCK_SIZE = 16  # Block size for AES in bytes (128 bits)
-    IV_SIZE = 16      # Initialization Vector size
-    KEY_SIZE = 32     # AES key size (256 bits)
+    
+    @staticmethod
+    def load_private_key(private_key_str):
+        """Load the private key from a string."""
+        return serialization.load_pem_private_key(
+            private_key_str.encode(),
+            password=None,
+            backend=default_backend()
+        )
 
     @staticmethod
-    def generate_key():
-        """Generate a random AES key."""
-        return os.urandom(EncryptionUtil.KEY_SIZE)
+    def load_public_key(public_key_str):
+        """Load the public key from a string."""
+        return serialization.load_pem_public_key(
+            public_key_str.encode(),
+            backend=default_backend()
+        )
 
     @staticmethod
-    def encrypt(plain_text, key):
-        """Encrypt the given plaintext with the provided key."""
-        iv = os.urandom(EncryptionUtil.IV_SIZE)
-        cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
-        encryptor = cipher.encryptor()
-
-        padder = padding.PKCS7(EncryptionUtil.BLOCK_SIZE * 8).padder()  # Padding in bits
-        padded_data = padder.update(plain_text.encode()) + padder.finalize()
-
-        encrypted = encryptor.update(padded_data) + encryptor.finalize()
-        return base64.b64encode(iv + encrypted).decode('utf-8')
+    def encrypt(data, public_key_str):
+        """Encrypt data using the public key."""
+        public_key = EncryptionUtil.load_public_key(public_key_str)
+        encrypted = public_key.encrypt(
+            data.encode(),
+            asym_padding.OAEP(
+                mgf=asym_padding.MGF1(algorithm=hashes.SHA256()),
+                algorithm=hashes.SHA256(),
+                label=None
+            )
+        )
+        return base64.b64encode(encrypted).decode('utf-8')
 
     @staticmethod
-    def decrypt(cipher_text, key):
-        """Decrypt the given ciphertext with the provided key."""
-        cipher_data = base64.b64decode(cipher_text)
-        iv = cipher_data[:EncryptionUtil.IV_SIZE]
-        encrypted_data = cipher_data[EncryptionUtil.IV_SIZE:]
-
-        cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
-        decryptor = cipher.decryptor()
-
-        decrypted_padded = decryptor.update(encrypted_data) + decryptor.finalize()
-        unpadder = padding.PKCS7(EncryptionUtil.BLOCK_SIZE * 8).unpadder()  # Padding in bits
-        decrypted = unpadder.update(decrypted_padded) + unpadder.finalize()
-
+    def decrypt(encrypted_data, private_key_str):
+        """Decrypt data using the private key."""
+        encrypted_data_bytes = base64.b64decode(encrypted_data)
+        private_key = EncryptionUtil.load_private_key(private_key_str)
+        decrypted = private_key.decrypt(
+            encrypted_data_bytes,
+            asym_padding.OAEP(
+                mgf=asym_padding.MGF1(algorithm=hashes.SHA256()),
+                algorithm=hashes.SHA256(),
+                label=None
+            )
+        )
         return decrypted.decode('utf-8')
 
     @staticmethod
-    def rotate_key(data, old_key, new_key):
-        """Re-encrypt the data with the new key."""
-        decrypted_data = EncryptionUtil.decrypt(data, old_key)
-        return EncryptionUtil.encrypt(decrypted_data, new_key)
+    def rotate_key(data, old_private_key_str, new_public_key_str):
+        """Rotate keys by decrypting with the old private key and encrypting with the new public key."""
+        decrypted_data = EncryptionUtil.decrypt(data, old_private_key_str)
+        return EncryptionUtil.encrypt(decrypted_data, new_public_key_str)
+    
+    
 
     @staticmethod
     def generate_rsa_key_pair():

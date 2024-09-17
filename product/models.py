@@ -75,55 +75,6 @@ class ScanInfo(models.Model):
             cache_key = sanitize_cache_key(key)
             cache.delete(cache_key)
        super().save(*args, **kwargs)
-  
-   @property
-   def code_key_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.code_key, key)
-
-   @property
-   def company_name_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.company_name, key)
-
-   @property
-   def product_name_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.product_name, key)
-   @property
-   def batch_number_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.batch_number, key)
-   @property
-   def user_name_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.user_name, key)
-   @property
-   def location_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.location, key)
-   @property
-   def country_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.country, key)
-   @property
-   def region_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.region, key)
-   @property
-   def city_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.city, key)
-   @property
-   def town_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.town, key)
-   @property
-   def street_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.street, key)
-        
-
 
 class CheckoutInfo(models.Model):
    date_time = models.DateTimeField(auto_now_add=True)
@@ -194,53 +145,7 @@ class CheckoutInfo(models.Model):
 
        super().save(*args, **kwargs)
   
-   @property
-   def code_key_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.code_key, key)
-
-   @property
-   def company_name_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.company_name, key)
-
-   @property
-   def product_name_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.product_name, key)
-   @property
-   def batch_number_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.batch_number, key)
-   @property
-   def user_name_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.user_name, key)
-   @property
-   def location_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.location, key)
-   @property
-   def country_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.country, key)
-   @property
-   def region_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.region, key)
-   @property
-   def city_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.city, key)
-   @property
-   def town_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.town, key)
-   @property
-   def street_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.street, key)
-   
+ 
 
 @receiver(post_save, sender=ScanInfo)
 @receiver(post_save, sender=CheckoutInfo)
@@ -358,90 +263,6 @@ class LogProduct(models.Model):
                 
        super().save(*args, **kwargs)
   
-    @property
-    def code_key_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.code_key, key)
-
-    @property
-    def company_name_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.company_name, key)
-
-    @property
-    def product_name_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.product_name, key)
-    
-    @property
-    def batch_number_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.batch_number, key)
-    
-    @property
-    def perishable_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.perishable, key)
-    
-    @property
-    def manufacture_date_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.manufacture_date, key)
-    
-    @property
-    def expiry_date_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.expiry_date, key)
-    
-    @property
-    def message_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.message, key)
-    
-    @property
-    def FDA_number_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.FDA_number, key)
-    
-    @property
-    def standards_authority_number_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.standards_authority_number, key)
-    
-    @property
-    def checkout_user_email_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.checkout_user_email, key)
-    
-    @property
-    def checkout_user_phone_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.checkout_user_phone, key)
-    
-    @property
-    def checkout_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.checkout, key)
-    
-    @property
-    def checkout_message_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.checkout_message, key)
-    
-    @property
-    def patch_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.patch, key)
-    
-    @property
-    def patch_reason_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.patch_reason, key)
-    @property
-    def patch_message_encrypted(self):
-        key = KeyManagement.get_key_by_version(self.key_version).aes_key
-        return EncryptionUtil.decrypt(self.patch_message, key)
-    
 
 def sanitize_cache_key(key):
     return re.sub(r'[^A-Za-z0-9_]', '_', key)
