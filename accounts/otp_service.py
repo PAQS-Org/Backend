@@ -15,6 +15,21 @@ def send_otp(phone_number):
     cache.set(f"otp_{phone_number}", otp, timeout=OTP_EXPIRATION_TIME)
     cache.set(f"otp_attempts_{phone_number}", 0, timeout=OTP_EXPIRATION_TIME)
     # Integrate with SMS gateway like Twilio
+    account_sid = settings.TWILIO_ACCOUNT_SID
+    auth_token = settings.TWILIO_AUTH_TOKEN
+    client = Client(account_sid, auth_token)
+
+    # Twilio sending SMS
+    try:
+        # message = client.verify.v2.messages.create(
+        #     body=message,
+        #     from_=settings.TWILIO_PHONE_NUMBER,  # Twilio registered phone number
+        #     to=phone_number
+        # )
+        client.verify.v2.services(f"Verify your account with the code {otp}").verifications.create(to=f"{phone_number}", channel="sms")
+        print(f"SMS sent successfully to {phone_number}")
+    except Exception as e:
+        print(f"Error sending SMS: {e}")
     print(f"Sending OTP {otp} to {phone_number}")
     return otp
 
@@ -49,11 +64,13 @@ def send_sms(phone_number, message):
 
     # Twilio sending SMS
     try:
-        message = client.messages.create(
-            body=message,
-            from_=settings.TWILIO_PHONE_NUMBER,  # Twilio registered phone number
-            to=phone_number
-        )
+        # message = client.messages.create(
+        #     body=message,
+        #     from_=settings.TWILIO_PHONE_NUMBER,  # Twilio registered phone number
+        #     to=phone_number
+        # )
+        client.verify.v2.services(message).verifications.create(to=f"{phone_number}", channel="sms")
+        
         print(f"SMS sent successfully to {phone_number}")
     except Exception as e:
         print(f"Error sending SMS: {e}")
