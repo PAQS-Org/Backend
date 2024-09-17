@@ -13,6 +13,7 @@ from .views import (
     UserRequestPasswordResetEmail,
     UserLoginView,
     UserRegistrationView,
+    OTPVerificationView,
     # General
     LogoutAPIView,
     # csp report
@@ -34,6 +35,7 @@ urlpatterns = [
     path('user-request-reset-email/', UserRequestPasswordResetEmail.as_view(),name="user-request-reset-email"),
     path('password-reset/<uidb64>/<token>/', UserPasswordTokenCheckAPI.as_view(), name='password-reset-confirm'),
     path('user-email-verify/', UserEmailVerificationView.as_view(), name="user-email-verify"),
+    path('otp-verify/', OTPVerificationView.as_view(), name="otp-verify"),
     path('user-password-reset/', UserSetNewPasswordAPIView.as_view(), name='password-reset-complete'),
     # generic
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
