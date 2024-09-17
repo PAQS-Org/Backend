@@ -27,7 +27,8 @@ def send_otp(phone_number):
         #     from_=settings.TWILIO_PHONE_NUMBER,  # Twilio registered phone number
         #     to=phone_number
         # )
-        client.verify.v2.services(service_id).verifications.create(to=f"{phone_number}", channel="sms", body=f"Verify your account with the code {otp}")
+        print("Kraw")
+        client.verify.v2.services(service_id).verifications.create(to=f"{phone_number}", channel="sms", custom_friendly_name="TeenByte Tech Lab", custom_code=otp, custom_message=f"Verify your account with the code {otp}")
         print(f"SMS sent successfully to {phone_number}")
     except Exception as e:
         print(f"Error sending SMS: {e}")
@@ -72,7 +73,8 @@ def send_sms(phone_number, message):
         #     from_=settings.TWILIO_PHONE_NUMBER,  # Twilio registered phone number
         #     to=phone_number
         # )
-        client.verify.v2.services(service_id).verifications.create(to=f"{phone_number}", channel="sms", body=message)
+        print("wow")
+        client.verify.v2.services(service_id).verifications.create(to=f"{phone_number}", channel="sms", custom_friendly_name="TeenByte Tech Lab", custom_message=message)
         
         print(f"SMS sent successfully to {phone_number}")
     except Exception as e:
