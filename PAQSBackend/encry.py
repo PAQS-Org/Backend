@@ -4,12 +4,14 @@ from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa, padding as asym_padding
 import os
-
+from django.conf import settings
 class EncryptionUtil:
     
     @staticmethod
-    def load_private_key(private_key_str):
-        """Load the private key from a string."""
+    def load_private_key():
+        private_key_str = settings.PRIVATE_KEY
+        if not private_key_str:
+            raise ValueError("Private key is not set in Django settings.")
         return serialization.load_pem_private_key(
             private_key_str.encode(),
             password=None,
@@ -17,8 +19,10 @@ class EncryptionUtil:
         )
 
     @staticmethod
-    def load_public_key(public_key_str):
-        """Load the public key from a string."""
+    def load_public_key():
+        public_key_str = settings.PUBLIC_KEY
+        if not public_key_str:
+            raise ValueError("Public key is not set in Django settings.")
         return serialization.load_pem_public_key(
             public_key_str.encode(),
             backend=default_backend()
@@ -61,22 +65,22 @@ class EncryptionUtil:
     
     
 
-    @staticmethod
-    def generate_rsa_key_pair():
-        private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048, backend=default_backend())
-        public_key = private_key.public_key()
-        return private_key, public_key
+    # @staticmethod
+    # def generate_rsa_key_pair():
+    #     private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048, backend=default_backend())
+    #     public_key = private_key.public_key()
+    #     return private_key, public_key
 
-    @staticmethod
-    def encrypt_with_public_key(data, public_key):
-        return public_key.encrypt(
-            data,
-            asym_padding.PKCS1v15()
-        )
+    # @staticmethod
+    # def encrypt_with_public_key(data, public_key):
+    #     return public_key.encrypt(
+    #         data,
+    #         asym_padding.PKCS1v15()
+    #     )
         
-    @staticmethod
-    def decrypt_with_private_key(encrypted_data, private_key):
-        return private_key.decrypt(
-            encrypted_data,
-            asym_padding.PKCS1v15()
-        )
+    # @staticmethod
+    # def decrypt_with_private_key(encrypted_data, private_key):
+    #     return private_key.decrypt(
+    #         encrypted_data,
+    #         asym_padding.PKCS1v15()
+        
