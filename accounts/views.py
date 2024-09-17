@@ -242,24 +242,24 @@ class UserRegistrationView(APIView):
         user = serializer.save()
 
         # Detect country code based on IP address
-        ip_address = request.META.get('REMOTE_ADDR')
-        print('ipaddress', ip_address)
-        response = requests.get(f'http://ipinfo.io/{ip_address}/json')
-        print('res', response)
-        country_code = response.json().get('country')
-        print('count', country_code)
+        # ip_address = request.META.get('REMOTE_ADDR')
+        # print('ipaddress', ip_address)
+        # response = requests.get(f'http://ipinfo.io/{ip_address}/json')
+        # print('res', response)
+        # country_code = response.json().get('country')
+        # print('count', country_code)
         
-        # Append country code to the phone number
-        full_phone_number = f"+{get_country_code(country_code)}{user.phone_number}"
-        print('f_numb', full_phone_number)
+        # # Append country code to the phone number
+        # full_phone_number = f"+{get_country_code(country_code)}{user.phone_number}"
+        # print('f_numb', full_phone_number)
         
         # Generate OTP and send to user's phone number
-        otp = send_otp(full_phone_number)
+        otp = send_otp(user.phone_number)
         print('otp', otp)
 
         # Save the phone number with country code
-        user.phone_number = full_phone_number
-        print('use phone', user.phone_number)
+        # user.phone_number = full_phone_number
+        # print('use phone', user.phone_number)
         user.save()
 
         return Response({'message': 'OTP sent successfully'}, status=status.HTTP_201_CREATED)
@@ -292,10 +292,10 @@ class OTPVerificationView(APIView):
         return Response({'error': message}, status=status.HTTP_400_BAD_REQUEST)
 
 
-def get_country_code(country_code):
-    # You can add more countries here
-    country_codes = {'GH': '+233', 'NG': '+234', 'BF': '+226'}
-    return country_codes.get(country_code, '1')
+# def get_country_code(country_code):
+#     # You can add more countries here
+#     country_codes = {'GH': '+233', 'NG': '+234', 'BF': '+226'}
+#     return country_codes.get(country_code, '1')
 
 
 class UserEmailVerificationView(APIView):
