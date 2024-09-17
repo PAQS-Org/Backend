@@ -17,6 +17,7 @@ def send_otp(phone_number):
     # Integrate with SMS gateway like Twilio
     account_sid = settings.TWILIO_ACCOUNT_SID
     auth_token = settings.TWILIO_AUTH_TOKEN
+    service_id = settings.TWILIO_SERVICES
     client = Client(account_sid, auth_token)
 
     # Twilio sending SMS
@@ -26,7 +27,7 @@ def send_otp(phone_number):
         #     from_=settings.TWILIO_PHONE_NUMBER,  # Twilio registered phone number
         #     to=phone_number
         # )
-        client.verify.v2.services(f"Verify your account with the code {otp}").verifications.create(to=f"{phone_number}", channel="sms")
+        client.verify.v2.services(service_id).verifications.create(to=f"{phone_number}", channel="sms", body=f"Verify your account with the code {otp}")
         print(f"SMS sent successfully to {phone_number}")
     except Exception as e:
         print(f"Error sending SMS: {e}")
@@ -60,6 +61,8 @@ def send_sms(phone_number, message):
     # Twilio credentials from settings.py
     account_sid = settings.TWILIO_ACCOUNT_SID
     auth_token = settings.TWILIO_AUTH_TOKEN
+    service_id = settings.TWILIO_SERVICES
+    
     client = Client(account_sid, auth_token)
 
     # Twilio sending SMS
@@ -69,7 +72,7 @@ def send_sms(phone_number, message):
         #     from_=settings.TWILIO_PHONE_NUMBER,  # Twilio registered phone number
         #     to=phone_number
         # )
-        client.verify.v2.services(message).verifications.create(to=f"{phone_number}", channel="sms")
+        client.verify.v2.services(service_id).verifications.create(to=f"{phone_number}", channel="sms", body=message)
         
         print(f"SMS sent successfully to {phone_number}")
     except Exception as e:
