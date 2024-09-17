@@ -27,7 +27,7 @@ class Google:
     @staticmethod
     def get_user_info(access_token):
         # Get user profile information using the People API
-        people_api_url = "https://people.googleapis.com/v1/people/me?personFields=names,emailAddresses"
+        people_api_url = "https://people.googleapis.com/v1/people/me?personFields=names,emailAddresses,phoneNumbers"
         headers = {"Authorization": f"Bearer {access_token}"}
         response = r.get(people_api_url, headers=headers)
 
@@ -37,6 +37,7 @@ class Google:
         user_info = response.json()
         names = user_info.get('names', [{}])
         email_addresses = user_info.get('emailAddresses', [{}])
+        phone = user_info.get('phoneNumbers',[{}])
 
         if not names or not email_addresses:
             raise AuthenticationFailed("Failed to retrieve necessary user info")
@@ -44,11 +45,12 @@ class Google:
         first_name = names[0].get('givenName', '')
         last_name = names[0].get('familyName', '')
         email = email_addresses[0].get('value', '')
+        phone_number = phone[0].get('value', '')
 
-        return first_name, last_name, email
+        return first_name, last_name, email, phone_number
 
 
-def register_social_user(provider, email, first_name, last_name):
+def register_social_user(provider, email, phone_number, first_name, last_name):
     # if user_type not in ['user', 'company']:
     #     raise ValueError("user_type must be 'user' or 'company'")
 
@@ -64,6 +66,7 @@ def register_social_user(provider, email, first_name, last_name):
             authenticated_user = authenticate(email=email, password=SOCIAL_AUTH_PASSWORD)
             if authenticated_user:
                 return {
+                    'phone_number': authenticated_user.phone_number,
                     'email': authenticated_user.email,
                     'first_name': authenticated_user.first_name,
                     'last_name': authenticated_user.last_name,
@@ -77,6 +80,7 @@ def register_social_user(provider, email, first_name, last_name):
             )
     except user_model.DoesNotExist:
         new_user = user_model(
+            phone_number=phone_number,
             email=email,
             first_name=first_name,
             last_name=last_name,

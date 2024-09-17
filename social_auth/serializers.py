@@ -11,7 +11,7 @@ class GoogleSignInSerializer(serializers.Serializer):
         access_token = attrs.get('access_token')
         # user_type = attrs.get('user_type' = "user")
         user_data = Google.validate(access_token)
-        first_name, last_name, email = Google.get_user_info(access_token)
+        first_name, phone_number, last_name, email = Google.get_user_info(access_token)
 
         try:
             user_data['sub']
@@ -21,4 +21,4 @@ class GoogleSignInSerializer(serializers.Serializer):
         if user_data['aud'] != GOOGLE_CLIENT_ID:
             raise AuthenticationFailed('Could not verify user.')
 
-        return register_social_user('google', email, first_name, last_name)
+        return register_social_user('google', email, first_name, last_name, phone_number)

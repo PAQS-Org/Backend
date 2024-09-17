@@ -56,6 +56,7 @@ class LoginSerializer(serializers.ModelSerializer):
         max_length=68, min_length=6, write_only=True)
     first_name = serializers.CharField(read_only=True)
     last_name = serializers.CharField(read_only=True)
+    phone_number = serializers.CharField(read_only=True)
 
     tokens = serializers.SerializerMethodField()
 
@@ -69,7 +70,7 @@ class LoginSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['email', 'first_name', 'last_name', 'password', 'tokens']
+        fields = ['email', 'phone_number', 'first_name', 'last_name', 'password', 'tokens']
     
     def validate(self, attrs):
         email = attrs.get('email', '')
@@ -91,6 +92,7 @@ class LoginSerializer(serializers.ModelSerializer):
 
         return {
             'email': user.email,
+            'phone_number': user.phone_number,
             'first_name': users.first_name,
             'last_name': users.last_name,
             'tokens': user.tokens
@@ -167,7 +169,7 @@ class CompanyRegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Company
-        fields = ['email', 'first_name', 'last_name', 'company_name', 'company_logo', 'password']
+        fields = ['email', 'first_name', 'phone_number', 'last_name', 'company_name', 'company_logo', 'password']
 
     def validate_email(self, value):
         """Check if email is already registered"""
@@ -212,6 +214,7 @@ class CompanyLoginSerializer(serializers.ModelSerializer):
     )
     password = serializers.CharField(write_only=True)
     company_name = serializers.CharField(read_only=True)  # Access company name from related field
+    phone_number = serializers.CharField(read_only=True)  # Access company name from related field
     company_logo = serializers.SerializerMethodField()
     first_name = serializers.CharField(read_only=True)
     last_name = serializers.CharField(read_only=True)
@@ -234,7 +237,7 @@ class CompanyLoginSerializer(serializers.ModelSerializer):
         
     class Meta:
         model = Company
-        fields = ['email', 'password', 'tokens', 'first_name', 'last_name', 'company_name', 'company_logo' ]
+        fields = ['email', 'password', 'phone_number', 'tokens', 'first_name', 'last_name', 'company_name', 'company_logo' ]
 
     def validate(self, attrs):
         email = attrs.get('email', '')
@@ -258,6 +261,7 @@ class CompanyLoginSerializer(serializers.ModelSerializer):
 
         return {
             'email': user.email,
+            'phone_number': user.phone_number,
             'company_name': users.company_name,
             'company_logo': users.company_logo,
             'first_name': users.first_name,
