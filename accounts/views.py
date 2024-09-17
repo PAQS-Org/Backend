@@ -234,7 +234,7 @@ class UserLoginView(APIView):
 class UserRegistrationView(APIView):
     permission_classes = [AllowAny]
 
-    @method_decorator(ratelimit(key='ip', rate='10/d', method='POST'))
+    @method_decorator(ratelimit(key='ip', rate='30/d', method='POST'))
     def post(self, request):
             
         serializer = RegisterSerializer(data=request.data)
@@ -243,17 +243,23 @@ class UserRegistrationView(APIView):
 
         # Detect country code based on IP address
         ip_address = request.META.get('REMOTE_ADDR')
+        print('ipaddress', ip_address)
         response = requests.get(f'http://ipinfo.io/{ip_address}/json')
+        print('res', response)
         country_code = response.json().get('country')
+        print('count', country_code)
         
         # Append country code to the phone number
         full_phone_number = f"+{get_country_code(country_code)}{user.phone_number}"
+        print('f_numb', full_phone_number)
         
         # Generate OTP and send to user's phone number
         otp = send_otp(full_phone_number)
+        print('otp', otp)
 
         # Save the phone number with country code
         user.phone_number = full_phone_number
+        print('use phone', user.phone_number)
         user.save()
 
         return Response({'message': 'OTP sent successfully'}, status=status.HTTP_201_CREATED)
