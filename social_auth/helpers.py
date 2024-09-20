@@ -53,7 +53,7 @@ class Google:
         return first_name, last_name, email, phone_number
 
 
-def register_social_user(provider, first_name, last_name, email, phone_number):
+def register_social_user(provider, email, first_name, last_name, phone_number):
     # if user_type not in ['user', 'company']:
     #     raise ValueError("user_type must be 'user' or 'company'")
 
