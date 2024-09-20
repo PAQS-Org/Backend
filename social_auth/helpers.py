@@ -59,11 +59,14 @@ def register_social_user(provider, email, phone_number, first_name, last_name):
     # else:
     #     user_model = Company
     user_model = User
+    print('user model', user_model)
+    print('user model main', User)
 
     try:
         existing_user = user_model.objects.get(email=email)
         if provider == existing_user.auth_provider:
             authenticated_user = authenticate(email=email, password=SOCIAL_AUTH_PASSWORD)
+            print('auth user', authenticated_user)
             if authenticated_user:
                 return {
                     'phone_number': authenticated_user.phone_number,
@@ -91,6 +94,7 @@ def register_social_user(provider, email, phone_number, first_name, last_name):
         new_user.save()
 
         authenticated_user = authenticate(email=email, password=SOCIAL_AUTH_PASSWORD)
+        print('false user', authenticated_user)
         tokens = authenticated_user.tokens()
         return {
             'email': authenticated_user.email,

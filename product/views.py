@@ -40,7 +40,8 @@ class ScanInfoView(APIView):
     def post(self, request):
         qr_code = request.data.get('qr_code')
         email = request.data.get('email')
-        location = request.data.get('location')  
+        location = request.data.get('location')
+        print('scan req', request)  
 
         if not qr_code or '/' not in qr_code or qr_code.startswith('http://'):
             return Response({'message': f'{qr_code} is not the expected data'}, status=status.HTTP_404_NOT_FOUND)
@@ -94,6 +95,7 @@ class ScanInfoView(APIView):
 
                 # Process location asynchronously if provided
                 if location:
+                    print('location was submitted', location)
                     scan_process_location(scan_info.location, serializer)
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
