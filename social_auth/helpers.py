@@ -28,8 +28,10 @@ class Google:
     def get_user_info(access_token):
         # Get user profile information using the People API
         people_api_url = "https://people.googleapis.com/v1/people/me?personFields=names,emailAddresses,phoneNumbers"
+        print('people api', people_api_url)
         headers = {"Authorization": f"Bearer {access_token}"}
         response = r.get(people_api_url, headers=headers)
+        print('people res', response)
 
         if response.status_code != 200:
             raise AuthenticationFailed("Failed to fetch user info from Google People API")
@@ -38,6 +40,7 @@ class Google:
         names = user_info.get('names', [{}])
         email_addresses = user_info.get('emailAddresses', [{}])
         phone = user_info.get('phoneNumbers',[{}])
+        print('get user info response', user_info)
 
         if not names or not email_addresses:
             raise AuthenticationFailed("Failed to retrieve necessary user info")
@@ -50,7 +53,7 @@ class Google:
         return first_name, last_name, email, phone_number
 
 
-def register_social_user(provider, email, phone_number, first_name, last_name):
+def register_social_user(provider, first_name, last_name, email, phone_number):
     # if user_type not in ['user', 'company']:
     #     raise ValueError("user_type must be 'user' or 'company'")
 
