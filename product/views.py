@@ -371,8 +371,7 @@ class TopLocationMetrics(APIView):
 
                 # CheckoutInfo Metrics
                 checkout_queryset = CheckoutInfo.objects.filter(company_name=company_name).distinct('user_name', 'code_key')
-                print('top loc query',checkout_queryset)
-
+                print('loc check qery', checkout_queryset)
                 # Get distinct location with highest count
                 highest_checkout_location = checkout_queryset.values(*location_fields).annotate(count=Count('id')).order_by('-count').first()
 
@@ -383,6 +382,8 @@ class TopLocationMetrics(APIView):
 
                 # Get the count value of the same distinct location from ScanInfo
                 scan_queryset = ScanInfo.objects.filter(company_name__iexact=company_name).distinct('user_name', 'code_key')
+                print('loc scan qery', scan_queryset)
+                
                 matching_scan_location_count = scan_queryset.filter(
                     **{field: highest_checkout_location[field] for field in location_fields}
                 ).count()
@@ -428,77 +429,69 @@ class TopLocationMetrics(APIView):
                     "conversion_rate":conversion
                 }
                 print('loc data', data)
-
                 cache.set(cache_key, data, timeout=60 * 60)  # Cache for 1 hour
 
             return Response(data)
         return Response({'message': "Company doesn't exist"}, status=status.HTTP_404_NOT_FOUND)
 
-class ProductMetricsView(APIView):
-
-    def get_cache_key(self, company_name, product_name):
-        return sanitize_cache_key(f"product_metrics_{company_name}_{product_name}")
-
-    @method_decorator(cache_page(60 * 5))  # Optional: cache the entire view for 5 minutes
+class PerformanceMetricsView(APIView):
+    permission_classes = [IsAuthenticated, IsOwner]
+        
+    @method_decorator(cache_page(60 * 1))    
     def get(self, request, *args, **kwargs):
-        company_name = request.query_params.get('company_name')
-        product_name = request.query_params.get('product_name')
-        cache_key = self.get_cache_key(company_name, product_name)
+        company_name = request.query_params.get('company_name')  # Assuming the user model has a company_name field
+        cache_key = sanitize_cache_key(f"performance_metrics_{company_name}")
         data = cache.get(cache_key)
 
         if not data:
-            try:
-                # Get distinct scan and checkout entries first
-                scan_queryset = ScanInfo.objects.filter(
-                    company_name__iexact=company_name,
-                    product_name__iexact=product_name
-                ).distinct('user_name', 'code_key')
+            # 1. Conversion rate calculation (only considering rows with no null values)
+            scan_queryset = ScanInfo.objects.filter(
+                company_name__iexact=company_name
+            ).distinct('user_name', 'code_key')
+            checkout_queryset = CheckoutInfo.objects.filter(
+                company_name__iexact=company_name
+            ).distinct('user_name', 'code_key')
 
-                checkout_queryset = CheckoutInfo.objects.filter(
-                    company_name__iexact=company_name,
-                    product_name__iexact=product_name
-                ).distinct('user_name', 'code_key')
+            total_scans = scan_queryset.count()
+            total_checkouts = checkout_queryset.count()
+            conversion_rate = (total_checkouts / total_scans) * 100 if total_scans > 0 else 0
 
-                # Fetch IDs first for counting distinct entries
-                scan_ids = scan_queryset.values_list('id', flat=True)
-                checkout_ids = checkout_queryset.values_list('id', flat=True)
+            # 2. Month and year with the highest checkout
+            checkout_by_month = checkout_queryset.annotate(
+                year=F('date_time__year'),
+                month=F('date_time__month')
+            ).values('year', 'month').annotate(
+                checkout_count=Count('id')
+            ).order_by('-checkout_count').first()
 
-                # Annotate and aggregate
-                scan_today = ScanInfo.objects.filter(id__in=scan_ids).annotate(day=TruncDay('date_time')).filter(day=F('day')).aggregate(total=Count('id'))['total'] or 0
-                scan_month = ScanInfo.objects.filter(id__in=scan_ids).annotate(month=TruncMonth('date_time')).filter(month=F('month')).aggregate(total=Count('id'))['total'] or 0
-                scan_year = ScanInfo.objects.filter(id__in=scan_ids).annotate(year=TruncYear('date_time')).filter(year=F('year')).aggregate(total=Count('id'))['total'] or 0
+            if checkout_by_month:
+                highest_checkout_month = f"{timezone.datetime(1900, checkout_by_month['month'], 1).strftime('%B')}, {checkout_by_month['year']}"
+                highest_checkout_month_value = checkout_by_month['checkout_count']
+            else:
+                highest_checkout_month = None
+                highest_checkout_month_value = 0
 
-                checkout_today = CheckoutInfo.objects.filter(id__in=checkout_ids).annotate(day=TruncDay('date_time')).filter(day=F('day')).aggregate(total=Count('id'))['total'] or 0
-                checkout_month = CheckoutInfo.objects.filter(id__in=checkout_ids).annotate(month=TruncMonth('date_time')).filter(month=F('month')).aggregate(total=Count('id'))['total'] or 0
-                checkout_year = CheckoutInfo.objects.filter(id__in=checkout_ids).annotate(year=TruncYear('date_time')).filter(year=F('year')).aggregate(total=Count('id'))['total'] or 0
+            # 3. Product name with the highest checkout count
+            highest_checkout_product = checkout_queryset.values('product_name').annotate(
+                product_count=Count('id')
+            ).order_by('-product_count').first()
 
-                acceptance_rate = (checkout_queryset.count() / scan_queryset.count()) * 100 if scan_queryset.count() > 0 else 0
+            highest_checkout_product_name = highest_checkout_product['product_name'] if highest_checkout_product else None
+            highest_checkout_product_value = highest_checkout_product['product_count'] if highest_checkout_product else 0
 
-                # Aggregate location info
-                highest_checkout_per_location = CheckoutInfo.objects.filter(id__in=checkout_ids).values('region', 'city', 'town', 'street').annotate(total=Count('id')).order_by('-total').first()
-                total_locations = list(CheckoutInfo.objects.filter(id__in=checkout_ids).values('region', 'city', 'town', 'street').annotate(total=Count('id')).order_by('total'))
-                median_location = total_locations[len(total_locations) // 2] if total_locations else None
-                lowest_checkout_per_location = CheckoutInfo.objects.filter(id__in=checkout_ids).values('region', 'city', 'town', 'street').annotate(total=Count('id')).order_by('total').first()
+            data = {
+                "conversion_rate": conversion_rate,
+                "highest_checkout_month": highest_checkout_month,
+                "highest_checkout_month_value": highest_checkout_month_value,
+                "highest_checkout_product_name": highest_checkout_product_name,
+                "highest_checkout_product_value": highest_checkout_product_value,
+            }
+            print('perf met', data)
 
-                data = {
-                    'metrics': {
-                        'checkout_today': checkout_today,
-                        'checkout_month': checkout_month,
-                        'checkout_year': checkout_year,
-                        'scan_today': scan_today,
-                        'scan_month': scan_month,
-                        'scan_year': scan_year,
-                        'acceptance_rate': acceptance_rate,
-                        'highest_checkout_per_location': highest_checkout_per_location,
-                        'median_checkout_per_location': median_location,
-                        'lowest_checkout_per_location': lowest_checkout_per_location,
-                    }
-                }
-            except Exception as e:
-                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            # Cache the results
+            # cache.set(cache_key, data, timeout=60 * 60)  # Cache for 1 hour
 
-        return Response(data, status=status.HTTP_200_OK)
-
+        return Response(data)
     
 class ProductAndUserMetricsView(APIView):
     permission_classes = [IsAuthenticated, IsOwner]
@@ -660,13 +653,17 @@ class BarChartDataView(APIView):
         company_name = request.query_params.get('company_name')
         selected_criteria = request.query_params.get('Region')
         selected_range = request.query_params.get('High')
-
+        
+        # Ensure company name is provided
         if company_name:
             cache_key = sanitize_cache_key(f"bar_chart_info{company_name}_{selected_criteria}_{selected_range}")
             final_data = cache.get(cache_key)
-
-            if not final_data:
+            
+            if not final_data:       
+                # Build the query filters to exclude rows with null values in the location fields
                 filters = Q(company_name=company_name)
+
+                # Aggregate the data based on the selected criteria
                 location_field = {
                     'Region': 'region',
                     'City': 'city',
@@ -674,31 +671,30 @@ class BarChartDataView(APIView):
                     'Locality': 'street'
                 }.get(selected_criteria, 'region')
 
-                # Get distinct IDs first
-                scan_ids = ScanInfo.objects.filter(filters).distinct('user_name', 'code_key').values_list('id', flat=True)
-                checkout_ids = CheckoutInfo.objects.filter(filters).distinct('user_name', 'code_key').values_list('id', flat=True)
-
-                # Aggregate ScanInfo data
-                scan_data = ScanInfo.objects.filter(id__in=scan_ids) \
+                # Fetch and aggregate ScanInfo data
+                scan_data = ScanInfo.objects.filter(filters) \
+                    .distinct('user_name', 'code_key') \
                     .values(location_field) \
                     .annotate(scanned_count=Count('id')) \
                     .order_by(location_field)
 
-                # Aggregate CheckoutInfo data
-                checkout_data = CheckoutInfo.objects.filter(id__in=checkout_ids) \
+                # Fetch and aggregate CheckoutInfo data
+                checkout_data = CheckoutInfo.objects.filter(filters) \
+                    .distinct('user_name', 'code_key') \
                     .values(location_field) \
                     .annotate(checkout_count=Count('id')) \
                     .order_by(location_field)
 
+                # Merge the scan_data and checkout_data based on location_field
                 aggregated_data = {}
                 for entry in scan_data:
                     key = entry[location_field]
                     aggregated_data[key] = {
                         'location': key,
                         'scanned': entry['scanned_count'],
-                        'checkout': 0  # Initialize with 0, will update later
+                        'checkout': 0  # Initialize with 0, will update later if present in checkout_data
                     }
-
+                
                 for entry in checkout_data:
                     key = entry[location_field]
                     if key in aggregated_data:
@@ -706,22 +702,22 @@ class BarChartDataView(APIView):
                     else:
                         aggregated_data[key] = {
                             'location': key,
-                            'scanned': 0,  # Initialize with 0, will update later
+                            'scanned': 0,  # Initialize with 0, will update later if present in scan_data
                             'checkout': entry['checkout_count']
                         }
 
+                # Convert the aggregated data to a list of dictionaries for easy JSON serialization
                 aggregated_data_list = list(aggregated_data.values())
-                sorted_data = sorted(aggregated_data_list, key=lambda x: x['checkout'], reverse=True)
 
+                # Sort and slice the data based on the selected range
+                sorted_data = sorted(aggregated_data_list, key=lambda x: x['checkout'], reverse=True)
                 if selected_range == 'High':
                     final_data = sorted_data[:5]
                 else:
                     final_data = sorted_data[-5:][::-1]
-
+                    
                 cache.set(cache_key, final_data, timeout=60 * 60)
-
-            return Response(final_data)
-
+            return Response(final_data)    
         return Response({'error': 'Company name is required'}, status=status.HTTP_404_NOT_FOUND)
 
 class ProductName(APIView):
@@ -746,7 +742,7 @@ class ProductMetricsView(APIView):
         return sanitize_cache_key(f"product_metrics_{company_name}_{product_name}")
 
     @method_decorator(cache_page(60 * 5))  # Optional: cache the entire view for 5 minutes
-    def get(self, request,*args, **kwargs):
+    def get(self, request, *args, **kwargs):
         company_name = request.query_params.get('company_name')
         product_name = request.query_params.get('product_name')
         cache_key = self.get_cache_key(company_name, product_name)
@@ -754,28 +750,37 @@ class ProductMetricsView(APIView):
 
         if not data:
             try:
-
+                # Get distinct scan and checkout entries first
                 scan_queryset = ScanInfo.objects.filter(
-                company_name__iexact=company_name,
-                product_name__iexact=product_name
+                    company_name__iexact=company_name,
+                    product_name__iexact=product_name
                 ).distinct('user_name', 'code_key')
-                
+
                 checkout_queryset = CheckoutInfo.objects.filter(
                     company_name__iexact=company_name,
                     product_name__iexact=product_name
                 ).distinct('user_name', 'code_key')
 
-                checkout_today = checkout_queryset.annotate(day=TruncDay('date_time')).filter(day=F('day')).aggregate(total=Count('id'))['total'] or 0
-                checkout_month = checkout_queryset.annotate(month=TruncMonth('date_time')).filter(month=F('month')).aggregate(total=Count('id'))['total'] or 0
-                checkout_year = checkout_queryset.annotate(year=TruncYear('date_time')).filter(year=F('year')).aggregate(total=Count('id'))['total'] or 0
-                scan_today = scan_queryset.annotate(day=TruncDay('date_time')).filter(day=F('day')).aggregate(total=Count('id'))['total'] or 0
-                scan_month = scan_queryset.annotate(month=TruncMonth('date_time')).filter(month=F('month')).aggregate(total=Count('id'))['total'] or 0
-                scan_year = scan_queryset.annotate(year=TruncYear('date_time')).filter(year=F('year')).aggregate(total=Count('id'))['total'] or 0
+                # Fetch IDs first for counting distinct entries
+                scan_ids = scan_queryset.values_list('id', flat=True)
+                checkout_ids = checkout_queryset.values_list('id', flat=True)
+
+                # Annotate and aggregate
+                scan_today = ScanInfo.objects.filter(id__in=scan_ids).annotate(day=TruncDay('date_time')).filter(day=F('day')).aggregate(total=Count('id'))['total'] or 0
+                scan_month = ScanInfo.objects.filter(id__in=scan_ids).annotate(month=TruncMonth('date_time')).filter(month=F('month')).aggregate(total=Count('id'))['total'] or 0
+                scan_year = ScanInfo.objects.filter(id__in=scan_ids).annotate(year=TruncYear('date_time')).filter(year=F('year')).aggregate(total=Count('id'))['total'] or 0
+
+                checkout_today = CheckoutInfo.objects.filter(id__in=checkout_ids).annotate(day=TruncDay('date_time')).filter(day=F('day')).aggregate(total=Count('id'))['total'] or 0
+                checkout_month = CheckoutInfo.objects.filter(id__in=checkout_ids).annotate(month=TruncMonth('date_time')).filter(month=F('month')).aggregate(total=Count('id'))['total'] or 0
+                checkout_year = CheckoutInfo.objects.filter(id__in=checkout_ids).annotate(year=TruncYear('date_time')).filter(year=F('year')).aggregate(total=Count('id'))['total'] or 0
+
                 acceptance_rate = (checkout_queryset.count() / scan_queryset.count()) * 100 if scan_queryset.count() > 0 else 0
-                highest_checkout_per_location = checkout_queryset.values('region', 'city', 'town', 'street').annotate(total=Count('id')).order_by('-total').first()
-                total_locations = list(checkout_queryset.values('region', 'city', 'town', 'street').annotate(total=Count('id')).order_by('total'))
+
+                # Aggregate location info
+                highest_checkout_per_location = CheckoutInfo.objects.filter(id__in=checkout_ids).values('region', 'city', 'town', 'street').annotate(total=Count('id')).order_by('-total').first()
+                total_locations = list(CheckoutInfo.objects.filter(id__in=checkout_ids).values('region', 'city', 'town', 'street').annotate(total=Count('id')).order_by('total'))
                 median_location = total_locations[len(total_locations) // 2] if total_locations else None
-                lowest_checkout_per_location = checkout_queryset.values('region', 'city', 'town', 'street').annotate(total=Count('id')).order_by('total').first()
+                lowest_checkout_per_location = CheckoutInfo.objects.filter(id__in=checkout_ids).values('region', 'city', 'town', 'street').annotate(total=Count('id')).order_by('total').first()
 
                 data = {
                     'metrics': {
@@ -791,10 +796,12 @@ class ProductMetricsView(APIView):
                         'lowest_checkout_per_location': lowest_checkout_per_location,
                     }
                 }
+                cache.set(cache_key, data, timeout=60 * 60)
             except Exception as e:
                 return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(data, status=status.HTTP_200_OK)
+
 
 
 # Store the private key securely
