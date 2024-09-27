@@ -370,12 +370,7 @@ class TopLocationMetrics(APIView):
                 location_fields = ['country', 'region', 'city', 'town']
 
                 # CheckoutInfo Metrics
-                checkout_queryset = CheckoutInfo.objects.filter(company_name=company_name).exclude(
-                    Q(country='') | Q(country__isnull=True) |
-                    Q(region='') | Q(region__isnull=True) |
-                    Q(city='') | Q(city__isnull=True) |
-                    Q(town='') | Q(town__isnull=True)
-                )
+                checkout_queryset = CheckoutInfo.objects.filter(company_name=company_name).distinct('user_name', 'code_key')
 
                 # Get distinct location with highest count
                 highest_checkout_location = checkout_queryset.values(*location_fields).annotate(count=Count('id')).order_by('-count').first()
@@ -386,12 +381,7 @@ class TopLocationMetrics(APIView):
                 ).values('product_name').annotate(total=Count('id')).order_by('-total').first()
 
                 # Get the count value of the same distinct location from ScanInfo
-                scan_queryset = ScanInfo.objects.filter(company_name__iexact=company_name).exclude(
-                    Q(country='') | Q(country__isnull=True) |
-                    Q(region='') | Q(region__isnull=True) |
-                    Q(city='') | Q(city__isnull=True) |
-                    Q(town='') | Q(town__isnull=True)
-                )
+                scan_queryset = ScanInfo.objects.filter(company_name__iexact=company_name).distinct('user_name', 'code_key')
                 matching_scan_location_count = scan_queryset.filter(
                     **{field: highest_checkout_location[field] for field in location_fields}
                 ).count()
@@ -455,20 +445,10 @@ class PerformanceMetricsView(APIView):
             # 1. Conversion rate calculation (only considering rows with no null values)
             scan_queryset = ScanInfo.objects.filter(
                 company_name__iexact=company_name
-            ).exclude(
-                Q(country='') | Q(country__isnull=True) |
-                Q(region='') | Q(region__isnull=True) |
-                Q(city='') | Q(city__isnull=True) |
-                Q(town='') | Q(town__isnull=True)
-            )
+            ).distinct('user_name', 'code_key')
             checkout_queryset = CheckoutInfo.objects.filter(
                 company_name__iexact=company_name
-            ).exclude(
-                Q(country='') | Q(country__isnull=True) |
-                Q(region='') | Q(region__isnull=True) |
-                Q(city='') | Q(city__isnull=True) |
-                Q(town='') | Q(town__isnull=True)
-            )
+            ).distinct('user_name', 'code_key')
 
             total_scans = scan_queryset.count()
             total_checkouts = checkout_queryset.count()
@@ -605,11 +585,7 @@ class LineChartDataView(APIView):
 
             # Build the query filters
             filters = Q(company_name=company_name)
-            
-            # Exclude rows with null values in any of the relevant location columns
-            filters &= Q(country__isnull=False) & Q(region__isnull=False) & Q(city__isnull=False) \
-                    & Q(town__isnull=False) & Q(street__isnull=False)
-            
+                        
             # Apply year, month, day filters
             if selected_year:
                 filters &= Q(date_time__year=selected_year)
@@ -644,17 +620,20 @@ class LineChartDataView(APIView):
                 return Response({"error": "Invalid time selection"}, status=400)
             # Fetch and process ScanInfo data
             scan_data = ScanInfo.objects.filter(filters) \
+                .distinct('user_name', 'code_key') \
                 .annotate(date=truncation) \
                 .values('date') \
                 .annotate(count=Count('id')) \
                 .order_by('date')
 
-            # Fetch and process CheckoutInfo data
+            # Fetch and process CheckoutInfo data, applying distinct on 'user_name' and 'code_key'
             checkout_data = CheckoutInfo.objects.filter(filters) \
+                .distinct('user_name', 'code_key') \
                 .annotate(date=truncation) \
                 .values('date') \
                 .annotate(count=Count('id')) \
                 .order_by('date')
+
 
             # Prepare the response data
             data = {
@@ -682,7 +661,6 @@ class BarChartDataView(APIView):
             if not final_data:       
                 # Build the query filters to exclude rows with null values in the location fields
                 filters = Q(company_name=company_name)
-                filters &= Q(country__isnull=False) & Q(region__isnull=False) & Q(city__isnull=False) & Q(town__isnull=False) & Q(street__isnull=False)
 
                 # Aggregate the data based on the selected criteria
                 location_field = {
@@ -694,12 +672,14 @@ class BarChartDataView(APIView):
 
                 # Fetch and aggregate ScanInfo data
                 scan_data = ScanInfo.objects.filter(filters) \
+                    .distinct('user_name', 'code_key') \
                     .values(location_field) \
                     .annotate(scanned_count=Count('id')) \
                     .order_by(location_field)
 
                 # Fetch and aggregate CheckoutInfo data
                 checkout_data = CheckoutInfo.objects.filter(filters) \
+                    .distinct('user_name', 'code_key') \
                     .values(location_field) \
                     .annotate(checkout_count=Count('id')) \
                     .order_by(location_field)
@@ -738,6 +718,7 @@ class BarChartDataView(APIView):
                 cache.set(cache_key, final_data, timeout=60 * 60)
             return Response(final_data)    
         return Response({'error': 'Company name is required'}, status=status.HTTP_404_NOT_FOUND)
+
 class ProductName(APIView):
     permission_classes = [IsAuthenticated, IsOwner]
 
@@ -772,21 +753,12 @@ class ProductMetricsView(APIView):
                 scan_queryset = ScanInfo.objects.filter(
                 company_name__iexact=company_name,
                 product_name__iexact=product_name
-                ).exclude(
-                    Q(country='') | Q(country__isnull=True) |
-                    Q(region='') | Q(region__isnull=True) |
-                    Q(city='') | Q(city__isnull=True) |
-                    Q(town='') | Q(town__isnull=True)
-                )
+                ).distinct('user_name', 'code_key')
+                
                 checkout_queryset = CheckoutInfo.objects.filter(
                     company_name__iexact=company_name,
                     product_name__iexact=product_name
-                ).exclude(
-                    Q(country='') | Q(country__isnull=True) |
-                    Q(region='') | Q(region__isnull=True) |
-                    Q(city='') | Q(city__isnull=True) |
-                    Q(town='') | Q(town__isnull=True)
-                )
+                ).distinct('user_name', 'code_key')
 
                 checkout_today = checkout_queryset.annotate(day=TruncDay('date_time')).filter(day=F('day')).aggregate(total=Count('id'))['total'] or 0
                 checkout_month = checkout_queryset.annotate(month=TruncMonth('date_time')).filter(month=F('month')).aggregate(total=Count('id'))['total'] or 0
@@ -859,15 +831,12 @@ class UserScanView(APIView):
             
             if not data:
                 filtered_data = ScanInfo.objects.filter(user_name__iexact=user_name
-                                                        ).exclude(
-                                                            Q(country__isnull=True) | Q(country='') |
-                                                            Q(region__isnull=True) | Q(region='') |
-                                                            Q(city__isnull=True) | Q(city='')                                                                   
-                                                            ).values(
+                                                        ).distinct('user_name', 'code_key'
+                                                        ).values(
                                                                 'company_name', 'product_name', 'batch_number'
-                                                            ).annotate(
+                                                        ).annotate(
                                                                 frequency=Count('batch_number')
-                                                            ).order_by('company_name', 'product_name')
+                                                        ).order_by('company_name', 'product_name')
                 data = list(filtered_data)
                 cache.set(cache_key, data, timeout=60 * 60)
             
@@ -885,11 +854,7 @@ class UserCheckoutView(APIView):
             
             if not data:
                 filtered_data = CheckoutInfo.objects.filter(user_name__iexact=user_name
-                                                        ).exclude(
-                                                            Q(country__isnull=True) | Q(country='') |
-                                                            Q(region__isnull=True) | Q(region='') |
-                                                            Q(city__isnull=True) | Q(city='')                                                                   
-                                                            ).values(
+                                                        ).distinct('user_name', 'code_key').values(
                                                                 'company_name', 'product_name', 'batch_number'
                                                             ).order_by('company_name')
                 data = list(filtered_data)
