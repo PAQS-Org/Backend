@@ -11,7 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 # from base64 import urlsafe_b64encode, urlsafe_b64decode
 
 from .models import LogProduct, ScanInfo, CheckoutInfo
-from django.db.models import Count, F,Q
+from django.db.models import Count, F,Q, Subquery
 from django.db.models.functions import TruncYear, TruncMonth, TruncDay, TruncHour
 from django.core.cache import cache
 from django.utils.decorators import method_decorator
@@ -572,15 +572,10 @@ class LineChartDataView(APIView):
         # Ensure company name is provided
         if company_name:   
        
-            # cache_key = sanitize_cache_key(f"line_chart_data_{company_name}_{selected_year}_{selected_month}_{selected_day}")
-            # data = cache.get(cache_key)
-            
-            # if not data:
-                
                        
             # Convert parameters to integers if they are provided
             selected_year = int(selected_year) if selected_year else None
-            selected_month = int(selected_month) + 1 if selected_month else None  # JS month is 0-indexed
+            selected_month = int(selected_month) + 1 if selected_month else None  
             selected_day = int(selected_day) if selected_day else None
 
             # Build the query filters
@@ -610,29 +605,35 @@ class LineChartDataView(APIView):
             elif selected_month and not selected_year and not selected_day:  # Only month selected, aggregate by month across years
                 truncation = TruncMonth('date_time')
 
-            if truncation is not None:
-                queryset = CheckoutInfo.objects \
-                    .annotate(date=truncation) \
-                    .values('date') \
-                    .annotate(total=Count('id'))
-            else:
-        # Handle the case where none of the conditions are met
-                return Response({"error": "Invalid time selection"}, status=400)
-            # Fetch and process ScanInfo data
-            scan_data = ScanInfo.objects.filter(filters) \
-                .distinct('user_name', 'code_key') \
-                .annotate(date=truncation) \
+            # Step 1: Get distinct user_name and code_key for ScanInfo
+            distinct_scan_queryset = ScanInfo.objects.filter(filters) \
+                .values('user_name', 'code_key') \
+                .distinct()
+
+            # Step 2: Perform aggregation on the distinct set for ScanInfo
+            scan_data = ScanInfo.objects.filter(
+                user_name__in=Subquery(distinct_scan_queryset.values('user_name')),
+                code_key__in=Subquery(distinct_scan_queryset.values('code_key'))
+            ).annotate(date=truncation) \
                 .values('date') \
                 .annotate(count=Count('id')) \
                 .order_by('date')
 
-            # Fetch and process CheckoutInfo data, applying distinct on 'user_name' and 'code_key'
-            checkout_data = CheckoutInfo.objects.filter(filters) \
-                .distinct('user_name', 'code_key') \
-                .annotate(date=truncation) \
+            # Step 1: Get distinct user_name and code_key for CheckoutInfo
+            distinct_checkout_queryset = CheckoutInfo.objects.filter(filters) \
+                .values('user_name', 'code_key') \
+                .distinct()
+
+            # Step 2: Perform aggregation on the distinct set for CheckoutInfo
+            checkout_data = CheckoutInfo.objects.filter(
+                user_name__in=Subquery(distinct_checkout_queryset.values('user_name')),
+                code_key__in=Subquery(distinct_checkout_queryset.values('code_key'))
+            ).annotate(date=truncation) \
                 .values('date') \
                 .annotate(count=Count('id')) \
                 .order_by('date')
+
+
 
 
             # Prepare the response data
