@@ -356,9 +356,102 @@ class CheckoutMetricsView(APIView):
             return Response(data)
         return Response({'message': "Company doesn't exist"}, status=status.HTTP_404_NOT_FOUND)
     
+# class TopLocationMetrics(APIView):
+#     permission_classes = [IsAuthenticated]
+    
+#     @method_decorator(cache_page(60 * 5))
+#     def get(self, request, *args, **kwargs):
+#         company_name = request.query_params.get('company_name')
+#         if company_name:
+#             cache_key = sanitize_cache_key(f"location_metrics_comparison_{company_name}")
+#             data = cache.get(cache_key)
+
+#             if not data:
+#                 location_fields = ['country', 'region', 'city', 'town']
+
+#                 # 1. Get distinct location fields first
+#                 distinct_checkout_locations = CheckoutInfo.objects.filter(
+#                     company_name=company_name
+#                 ).values(*location_fields).distinct()
+
+#                 # 2. Highest checkout location based on distinct fields
+#                 highest_checkout_location = distinct_checkout_locations.annotate(count=Count('id')).order_by('-count').first()
+
+#                 # 3. Get product_name with the highest count for that location
+#                 highest_checkout_product = CheckoutInfo.objects.filter(
+#                     company_name=company_name,
+#                     **{field: highest_checkout_location[field] for field in location_fields}
+#                 ).values('product_name').annotate(total=Count('id')).order_by('-total').first()
+
+#                 # 4. Get the count of matching scan locations
+#                 distinct_scan_locations = ScanInfo.objects.filter(
+#                     company_name=company_name
+#                 ).values(*location_fields).distinct()
+
+#                 matching_scan_location_count = distinct_scan_locations.filter(
+#                     **{field: highest_checkout_location[field] for field in location_fields}
+#                 ).count()
+
+#                 # Current Month Metrics
+#                 current_month = timezone.now().month
+#                 current_month_checkout_queryset = CheckoutInfo.objects.filter(
+#                     company_name=company_name,
+#                     date_time__month=current_month
+#                 ).values(*location_fields).distinct()
+
+#                 # 5. Distinct location with highest count for the current month
+#                 highest_checkout_location_month = current_month_checkout_queryset.annotate(count=Count('id')).order_by('-count').first()
+
+#                 # 6. Product_name with highest count for that location in the current month
+#                 highest_checkout_product_month = CheckoutInfo.objects.filter(
+#                     company_name=company_name,
+#                     date_time__month=current_month,
+#                     **{field: highest_checkout_location_month[field] for field in location_fields}
+#                 ).values('product_name').annotate(total=Count('id')).order_by('-total').first()
+
+#                 highest_scan_product_month = ScanInfo.objects.filter(
+#                     company_name=company_name,
+#                     date_time__month=current_month,
+#                     **{field: highest_checkout_location_month[field] for field in location_fields}
+#                 ).values('product_name').annotate(total=Count('id')).order_by('-total').first()
+
+#                 # 7. Get the count value of the same distinct location from ScanInfo for the current month
+#                 matching_scan_location_count_month = ScanInfo.objects.filter(
+#                     company_name=company_name,
+#                     date_time__month=current_month,
+#                     **{field: highest_checkout_location_month[field] for field in location_fields}
+#                 ).count()
+
+#                 # 8. Conversion rate
+#                 conversion = (highest_checkout_product_month['total'] / highest_scan_product_month['total']) * 100 if highest_scan_product_month['total'] != 0 else 0
+
+#                 # 9. Prepare response data
+#                 data = {
+#                     "highest_checkout_location": highest_checkout_location,
+#                     "highest_checkout_product": highest_checkout_product,
+#                     "matching_scan_location_count": matching_scan_location_count,
+#                     "highest_checkout_location_month": {
+#                         "location": highest_checkout_location_month,
+#                         "value": highest_checkout_location_month['count'],
+#                         "product_name": highest_checkout_product_month['product_name'],
+#                         "product_value": highest_checkout_product_month['total'],
+#                         "month": timezone.now().strftime("%B")
+#                     },
+#                     "matching_scan_location_count_month": matching_scan_location_count_month,
+#                     "highest_scan_product_month": highest_scan_product_month,
+#                     "conversion_rate": conversion
+#                 }
+                
+#                 print('loc data', data)
+
+#                 # Cache the result for 1 hour
+#                 cache.set(cache_key, data, timeout=60 * 60)
+
+#             return Response(data)
+#         return Response({'message': "Company doesn't exist"}, status=404)
 class TopLocationMetrics(APIView):
     permission_classes = [IsAuthenticated]
-    
+
     @method_decorator(cache_page(60 * 5))
     def get(self, request, *args, **kwargs):
         company_name = request.query_params.get('company_name')
@@ -369,63 +462,58 @@ class TopLocationMetrics(APIView):
             if not data:
                 location_fields = ['country', 'region', 'city', 'town']
 
-                # 1. Get distinct location fields first
-                distinct_checkout_locations = CheckoutInfo.objects.filter(
-                    company_name=company_name
-                ).values(*location_fields).distinct()
+                # CheckoutInfo Metrics
+                checkout_queryset = CheckoutInfo.objects.filter(company_name=company_name).exclude(
+                    Q(country='') | Q(country__isnull=True) |
+                    Q(region='') | Q(region__isnull=True) |
+                    Q(city='') | Q(city__isnull=True) |
+                    Q(town='') | Q(town__isnull=True)
+                )
 
-                # 2. Highest checkout location based on distinct fields
-                highest_checkout_location = distinct_checkout_locations.annotate(count=Count('id')).order_by('-count').first()
+                # Get distinct location with highest count
+                highest_checkout_location = checkout_queryset.values(*location_fields).annotate(count=Count('id')).order_by('-count').first()
 
-                # 3. Get product_name with the highest count for that location
-                highest_checkout_product = CheckoutInfo.objects.filter(
-                    company_name=company_name,
+                # Get product_name with the highest count for that location
+                highest_checkout_product = checkout_queryset.filter(
                     **{field: highest_checkout_location[field] for field in location_fields}
                 ).values('product_name').annotate(total=Count('id')).order_by('-total').first()
 
-                # 4. Get the count of matching scan locations
-                distinct_scan_locations = ScanInfo.objects.filter(
-                    company_name=company_name
-                ).values(*location_fields).distinct()
-
-                matching_scan_location_count = distinct_scan_locations.filter(
+                # Get the count value of the same distinct location from ScanInfo
+                scan_queryset = ScanInfo.objects.filter(company_name__iexact=company_name).exclude(
+                    Q(country='') | Q(country__isnull=True) |
+                    Q(region='') | Q(region__isnull=True) |
+                    Q(city='') | Q(city__isnull=True) |
+                    Q(town='') | Q(town__isnull=True)
+                )
+                matching_scan_location_count = scan_queryset.filter(
                     **{field: highest_checkout_location[field] for field in location_fields}
                 ).count()
 
                 # Current Month Metrics
                 current_month = timezone.now().month
-                current_month_checkout_queryset = CheckoutInfo.objects.filter(
-                    company_name=company_name,
+                current_month_checkout_queryset = checkout_queryset.filter(date_time__month=current_month)
+                current_month_scan_queryset = scan_queryset.filter(date_time__month=current_month)
+
+                # Distinct location with highest count for current month
+                highest_checkout_location_month = current_month_checkout_queryset.values(*location_fields).annotate(count=Count('id')).order_by('-count').first()
+
+                # Product_name with the highest count for that location in the current month
+                highest_checkout_product_month = current_month_checkout_queryset.filter(
+                    **{field: highest_checkout_location_month[field] for field in location_fields}
+                ).values('product_name').annotate(total=Count('id')).order_by('-total').first()
+
+                highest_scan_product_month = current_month_scan_queryset.filter(
+                    **{field: highest_checkout_location_month[field] for field in location_fields}
+                ).values('product_name').annotate(total=Count('id')).order_by('-total').first()
+
+                # Get the count value of the same distinct location from ScanInfo for the current month
+                matching_scan_location_count_month = scan_queryset.filter(
+                    **{field: highest_checkout_location_month[field] for field in location_fields},
                     date_time__month=current_month
-                ).values(*location_fields).distinct()
-
-                # 5. Distinct location with highest count for the current month
-                highest_checkout_location_month = current_month_checkout_queryset.annotate(count=Count('id')).order_by('-count').first()
-
-                # 6. Product_name with highest count for that location in the current month
-                highest_checkout_product_month = CheckoutInfo.objects.filter(
-                    company_name=company_name,
-                    date_time__month=current_month,
-                    **{field: highest_checkout_location_month[field] for field in location_fields}
-                ).values('product_name').annotate(total=Count('id')).order_by('-total').first()
-
-                highest_scan_product_month = ScanInfo.objects.filter(
-                    company_name=company_name,
-                    date_time__month=current_month,
-                    **{field: highest_checkout_location_month[field] for field in location_fields}
-                ).values('product_name').annotate(total=Count('id')).order_by('-total').first()
-
-                # 7. Get the count value of the same distinct location from ScanInfo for the current month
-                matching_scan_location_count_month = ScanInfo.objects.filter(
-                    company_name=company_name,
-                    date_time__month=current_month,
-                    **{field: highest_checkout_location_month[field] for field in location_fields}
                 ).count()
-
-                # 8. Conversion rate
                 conversion = (highest_checkout_product_month['total'] / highest_scan_product_month['total']) * 100 if highest_scan_product_month['total'] != 0 else 0
 
-                # 9. Prepare response data
+
                 data = {
                     "highest_checkout_location": highest_checkout_location,
                     "highest_checkout_product": highest_checkout_product,
@@ -439,16 +527,14 @@ class TopLocationMetrics(APIView):
                     },
                     "matching_scan_location_count_month": matching_scan_location_count_month,
                     "highest_scan_product_month": highest_scan_product_month,
-                    "conversion_rate": conversion
+                    "conversion_rate":conversion
                 }
-                
-                print('loc data', data)
+                print('loc met data', data)
 
-                # Cache the result for 1 hour
-                cache.set(cache_key, data, timeout=60 * 60)
+                cache.set(cache_key, data, timeout=60 * 60)  # Cache for 1 hour
 
             return Response(data)
-        return Response({'message': "Company doesn't exist"}, status=404)
+        return Response({'message': "Company doesn't exist"}, status=status.HTTP_404_NOT_FOUND)
 class PerformanceMetricsView(APIView):
     permission_classes = [IsAuthenticated, IsOwner]
         
@@ -674,16 +760,14 @@ class BarChartDataView(APIView):
         selected_criteria = request.query_params.get('Region')
         selected_range = request.query_params.get('High')
         
-        # Ensure company name is provided
         if company_name:
             cache_key = sanitize_cache_key(f"bar_chart_info{company_name}_{selected_criteria}_{selected_range}")
             final_data = cache.get(cache_key)
             
             if not final_data:       
-                # Build the query filters to exclude rows with null values in the location fields
+                # Build the query filters
                 filters = Q(company_name=company_name)
 
-                # Aggregate the data based on the selected criteria
                 location_field = {
                     'Region': 'region',
                     'City': 'city',
@@ -691,30 +775,28 @@ class BarChartDataView(APIView):
                     'Locality': 'street'
                 }.get(selected_criteria, 'region')
 
-                # Fetch and aggregate ScanInfo data
+                # Fetch and aggregate ScanInfo data without distinct on fields
                 scan_data = ScanInfo.objects.filter(filters) \
-                    .distinct('user_name', 'code_key') \
                     .values(location_field) \
                     .annotate(scanned_count=Count('id')) \
                     .order_by(location_field)
 
                 # Fetch and aggregate CheckoutInfo data
                 checkout_data = CheckoutInfo.objects.filter(filters) \
-                    .distinct('user_name', 'code_key') \
                     .values(location_field) \
                     .annotate(checkout_count=Count('id')) \
                     .order_by(location_field)
 
-                # Merge the scan_data and checkout_data based on location_field
+                # Merge the scan_data and checkout_data
                 aggregated_data = {}
                 for entry in scan_data:
                     key = entry[location_field]
                     aggregated_data[key] = {
                         'location': key,
                         'scanned': entry['scanned_count'],
-                        'checkout': 0  # Initialize with 0, will update later if present in checkout_data
+                        'checkout': 0
                     }
-                
+
                 for entry in checkout_data:
                     key = entry[location_field]
                     if key in aggregated_data:
@@ -722,14 +804,14 @@ class BarChartDataView(APIView):
                     else:
                         aggregated_data[key] = {
                             'location': key,
-                            'scanned': 0,  # Initialize with 0, will update later if present in scan_data
+                            'scanned': 0,
                             'checkout': entry['checkout_count']
                         }
 
-                # Convert the aggregated data to a list of dictionaries for easy JSON serialization
+                # Convert aggregated data to a list
                 aggregated_data_list = list(aggregated_data.values())
 
-                # Sort and slice the data based on the selected range
+                # Sort and slice based on the selected range
                 sorted_data = sorted(aggregated_data_list, key=lambda x: x['checkout'], reverse=True)
                 if selected_range == 'High':
                     final_data = sorted_data[:5]
