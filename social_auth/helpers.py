@@ -28,10 +28,8 @@ class Google:
     def get_user_info(access_token):
         # Get user profile information using the People API
         people_api_url = "https://people.googleapis.com/v1/people/me?personFields=names,emailAddresses,phoneNumbers"
-        print('people api', people_api_url)
         headers = {"Authorization": f"Bearer {access_token}"}
         response = r.get(people_api_url, headers=headers)
-        print('people res', response)
 
         if response.status_code != 200:
             raise AuthenticationFailed("Failed to fetch user info from Google People API")
@@ -40,7 +38,6 @@ class Google:
         names = user_info.get('names', [{}])
         email_addresses = user_info.get('emailAddresses', [{}])
         phone = user_info.get('phoneNumbers',[{}])
-        print('get user info response', user_info)
 
         if not names or not email_addresses:
             raise AuthenticationFailed("Failed to retrieve necessary user info")
@@ -62,8 +59,6 @@ def register_social_user(provider, email, first_name, last_name, phone_number):
     # else:
     #     user_model = Company
     user_model = User
-    print('user model', user_model)
-    print('user model main', User)
 
     try:
         existing_user = user_model.objects.get(email=email)
@@ -97,7 +92,6 @@ def register_social_user(provider, email, first_name, last_name, phone_number):
         new_user.save()
 
         authenticated_user = authenticate(email=email, password=SOCIAL_AUTH_PASSWORD)
-        print('false user', authenticated_user)
         tokens = authenticated_user.tokens()
         return {
             'email': authenticated_user.email,

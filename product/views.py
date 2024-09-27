@@ -249,11 +249,7 @@ class ScanMetricsView(APIView):
                 # Filter out rows with any null values
                 filtered_data = ScanInfo.objects.filter(
                     company_name__iexact=company_name
-                ).exclude(
-                    Q(country__isnull=True) | Q(country='') |
-                    Q(region__isnull=True) | Q(region='') |
-                    Q(city__isnull=True) | Q(city='') 
-                )
+                ).distinct('user_name', 'code_key')
 
                 # Total rows with no null values
                 total_rows = filtered_data.count()
@@ -315,11 +311,7 @@ class CheckoutMetricsView(APIView):
                 # Filter out rows with any null values
                 filtered_data = CheckoutInfo.objects.filter(
                     company_name__iexact=company_name
-                ).exclude(
-                    Q(country__isnull=True) | Q(country='') |
-                    Q(region__isnull=True) | Q(region='') |
-                    Q(city__isnull=True) | Q(city='') 
-                )
+                ).distinct('user_name', 'code_key')
 
                 # Total rows with no null values
                 total_rows = filtered_data.count()

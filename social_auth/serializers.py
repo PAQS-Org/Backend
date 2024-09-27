@@ -11,8 +11,6 @@ class GoogleSignInSerializer(serializers.Serializer):
         access_token = attrs.get('access_token')
         # user_type = attrs.get('user_type' = "user")
         user_data = Google.validate(access_token)
-        print('data', user_data)
-        print('user info', Google.get_user_info(access_token))
         first_name, last_name,  email, phone_number,= Google.get_user_info(access_token)
 
         try:
