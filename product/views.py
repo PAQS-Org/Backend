@@ -369,50 +369,63 @@ class TopLocationMetrics(APIView):
             if not data:
                 location_fields = ['country', 'region', 'city', 'town']
 
-                # CheckoutInfo Metrics
-                checkout_queryset = CheckoutInfo.objects.filter(company_name=company_name).distinct('user_name', 'code_key')
-                print('loc check qery', checkout_queryset)
-                # Get distinct location with highest count
-                highest_checkout_location = checkout_queryset.values(*location_fields).annotate(count=Count('id')).order_by('-count').first()
+                # 1. Get distinct location fields first
+                distinct_checkout_locations = CheckoutInfo.objects.filter(
+                    company_name=company_name
+                ).values(*location_fields).distinct()
 
-                # Get product_name with the highest count for that location
-                highest_checkout_product = checkout_queryset.filter(
+                # 2. Highest checkout location based on distinct fields
+                highest_checkout_location = distinct_checkout_locations.annotate(count=Count('id')).order_by('-count').first()
+
+                # 3. Get product_name with the highest count for that location
+                highest_checkout_product = CheckoutInfo.objects.filter(
+                    company_name=company_name,
                     **{field: highest_checkout_location[field] for field in location_fields}
                 ).values('product_name').annotate(total=Count('id')).order_by('-total').first()
 
-                # Get the count value of the same distinct location from ScanInfo
-                scan_queryset = ScanInfo.objects.filter(company_name__iexact=company_name).distinct('user_name', 'code_key')
-                print('loc scan qery', scan_queryset)
-                
-                matching_scan_location_count = scan_queryset.filter(
+                # 4. Get the count of matching scan locations
+                distinct_scan_locations = ScanInfo.objects.filter(
+                    company_name=company_name
+                ).values(*location_fields).distinct()
+
+                matching_scan_location_count = distinct_scan_locations.filter(
                     **{field: highest_checkout_location[field] for field in location_fields}
                 ).count()
 
                 # Current Month Metrics
                 current_month = timezone.now().month
-                current_month_checkout_queryset = checkout_queryset.filter(date_time__month=current_month)
-                current_month_scan_queryset = scan_queryset.filter(date_time__month=current_month)
-
-                # Distinct location with highest count for current month
-                highest_checkout_location_month = current_month_checkout_queryset.values(*location_fields).annotate(count=Count('id')).order_by('-count').first()
-
-                # Product_name with the highest count for that location in the current month
-                highest_checkout_product_month = current_month_checkout_queryset.filter(
-                    **{field: highest_checkout_location_month[field] for field in location_fields}
-                ).values('product_name').annotate(total=Count('id')).order_by('-total').first()
-                
-                highest_scan_product_month = current_month_scan_queryset.filter(
-                    **{field: highest_checkout_location_month[field] for field in location_fields}
-                ).values('product_name').annotate(total=Count('id')).order_by('-total').first()
-
-                # Get the count value of the same distinct location from ScanInfo for the current month
-                matching_scan_location_count_month = scan_queryset.filter(
-                    **{field: highest_checkout_location_month[field] for field in location_fields},
+                current_month_checkout_queryset = CheckoutInfo.objects.filter(
+                    company_name=company_name,
                     date_time__month=current_month
+                ).values(*location_fields).distinct()
+
+                # 5. Distinct location with highest count for the current month
+                highest_checkout_location_month = current_month_checkout_queryset.annotate(count=Count('id')).order_by('-count').first()
+
+                # 6. Product_name with highest count for that location in the current month
+                highest_checkout_product_month = CheckoutInfo.objects.filter(
+                    company_name=company_name,
+                    date_time__month=current_month,
+                    **{field: highest_checkout_location_month[field] for field in location_fields}
+                ).values('product_name').annotate(total=Count('id')).order_by('-total').first()
+
+                highest_scan_product_month = ScanInfo.objects.filter(
+                    company_name=company_name,
+                    date_time__month=current_month,
+                    **{field: highest_checkout_location_month[field] for field in location_fields}
+                ).values('product_name').annotate(total=Count('id')).order_by('-total').first()
+
+                # 7. Get the count value of the same distinct location from ScanInfo for the current month
+                matching_scan_location_count_month = ScanInfo.objects.filter(
+                    company_name=company_name,
+                    date_time__month=current_month,
+                    **{field: highest_checkout_location_month[field] for field in location_fields}
                 ).count()
+
+                # 8. Conversion rate
                 conversion = (highest_checkout_product_month['total'] / highest_scan_product_month['total']) * 100 if highest_scan_product_month['total'] != 0 else 0
 
-
+                # 9. Prepare response data
                 data = {
                     "highest_checkout_location": highest_checkout_location,
                     "highest_checkout_product": highest_checkout_product,
@@ -426,14 +439,16 @@ class TopLocationMetrics(APIView):
                     },
                     "matching_scan_location_count_month": matching_scan_location_count_month,
                     "highest_scan_product_month": highest_scan_product_month,
-                    "conversion_rate":conversion
+                    "conversion_rate": conversion
                 }
+                
                 print('loc data', data)
-                cache.set(cache_key, data, timeout=60 * 60)  # Cache for 1 hour
+
+                # Cache the result for 1 hour
+                cache.set(cache_key, data, timeout=60 * 60)
 
             return Response(data)
-        return Response({'message': "Company doesn't exist"}, status=status.HTTP_404_NOT_FOUND)
-
+        return Response({'message': "Company doesn't exist"}, status=404)
 class PerformanceMetricsView(APIView):
     permission_classes = [IsAuthenticated, IsOwner]
         
@@ -444,20 +459,22 @@ class PerformanceMetricsView(APIView):
         data = cache.get(cache_key)
 
         if not data:
-            # 1. Conversion rate calculation (only considering rows with no null values)
-            scan_queryset = ScanInfo.objects.filter(
+            # 1. Conversion rate calculation (using subquery for distinct)
+            scan_subquery = ScanInfo.objects.filter(
                 company_name__iexact=company_name
-            ).distinct('user_name', 'code_key')
-            checkout_queryset = CheckoutInfo.objects.filter(
+            ).distinct('user_name', 'code_key').values('id')  # Fetch distinct ScanInfo IDs
+            checkout_subquery = CheckoutInfo.objects.filter(
                 company_name__iexact=company_name
-            ).distinct('user_name', 'code_key')
+            ).distinct('user_name', 'code_key').values('id')  # Fetch distinct CheckoutInfo IDs
 
-            total_scans = scan_queryset.count()
-            total_checkouts = checkout_queryset.count()
+            total_scans = ScanInfo.objects.filter(id__in=Subquery(scan_subquery)).count()
+            total_checkouts = CheckoutInfo.objects.filter(id__in=Subquery(checkout_subquery)).count()
             conversion_rate = (total_checkouts / total_scans) * 100 if total_scans > 0 else 0
 
-            # 2. Month and year with the highest checkout
-            checkout_by_month = checkout_queryset.annotate(
+            # 2. Month and year with the highest checkout (on distinct data)
+            checkout_by_month = CheckoutInfo.objects.filter(
+                id__in=Subquery(checkout_subquery)
+            ).annotate(
                 year=F('date_time__year'),
                 month=F('date_time__month')
             ).values('year', 'month').annotate(
@@ -471,14 +488,17 @@ class PerformanceMetricsView(APIView):
                 highest_checkout_month = None
                 highest_checkout_month_value = 0
 
-            # 3. Product name with the highest checkout count
-            highest_checkout_product = checkout_queryset.values('product_name').annotate(
+            # 3. Product name with the highest checkout count (on distinct data)
+            highest_checkout_product = CheckoutInfo.objects.filter(
+                id__in=Subquery(checkout_subquery)
+            ).values('product_name').annotate(
                 product_count=Count('id')
             ).order_by('-product_count').first()
 
             highest_checkout_product_name = highest_checkout_product['product_name'] if highest_checkout_product else None
             highest_checkout_product_value = highest_checkout_product['product_count'] if highest_checkout_product else 0
 
+            # Combine data for the response
             data = {
                 "conversion_rate": conversion_rate,
                 "highest_checkout_month": highest_checkout_month,
@@ -489,7 +509,7 @@ class PerformanceMetricsView(APIView):
             print('perf met', data)
 
             # Cache the results
-            # cache.set(cache_key, data, timeout=60 * 60)  # Cache for 1 hour
+            cache.set(cache_key, data, timeout=60 * 60)  # Cache for 1 hour
 
         return Response(data)
     
