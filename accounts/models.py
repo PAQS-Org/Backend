@@ -49,10 +49,8 @@ class AbstractUserProfile(AbstractBaseUser, PermissionsMixin):
         unique=True,
         validators=[EmailValidator()],  # Ensure valid email format
     )
-    phone_regex = RegexValidator(regex=r'^\+?1?\d{9,15}$', message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.")
-    phone_number = models.CharField(validators=[phone_regex], max_length=17, blank=True)
-    is_phone_verified = models.BooleanField(default=False)
     
+    is_phone_verified = models.BooleanField(default=False)    
     is_verified = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
@@ -63,17 +61,16 @@ class AbstractUserProfile(AbstractBaseUser, PermissionsMixin):
     )
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['phone_number']  # No additional fields required for base user
-
+    
     objects = UserManager()
     
     class Meta:
         indexes = [
-            models.Index(fields=['email', 'phone_number'])
+            models.Index(fields=['email'])
         ]
 
     def __str__(self):
-        return self.email
+        return self.email.lower()
 
     def tokens(self):
         refresh = RefreshToken.for_user(self)
@@ -123,11 +120,17 @@ class Company(AbstractUserProfile):
 class User(AbstractUserProfile):
     first_name = models.CharField(max_length=100, db_index=True)
     last_name = models.CharField(max_length=100, db_index=True)
+    phone_regex = RegexValidator(regex=r'^\+?1?\d{9,15}$', message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.")
+    phone_number = models.CharField(validators=[phone_regex], max_length=17, blank=True)
 
     objects = UserManager()
+    # REQUIRED_FIELDS = ['phone_number']  
     class Meta:
         verbose_name = 'User'
         verbose_name_plural = 'Users'
+        indexes = [
+            models.Index(fields=['phone_number'])
+        ]
         
     @property
     def get_full_name(self):
