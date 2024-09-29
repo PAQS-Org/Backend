@@ -13,14 +13,14 @@ AUTH_PROVIDERS = {'facebook': 'facebook', 'google': 'google',
 
 class UserManager(BaseUserManager):
 
-    def create_user(self, email, phone_number=None, password=None, **extra_fields):
+    def create_user(self, email, password=None, **extra_fields):
         """
         Creates and saves a User with the given email and password.
         """
         if not email:
             raise ValueError('Users must have an email address')
         email = self.normalize_email(email)
-        user = self.model(email=email, phone_number=phone_number, **extra_fields)
+        user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
