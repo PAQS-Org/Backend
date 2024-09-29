@@ -48,7 +48,7 @@ from django.conf import settings
 class CompanyRegistrationView(APIView):
     permission_classes = [AllowAny]
 
-    @method_decorator(ratelimit(key='ip', rate='2/d', method='POST'))
+    # @method_decorator(ratelimit(key='ip', rate='2/d', method='POST'))
     def post(self, request):
         serializer = CompanyRegisterSerializer(data=request.data)
         
